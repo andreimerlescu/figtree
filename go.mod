@@ -1,6 +1,8 @@
-module github.com/andreimerlescu/configurable
+module github.com/andreimerlescu/figs
 
-go 1.23
+go 1.23.4
+
+toolchain go1.24.1
 
 require (
 	github.com/go-ini/ini v1.67.0
@@ -9,6 +11,7 @@ require (
 )
 
 require (
+	github.com/andreimerlescu/checkfs v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 )

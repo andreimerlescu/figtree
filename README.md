@@ -1,23 +1,23 @@
-# Configurable Package
+# Figs 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The Configurable package provides a simple and flexible way to handle configuration data in your Go projects. It allows you to define and manage various types of configuration variables, such as integers, strings, booleans, durations, and more. This package supports configuration parsing from JSON, YAML, and INI files, as well as environment variables.
+The Configurable (`figs` as `cfigs`) package provides a simple and flexible way to handle configuration data in your Go projects. It allows you to define and manage various types of configuration variables, such as integers, strings, booleans, durations, and more. This package supports configuration parsing from JSON, YAML, and INI files, as well as environment variables.
 
 ## Installation
 
 To use the Configurable package in your project, you need to have Go installed and set up. Then, you can install the package by running the following command in your terminal:
 
 ```shell
-go get -u github.com/andreimerlescu/configurable
+go get -u github.com/andreimerlescu/figs
 ```
 
 ## Usage
 
-To use the Configurable package in your Go code, you need to import it:
+To use **figs** package in your Go code, you need to import it:
 
 ```go
-import "github.com/andreimerlescu/configurable"
+import "github.com/andreimerlescu/figs"
 ```
 
 ### Creating a Configurable Instance
@@ -25,7 +25,7 @@ import "github.com/andreimerlescu/configurable"
 To get started, you need to create an instance of the Configurable struct by calling the `NewConfigurable()` function:
 
 ```go
-config := configurable.New()
+cfigs := figs.New()
 ```
 
 ### Defining Configuration Variables
@@ -33,9 +33,9 @@ config := configurable.New()
 The Configurable package provides several methods to define different types of configuration variables. Each method takes a name, default value, and usage description as parameters and returns a pointer to the respective variable:
 
 ```go
-port := config.NewInt("port", 8080, "The port number to listen on")
-timeout := config.NewDuration("timeout", time.Second * 5, "The timeout duration for requests")
-debug := config.NewBool("debug", false, "Enable debug mode")
+port := cfigs.NewInt("port", 8080, "The port number to listen on")
+timeout := cfigs.NewDuration("timeout", time.Second * 5, "The timeout duration for requests")
+debug := cfigs.NewBool("debug", false, "Enable debug mode")
 ```
 
 ### Loading Configuration from Files
@@ -43,7 +43,7 @@ debug := config.NewBool("debug", false, "Enable debug mode")
 You can load configuration data from JSON, YAML, and INI files using the `LoadFile()` method:
 
 ```go
-err := config.LoadFile("config.json")
+err := cfigs.ParseFile("config.json")
 if err != nil {
     // Handle error
 }
@@ -56,10 +56,13 @@ The package automatically parses the file based on its extension. Make sure to p
 The Configurable package also allows you to parse command-line arguments. Call the `Parse()` method to parse the arguments after defining your configuration variables:
 
 ```go
-err := config.Parse("")
-if err != nil {
-    // Handle error
-}
+cfigs.Parse()
+```
+
+or 
+
+```go
+cfigs.Load()
 ```
 
 Passing an empty string to `Parse()` means it will only parse the command-line arguments and not load any file.
@@ -69,9 +72,9 @@ Passing an empty string to `Parse()` means it will only parse the command-line a
 You can access the values of your configuration variables using the respective getter methods:
 
 ```go
-fmt.Println("Port:", *port)
-fmt.Println("Timeout:", *timeout)
-fmt.Println("Debug mode:", *debug)
+fmt.Println("Port:", *cfigs.Int("port"))
+fmt.Println("Timeout:", *cfigs.Duration("timeout"))
+fmt.Println("Debug mode:", *cfigs.String("debug"))
 ```
 
 ### Environment Variables
@@ -83,8 +86,7 @@ The Configurable package supports setting configuration values through environme
 To generate a usage string with information about your configuration variables, use the `Usage()` method:
 
 ```go
-usage := config.Usage()
-fmt.Println(usage)
+fmt.Println(cfigs.Usage())
 ```
 
 The generated usage string includes information about each configuration variable, including its name, default value, description, and the source from which it was set (flag, environment, JSON, YAML, or INI).
@@ -97,4 +99,4 @@ This package is distributed under the MIT License. See the [LICENSE](LICENSE) fi
 
 Contributions to this package are welcome. If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
-Enjoy using the Configurable package in your projects!
+Enjoy using the Figs package in your projects!

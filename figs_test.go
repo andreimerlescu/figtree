@@ -1,4 +1,4 @@
-package configurable
+package figs
 
 import (
 	"os"
@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfigurable(t *testing.T) {
+func TestFigsTree(t *testing.T) {
 	os.Clearenv()
 
 	conf := New()
@@ -59,13 +59,12 @@ func TestConfigurable(t *testing.T) {
 	})
 
 	t.Run("test Parse", func(t *testing.T) {
-		err := conf.Parse("")
-		assert.NoError(t, err)
+		conf.Parse()
 	})
 
-	t.Run("test LoadFile", func(t *testing.T) {
+	t.Run("test ParseFile", func(t *testing.T) {
 		// Create a temporary config file, write some config to it, then use that for the test
-		err := conf.LoadFile("unknown_file_type.unknown")
+		err := conf.ParseFile("unknown_file_type.unknown")
 		assert.Error(t, err)
 	})
 
