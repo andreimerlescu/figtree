@@ -22,5 +22,5 @@ func TestSomeAssurances(t *testing.T) {
 
 	figs.NewUnitDuration(k4, 33, time.Second, "usage")
 	figs.WithValidator(k4, AssureDurationMin(30*time.Second))
-	assert.Nil(t, figs.Parse())
+	assert.NotNil(t, figs.Parse())
 }

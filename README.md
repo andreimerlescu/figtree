@@ -29,6 +29,21 @@ import "github.com/andreimerlescu/figtree"
 | `figtree.Grow()`                                | Provides `Mutation` tracking.         |
 | `figtree.With(figtree.Options{Tracking: true})` | Provides `Mutation` tracking.         |
 
+Configurable properties have whats called metagenesis to them, which are types, like `String`, `Bool`, `Float64`, etc.
+
+New properties can be registered before calling Parse() using a metagenesis pattern of `figs.New<Metagenesis>()`, like
+`figs.NewString()` or `figs.NewFloat64()`, etc. 
+
+Only one validator per property is permitted, and additional WithValidator() calls with duplicate name entries will 
+record an error in the `Fig.Error` property of the property's "fruit, aka `*Fig{}`".
+
+Figtree keeps a withered copy of `figs.New<Metagenesis>()` property declarations and has an `Options{Tracking: true}` 
+argument that can be passed into `figs.New()` that enables the `figs.Mutations()` receiver channel to receive anytime
+a property value changes, a new `figtree.Mutation`.
+
+Figtree includes 36 different built-in `figs.WithValidator(name, figtree.Assure<Rule>[()])` that can
+validate your various Mutageneses without needing to write every validation yourself. For larger or
+custom validations, the 2nd argument requires a `func (interface{}) error` signature in order use.
 
 ```go
 package main
@@ -41,21 +56,58 @@ import (
 )
 
 func main() {
-    figs := figtree.Grow() 
-    figs.NewUnitDuration("minutes", 1, time.Minute, "minutes for timer")
-    figs.Parse()
-
-    go func() {
-        for mutation := range figs.Mutations() {
-            log.Printf("Mutation: %s changed from %v to %v", mutation.Property, mutation.Old, mutation.New)
-        }
-    }()
-
-    timer := time.NewTimer(*figs.UnitDuration("minutes", time.Minute))
-    <-timer.C
-    fmt.Println("Timer fired after 1 minute!")
+	figs := figtree.Grow()
+	figs.NewUnitDuration("minutes", 1, time.Minute, "minutes for timer")
+    figs.WithValidator("minutes", figtree.AssureDurationLessThan(time.Hour))
+	err := figs.Parse()
+	if err != nil {
+		log.Fatal(err)
+	}
+    log.Println(*figs.UnitDuration("minutes"))
 }
 ```
+
+### Available Validators
+
+| Mutagenesis | `figtree.ValidatorFunc`   | Notes                                                                            |
+|-------------|---------------------------|----------------------------------------------------------------------------------|
+| tString     | AssureStringLength        | Ensures a string is a specific length.                                           |
+| tString     | AssureStringSubstring     | Ensures a string contains a specific substring (case-sensitive).                 |
+| tString     | AssureStringNotEmpty      | Ensures a string is not empty.                                                   |
+| tString     | AssureStringContains      | Ensures a string contains a specific substring.                                  |
+| tBool       | AssureBoolTrue            | Ensures a boolean value is true.                                                 |
+| tBool       | AssureBoolFalse           | Ensures a boolean value is false.                                                |
+| tInt        | AssurePositiveInt         | Ensures an integer is positive (greater than zero).                              |
+| tInt        | AssureNegativeInt         | Ensures an integer is negative (less than zero).                                 |
+| tInt        | AssureIntGreaterThan      | Ensures an integer is greater than a specified value (exclusive).                |
+| tInt        | AssureIntLessThan         | Ensures an integer is less than a specified value (exclusive).                   |
+| tInt        | AssureIntInRange          | Ensures an integer is within a specified range (inclusive).                      |
+| tInt64      | AssureInt64GreaterThan    | Ensures an int64 is greater than a specified value (exclusive).                  |
+| tInt64      | AssureInt64LessThan       | Ensures an int64 is less than a specified value (exclusive).                     |
+| tInt64      | AssurePositiveInt64       | Ensures an int64 is positive (greater than zero).                                |
+| tInt64      | AssureInt64InRange        | Ensures an int64 is within a specified range (inclusive).                        |
+| tFloat64    | AssureFloat64Positive     | Ensures a float64 is positive (greater than zero).                               |
+| tFloat64    | AssureFloat64InRange      | Ensures a float64 is within a specified range (inclusive).                       |
+| tFloat64    | AssureFloat64GreaterThan  | Ensures a float64 is greater than a specified value (exclusive).                 |
+| tFloat64    | AssureFloat64LessThan     | Ensures a float64 is less than a specified value (exclusive).                    |
+| tFloat64    | AssureFloat64NotNaN       | Ensures a float64 is not NaN.                                                    |
+| tDuration   | AssureDurationGreaterThan | Ensures a time.Duration is greater than a specified value (exclusive).           |
+| tDuration   | AssureDurationLessThan    | Ensures a time.Duration is less than a specified value (exclusive).              |
+| tDuration   | AssureDurationPositive    | Ensures a time.Duration is positive (greater than zero).                         |
+| tDuration   | AssureDurationMax         | Ensures a time.Duration does not exceed a maximum value.                         |
+| tDuration   | AssureDurationMin         | Ensures a time.Duration is at least a minimum value.                             |
+| tList       | AssureListNotEmpty        | Ensures a list (*ListFlag, *[]string, or []string) is not empty.                 |
+| tList       | AssureListMinLength       | Ensures a list has at least a minimum number of elements.                        |
+| tList       | AssureListContains        | Ensures a list contains a specific string value.                                 |
+| tList       | AssureListContainsKey     | Ensures a list contains a specific string.                                       |
+| tList       | AssureListLength          | Ensures a list has exactly the specified length.                                 |
+| tMap        | AssureMapNotEmpty         | Ensures a map (*MapFlag, *map[string]string, or map[string]string) is not empty. |
+| tMap        | AssureMapHasKey           | Ensures a map contains a specific key.                                           |
+| tMap        | AssureMapValueMatches     | Ensures a map has a specific key with a matching value.                          |
+| tMap        | AssureMapHasKeys          | Ensures a map contains all specified keys.                                       |
+| tMap        | AssureMapLength           | Ensures a map has exactly the specified length.                                  |
+
+
 
 ### Complex Example Usage
 
@@ -98,12 +150,7 @@ func main() {
         return nil
     })
     figs.NewInt64("maxRetries", 5, "Maximum retry attempts")
-    figs.WithValidator("maxRetries", func(v interface{}) error {
-        if val, ok := v.(int64); ok && val < 0 {
-            return fmt.Errorf("maxRetries cannot be negative")
-        }
-        return nil
-    })
+    figs.WithValidator("maxRetries", figtree.AssurePositiveInt64)
     figs.NewFloat64("threshold", 0.75, "Threshold value")
     figs.WithValidator("threshold", func(v interface{}) error {
         if val, ok := v.(float64); ok && (val < 0 || val > 1) {
@@ -121,12 +168,7 @@ func main() {
     figs.NewBool("debug", false, "Enable debug mode")
     figs.NewDuration("timeout", 30*time.Second, "Request timeout")
     figs.NewUnitDuration("interval", 1, time.Minute, "Polling interval in minutes")
-    figs.WithValidator("interval", func(v interface{}) error {
-        if val, ok := v.(time.Duration); ok && val < time.Minute {
-            return fmt.Errorf("interval must be at least 1 minute")
-        }
-        return nil
-    })
+    figs.WithValidator("interval", figtree.AssureDurationGreaterThan(30*time.Second))
     figs.NewList("servers", []string{"server1", "server2"}, "List of servers")
     figs.NewMap("metadata", map[string]string{"env": "prod", "version": "1.0"}, "Metadata key-value pairs")
     // Note: Each New* method registers a flag and initializes withered; WithValidator adds validation logic
@@ -135,7 +177,10 @@ func main() {
     configFile := filepath.Join(".", "config.yaml")
     if err := figs.ParseFile(configFile); err != nil {
         log.Printf("No config file at %s, using defaults: %v", configFile, err)
-        figs.Parse() // Parse command-line flags and environment variables
+        err := figs.Parse() // Parse command-line flags and environment variables
+        if err != nil {
+            log.Fatal(err)
+        }
     }
     // Note: LoadFile tries the specified file, then env vars; Parse handles flags/env if file fails
 
@@ -167,7 +212,7 @@ func main() {
                     *figs.String("endpoint"),
                     *figs.Bool("debug"),
                     *figs.Duration("timeout"),
-                    *figs.UnitDuration("interval", time.Minute),
+                    *figs.UnitDuration("interval"),
                     *figs.List("servers"),
                     *figs.Map("metadata"),
                 )
@@ -378,6 +423,9 @@ To generate a usage string with information about your configuration variables, 
 fmt.Println(figtree.New().Usage())
 ```
 
+On any runtime with `figs.Parse()` or subsequently activated figtree, you can run on your command line `-h` or `-help` 
+and print the `Usage()` func's output.
+
 The generated usage string includes information about each configuration variable, including its name, default value, description, and the source from which it was set (flag, environment, JSON, YAML, or INI).
 
 ## License
@@ -389,3 +437,5 @@ This package is distributed under the MIT License. See the [LICENSE](LICENSE) fi
 Contributions to this package are welcome. If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
 Enjoy using the Figtree package in your projects!
+
+

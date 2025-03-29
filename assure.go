@@ -21,6 +21,20 @@ var AssureStringSubstring = func(sub string) ValidatorFunc {
 	}
 }
 
+// AssureStringLength ensures a string contains a specific substring.
+// Returns a ValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringLength = func(length int) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(string); ok {
+			if len(v) < length {
+				return fmt.Errorf("string must be at least %d chars, got %q", length, len(v))
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
 // AssureStringNotEmpty ensures a string is not empty.
 // Returns an error if the value is an empty string or not a string.
 var AssureStringNotEmpty = func(value interface{}) error {

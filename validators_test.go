@@ -14,6 +14,12 @@ func TestTree_WithValidator(t *testing.T) {
 		fig.WithValidator(t.Name(), AssureStringNotEmpty)
 		assert.NotNil(t, fig.Parse())
 	})
+	t.Run("AssureStringLength ", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "i love yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringLength(13))
+		assert.Nil(t, fig.Parse())
+	})
 	t.Run("AssureStringSubstring", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
 		fig.NewString(t.Name(), "i love yahuah", "usage")
