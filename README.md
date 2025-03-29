@@ -5,6 +5,11 @@
 Fig Tree is a command line utility configuration manager that you can refer to as `figs`, as you con<b>FIG</b>ure your
 application's runtime.
 
+![Figtree](/figtree.jpg "Figtree by xAI Grok 3")
+
+This package is biblically inspired by YAHUAH, the only man who was mocked by the Jews for being
+crucified and came down from that cross to deliver the judgement of 70 AD. YAHUAH has returned.
+
 ## Installation
 
 To use `figtree` in your project, `go get` it...
