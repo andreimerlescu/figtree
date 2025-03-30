@@ -28,13 +28,37 @@ import "github.com/andreimerlescu/figtree"
 
 ### Using Fig Tree
 
+Creating a new Fig Tree can be done with the following strategies. Your choice. 
+
 | Method                                          | Usage                                 |
 |-------------------------------------------------|---------------------------------------|
 | `figtree.New()`                                 | Does not perform `Mutation` tracking. |
 | `figtree.Grow()`                                | Provides `Mutation` tracking.         |
 | `figtree.With(figtree.Options{Tracking: true})` | Provides `Mutation` tracking.         |
 
+When using `figtree.Options`, you can enable: 
+
+| Option              | What It Does                                                                                  | 
+|---------------------|-----------------------------------------------------------------------------------------------|
+| `Pollinate`         | Read `os.Getenv(key)` when a Getter on a Mutagenesis is called                                |
+| `Harvest`           | Slice length of `Mutation` for `Pollinate`                                                    |
+| `IgnoreEnvironment` | Ignore `os.Getenv()` and use `os.Clearenv()` inside `With(opts Options)`                      |
+| `Germinate`         | Ignore command line flags that begin with `-test.`                                            |
+| `Tracking`          | Sends `Mutation` into a receiver channel on `figs.Mutations()` whenever a `Fig` value changes |
+| `ConfigFile`        | Path to your `config.yaml` or `config.ini` or `config.json` file                              |
+
 Configurable properties have whats called metagenesis to them, which are types, like `String`, `Bool`, `Float64`, etc.
+
+| Mutagenesis     | Getter                                | Setter                                  | Fruit Getter            |
+|-----------------|---------------------------------------|-----------------------------------------|-------------------------|
+| `tString`       | `keyValue := *figs.String(key)`       | `figs.Store(tString, key, value)`       | `fig := figs.Fig(key)`  |
+| `tInt`          | `keyValue := *figs.Int(key)`          | `figs.Store(tInt, key, value)`          | `figs := figs.Fig(key)` |
+| `tInt64`        | `keyValue := *figs.Int64(key)`        | `figs.Store(tInt64, key, value)`        | `figs := figs.Fig(key)` |
+| `tFloat64`      | `keyValue := *figs.Float64(key)`      | `figs.Store(tFloat64, key, value)`      | `figs := figs.Fig(key)` |
+| `tDuration`     | `keyValue := *figs.Duration(key)`     | `figs.Store(tDuration, key, value)`     | `figs := figs.Fig(key)` |
+| `tUnitDuration` | `keyValue := *figs.UnitDuration(key)` | `figs.Store(tUnitDuration, key, value)` | `figs := figs.Fig(key)` |
+| `tList`         | `keyValue := *figs.List(key)`         | `figs.Store(tList, key, value)`         | `figs := figs.Fig(key)` |
+| `tMap`          | `keyValue := *figs.Map(key)`          | `figs.Store(tMap, key, value)`          | `figs := figs.Fig(key)` |
 
 New properties can be registered before calling Parse() using a metagenesis pattern of `figs.New<Metagenesis>()`, like
 `figs.NewString()` or `figs.NewFloat64()`, etc. 
@@ -77,9 +101,11 @@ func main() {
 | Mutagenesis | `figtree.ValidatorFunc`   | Notes                                                                            |
 |-------------|---------------------------|----------------------------------------------------------------------------------|
 | tString     | AssureStringLength        | Ensures a string is a specific length.                                           |
+| tString     | AssureStringNotLength     | Ensures a string is not a specific length.                                       |
 | tString     | AssureStringSubstring     | Ensures a string contains a specific substring (case-sensitive).                 |
 | tString     | AssureStringNotEmpty      | Ensures a string is not empty.                                                   |
 | tString     | AssureStringContains      | Ensures a string contains a specific substring.                                  |
+| tString     | AssureStringNotContains   | Ensures a string does not contains a specific substring.                         |
 | tBool       | AssureBoolTrue            | Ensures a boolean value is true.                                                 |
 | tBool       | AssureBoolFalse           | Ensures a boolean value is false.                                                |
 | tInt        | AssurePositiveInt         | Ensures an integer is positive (greater than zero).                              |
@@ -104,15 +130,95 @@ func main() {
 | tList       | AssureListNotEmpty        | Ensures a list (*ListFlag, *[]string, or []string) is not empty.                 |
 | tList       | AssureListMinLength       | Ensures a list has at least a minimum number of elements.                        |
 | tList       | AssureListContains        | Ensures a list contains a specific string value.                                 |
+| tList       | AssureListNotContains     | Ensures a list does not contain a specific string value.                         |
 | tList       | AssureListContainsKey     | Ensures a list contains a specific string.                                       |
 | tList       | AssureListLength          | Ensures a list has exactly the specified length.                                 |
+| tList       | AssureListNotLength       | Ensures a list is not the specified length.                                      |
 | tMap        | AssureMapNotEmpty         | Ensures a map (*MapFlag, *map[string]string, or map[string]string) is not empty. |
 | tMap        | AssureMapHasKey           | Ensures a map contains a specific key.                                           |
 | tMap        | AssureMapValueMatches     | Ensures a map has a specific key with a matching value.                          |
 | tMap        | AssureMapHasKeys          | Ensures a map contains all specified keys.                                       |
 | tMap        | AssureMapLength           | Ensures a map has exactly the specified length.                                  |
+| tMap        | AssureMapNotLength        | Ensures a map not the specified length.                                          |
 
 
+### Callbacks
+
+The **Go** way of doing callbacks is to rely on the `Option.Tracking` set to `true` and receiving on the `figs.Mutations()`
+receiver channel. However, if you want to use Callbacks, you can register them various different ways. 
+
+```go
+func CheckAvailability(domain string) error {
+    // todo implement something that checks the availability of the domain
+    return nil
+}
+const kDomain string = "domain"
+figs := figtree.With(Options{Tracking: true, Harvest: 1776, Pollinate: true})
+figs.NewString(kDomain, "", "Domain name")
+figs.WithValidator(kDomain, figtree.AssureStringLengthGreaterThan(3))
+figs.WithValidator(kDomain, figtree.AssureStringHasPrefix("https://"))
+figs.WithCallback(kDomain, figree.CallbackAfterVerify, func(value interface{}) error {
+    var s string
+    switch v := value.(type) {
+    case *string:
+        s = *v
+    case string:
+        s = v
+    }
+    // try connecting to the domain now
+    return CheckAvailability(s)
+})
+figs.WithCallback(kDomain, figree.CallbackAfterRead, func(value interface{}) error {
+    // every time *figs.String(kDomain) is called, run this
+	var s string
+	switch v := value.(type) {
+    case *string:
+        s = *v
+    case string:
+        s = v
+    }
+    log.Printf("CallbackAfterRead invoked for %s", s)
+    return nil
+})
+figs.WithCallback(kDomain, figtree.CallbackAfterChange, func(value interface{}) error{
+    var s string
+    switch v := value.(type) {
+    case *string:
+        s = *v
+    case string:
+        s = v
+    }
+    log.Printf("CallbackAfterChange invoked for %s", s)
+    return nil
+})
+err := figs.Parse() // CallbackAfterVerify invoked
+if err != nil {
+    log.Fatal(err)
+}
+
+domain := *figs.String(kDomain) // CallbackAfterRead invoked
+figs.Store(kDomain, "https://newdomain.com") // CallbackAfterChange invoked
+err := figs.HasError(kDomain)
+if err != nil {
+    log.Fatal(err)
+}
+newDomain := *figs.String(kDomain) // CallbackAfterRead invoked
+log.Printf("domain = %s ; newDomain = %s", domain, newDomain)
+```
+
+The second argument to the `WithCallback` func is a `ChangeAfter` type. 
+
+| Option                 | When It's Triggered                                                                |
+|------------------------|------------------------------------------------------------------------------------|
+| `CallbackAfterVerify`  | Called on `.Parse()`, `.ParseFile()`, `Load()`, or `LoadFile()`                    | 
+| `CallbackAfterRead`    | Called on Mutagenesis Getters like `figs.String(key)` or `figs.<Mutagenesis>(key)` |
+| `CallbackAfterChanged` | Called on `.Store(Mutagenesis, key, value)` and `.Resurrect(key)`                  |
+
+When using callbacks, you will want to make sure that you're keeping on top of what you're assigning to each `Fig`.
+
+With callbacks, you can really slow the performance down of `figtree`, but when used sparingly, its extremely powerful.
+
+At the end of the day, you'll know what's best to use. I build what I build because its the best that I use.
 
 ### Complex Example Usage
 
@@ -436,6 +542,24 @@ The generated usage string includes information about each configuration variabl
 ## License
 
 This package is distributed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+
+## Version History
+
+### v2.0.0 (Latest)
+
+This update introduces callbacks, enable multiple validators per key, and adds negating `Assure<Mutagenesis><Func>` to ValidatorFunc definitions.
+
+### v1.0.1 
+
+This update released additional `Assure<Mutagenesis><Func>` ValidatorFunc definitions and enabled pollination.
+
+### v1.0.0
+
+The `figtree` was enhanced and introduced a lot of new functionality.
+
+### v0.0.1 
+
+The `figtree` package was called `configurable` at this point, and lacked a lot of functionality.
 
 ## Contributing
 

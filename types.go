@@ -9,6 +9,11 @@ import (
 
 // Fruit defines the interface for configuration management.
 type Fruit interface {
+	// WithCallback registers a new CallbackAfter with a CallbackFunc on a Fig on the Tree by its name
+	WithCallback(name string, whenCallback CallbackAfter, runThis CallbackFunc) Fruit
+	// Fig returns a Fig from the Tree by its name
+	Fig(name string) *Fig
+
 	// WithValidator binds a ValidatorFunc to a Fig that returns Fruit
 	WithValidator(name string, validator func(interface{}) error) Fruit
 	// Parse can panic but interprets command line arguments defined with single dashes -example value -another sample
@@ -112,10 +117,12 @@ type Tree struct {
 	withered       map[string]Fig
 	mu             sync.RWMutex
 	tracking       bool
+	problems       []error
 	mutationsCh    chan Mutation
 	flagSet        *flag.FlagSet
 	filterTests    bool
 	angel          *atomic.Bool
+	ignoreEnv      bool
 }
 
 // Mutagenesis stores the type as a string like String, Bool, Float, etc to represent a supported Type
@@ -135,17 +142,31 @@ type Options struct {
 
 	// Pollinate will enable Getters to lookup the environment for changes on every read
 	Pollinate bool
+
+	// IgnoreEnvironment is a part of free will, it lets us disregard our environment (ENV vars)
+	IgnoreEnvironment bool
 }
 
 type ValidatorFunc func(interface{}) error
 
 type Fig struct {
-	Flesh       interface{}
-	Mutagenesis Mutagenesis
-	Validator   ValidatorFunc
-	Error       error
-	Mutations   []Mutation
+	Validators    []ValidatorFunc
+	Mutations     []Mutation
+	Callbacks     []Callback
+	CallbackAfter CallbackAfter
+	Error         error
+	Mutagenesis   Mutagenesis
+	Flesh         interface{}
 }
+
+type Callback struct {
+	CallbackAfter CallbackAfter
+	CallbackFunc  CallbackFunc
+}
+
+type CallbackAfter string
+
+type CallbackFunc func(interface{}) error
 
 type Mutation struct {
 	Property string
@@ -154,4 +175,5 @@ type Mutation struct {
 	Old      interface{}
 	New      interface{}
 	When     time.Time
+	Error    error
 }

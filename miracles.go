@@ -13,42 +13,55 @@ import (
 )
 
 // Mutations returns a receiver channel of Mutation data
-func (fig *Tree) Mutations() <-chan Mutation {
-	return fig.mutationsCh
+func (tree *Tree) Mutations() <-chan Mutation {
+	return tree.mutationsCh
 }
 
 // Recall is when you bring the mutations channel back to life and you unlock making further changes to the fig *Tree
-func (fig *Tree) Recall() {
-	fig.angel.Store(false)
-	fig.mutationsCh = make(chan Mutation, fig.harvest)
-	fig.tracking = true
+func (tree *Tree) Recall() {
+	tree.angel.Store(false)
+	tree.mutationsCh = make(chan Mutation, tree.harvest)
+	tree.tracking = true
 }
 
 // Curse is when you lock the fig *Tree from further changes, stop tracking and close the channel
-func (fig *Tree) Curse() {
-	fig.angel.Store(true)
-	fig.tracking = false
-	close(fig.mutationsCh)
+func (tree *Tree) Curse() {
+	tree.angel.Store(true)
+	tree.tracking = false
+	close(tree.mutationsCh)
 }
 
 // Resurrect revives a missing or nil definition, checking env and config files first
-func (fig *Tree) Resurrect(name string) {
-	fig.mu.Lock()
-	defer fig.mu.Unlock()
-	if _, exists := fig.figs[name]; !exists {
+func (tree *Tree) Resurrect(name string) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	if _, exists := tree.figs[name]; !exists {
 		// Check environment first
-		if val, ok := os.LookupEnv(name); ok {
-			ptr := new(string)
-			*ptr = strings.Clone(val) // Use strings.Clone as requested
-			fig.figs[name] = &Fig{Flesh: ptr}
-			flag.String(name, val, "Resurrected from environment")
-			return
+		if !tree.ignoreEnv {
+			if val, ok := os.LookupEnv(name); ok {
+				ptr := new(string)
+				*ptr = strings.Clone(val) // Use strings.Clone as requested
+				tree.figs[name] = &Fig{
+					Flesh:         ptr,
+					Mutagenesis:   tree.MutagensisOf(val),
+					Validators:    make([]ValidatorFunc, 0),
+					Callbacks:     make([]Callback, 0),
+					Mutations:     make([]Mutation, 0),
+					CallbackAfter: CallbackAfterRead,
+				}
+				flag.String(name, val, "Resurrected from environment")
+				return
+			}
 		}
 
 		// Check config files with traditional for loop
+		envVal := ""
+		if !tree.ignoreEnv {
+			envVal = os.Getenv(EnvironmentKey)
+		}
 		files := []string{
-			os.Getenv(EnvironmentKey),
-			fig.ConfigFilePath,
+			envVal,
+			tree.ConfigFilePath,
 			ConfigFilePath,
 			filepath.Join(".", DefaultJSONFile),
 			filepath.Join(".", DefaultINIFile),
@@ -69,7 +82,14 @@ func (fig *Tree) Resurrect(name string) {
 							if strVal, err := toString(m[name]); err == nil {
 								ptr := new(string)
 								*ptr = strings.Clone(strVal)
-								fig.figs[name] = &Fig{Flesh: ptr}
+								tree.figs[name] = &Fig{
+									Flesh:         ptr,
+									Mutagenesis:   tree.MutagensisOf(ptr),
+									Validators:    make([]ValidatorFunc, 0),
+									Callbacks:     make([]Callback, 0),
+									Mutations:     make([]Mutation, 0),
+									CallbackAfter: CallbackAfterRead,
+								}
 								flag.String(name, strVal, "Resurrected from JSON")
 								return
 							}
@@ -79,7 +99,14 @@ func (fig *Tree) Resurrect(name string) {
 							if strVal, err := toString(m[name]); err == nil {
 								ptr := new(string)
 								*ptr = strings.Clone(strVal)
-								fig.figs[name] = &Fig{Flesh: ptr}
+								tree.figs[name] = &Fig{
+									Flesh:         ptr,
+									Mutagenesis:   tree.MutagensisOf(ptr),
+									Validators:    make([]ValidatorFunc, 0),
+									Callbacks:     make([]Callback, 0),
+									Mutations:     make([]Mutation, 0),
+									CallbackAfter: CallbackAfterRead,
+								}
 								flag.String(name, strVal, "Resurrected from YAML")
 								return
 							}
@@ -89,7 +116,14 @@ func (fig *Tree) Resurrect(name string) {
 							if val := cfg.Section("").Key(name).String(); val != "" {
 								ptr := new(string)
 								*ptr = strings.Clone(val)
-								fig.figs[name] = &Fig{Flesh: ptr}
+								tree.figs[name] = &Fig{
+									Flesh:         ptr,
+									Mutagenesis:   tree.MutagensisOf(ptr),
+									Validators:    make([]ValidatorFunc, 0),
+									Callbacks:     make([]Callback, 0),
+									Mutations:     make([]Mutation, 0),
+									CallbackAfter: CallbackAfterRead,
+								}
 								flag.String(name, val, "Resurrected from INI")
 								return
 							}
@@ -102,7 +136,25 @@ func (fig *Tree) Resurrect(name string) {
 		// Default to empty string if no value found
 		ptr := new(string)
 		*ptr = ""
-		fig.figs[name] = &Fig{Flesh: ptr}
+		tree.figs[name] = &Fig{
+			Flesh:         ptr,
+			Mutagenesis:   tree.MutagensisOf(ptr),
+			Validators:    make([]ValidatorFunc, 0),
+			Callbacks:     make([]Callback, 0),
+			Mutations:     make([]Mutation, 0),
+			CallbackAfter: CallbackAfterRead,
+		}
 		flag.String(name, "", "Resurrected configuration")
 	}
+}
+
+// Fig returns a Fig on the fig Tree
+func (tree *Tree) Fig(name string) *Fig {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	fruit, exists := tree.figs[name]
+	if !exists {
+		return nil
+	}
+	return fruit
 }

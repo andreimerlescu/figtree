@@ -10,7 +10,7 @@ import (
 )
 
 // Usage prints a helpful table of figs in a human-readable format
-func (fig *Tree) Usage() string {
+func (tree *Tree) Usage() string {
 	// Determine terminal width (default to 80 if unavailable)
 	termWidth := 80
 	if term.IsTerminal(int(os.Stdout.Fd())) {
@@ -38,7 +38,7 @@ func (fig *Tree) Usage() string {
 
 	// Build the usage string
 	var sb strings.Builder
-	_, _ = fmt.Fprintf(&sb, "Usage of %s:\n", os.Args[0])
+	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", os.Args[0], VERSION)
 	flag.VisitAll(func(f *flag.Flag) {
 		// Format the flag name and default value
 		flagStr := f.Name
@@ -50,13 +50,13 @@ func (fig *Tree) Usage() string {
 			flagStr = fmt.Sprintf("%s[=%s]", f.Name, defValue)
 		}
 
-		// Get the type from fig.figs
+		// Get the type from tree.figs
 		typeStr := "Unknown"
-		fig.mu.RLock()
-		if fig, ok := fig.figs[f.Name]; ok && fig != nil {
+		tree.mu.RLock()
+		if fig, ok := tree.figs[f.Name]; ok && fig != nil {
 			typeStr = string(fig.Mutagenesis)
 		}
-		fig.mu.RUnlock()
+		tree.mu.RUnlock()
 		typeField := fmt.Sprintf("[%s]", typeStr)
 
 		// Start building the line

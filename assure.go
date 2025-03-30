@@ -91,6 +91,20 @@ var AssureStringLength = func(length int) ValidatorFunc {
 	}
 }
 
+// AssureStringNotLength ensures a string contains a specific substring.
+// Returns a ValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringNotLength = func(length int) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(string); ok {
+			if len(v) == length {
+				return fmt.Errorf("string must not be %d chars, got %q", length, len(v))
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
 // AssureStringNotEmpty ensures a string is not empty.
 // Returns an error if the value is an empty string or not a string.
 var AssureStringNotEmpty = func(value interface{}) error {
@@ -110,6 +124,28 @@ var AssureStringContains = func(substring string) ValidatorFunc {
 		if v, ok := value.(string); ok {
 			if !strings.Contains(v, substring) {
 				return fmt.Errorf("string must contain %q, got %q", substring, v)
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, got %T", value)
+	}
+}
+
+// AssureStringNotContains ensures a string contains a specific substring.
+// Returns an error if the substring is not found or if the value is not a string.
+var AssureStringNotContains = func(substring string) ValidatorFunc {
+	return func(value interface{}) error {
+		v, ok := value.(string)
+		if ok {
+			if strings.Contains(v, substring) {
+				return fmt.Errorf("string must not contain %q, got %q", substring, v)
+			}
+			return nil
+		}
+		v2, ok2 := value.(*string)
+		if ok2 {
+			if strings.Contains(*v2, substring) {
+				return fmt.Errorf("string must not contain %q, got %q", substring, *v2)
 			}
 			return nil
 		}
@@ -489,6 +525,38 @@ var AssureListContains = func(value string) ValidatorFunc {
 	}
 }
 
+// AssureListNotContains ensures a list contains a specific string value.
+// Returns a ValidatorFunc that checks for the presence of the value.
+var AssureListNotContains = func(value string) ValidatorFunc {
+	return func(v interface{}) error {
+		if list, ok := v.(*ListFlag); ok && list != nil {
+			for _, item := range *list.values {
+				if item == value {
+					return fmt.Errorf("list cannot contain %s", item)
+				}
+			}
+			return nil
+		}
+		if list, ok := v.(*[]string); ok && list != nil {
+			for _, item := range *list {
+				if item == value {
+					return fmt.Errorf("list cannot contain %s", item)
+				}
+			}
+			return nil
+		}
+		if list, ok := v.([]string); ok && list != nil {
+			for _, item := range list {
+				if item == value {
+					return fmt.Errorf("list cannot contain %s", item)
+				}
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
+	}
+}
+
 // AssureListContainsKey ensures a list contains a specific string.
 // It accepts *ListFlag, *[]string, or []string and returns an error if the key string is not found
 // or the type is invalid.
@@ -611,6 +679,32 @@ var AssureMapHasKey = func(key string) ValidatorFunc {
 	}
 }
 
+// AssureMapHasNoKey ensures a map contains a specific key.
+// Returns an error if the key is missing or the value is not a MapFlag.
+var AssureMapHasNoKey = func(key string) ValidatorFunc {
+	return func(value interface{}) error {
+		switch v := value.(type) {
+		case *MapFlag:
+			if _, exists := (*v.values)[key]; exists {
+				return fmt.Errorf("map must not contain key %q", key)
+			}
+			return nil
+		case *map[string]string:
+			if _, exists := (*v)[key]; exists {
+				return fmt.Errorf("map must not contain key %q", key)
+			}
+			return nil
+		case map[string]string:
+			if _, exists := v[key]; exists {
+				return fmt.Errorf("map must not contain key %q", key)
+			}
+			return nil
+		default:
+			return fmt.Errorf("invalid type, got %T", value)
+		}
+	}
+}
+
 // AssureMapValueMatches ensures a map has a specific key with a matching value.
 // Returns a ValidatorFunc that checks for the key-value pair.
 var AssureMapValueMatches = func(key, value string) ValidatorFunc {
@@ -711,6 +805,39 @@ var AssureMapLength = func(length int) ValidatorFunc {
 		case map[string]string:
 			if len(m) != length {
 				return fmt.Errorf("map must have length %d, got %d", length, len(m))
+			}
+			return nil
+		default:
+			return fmt.Errorf("invalid type, expected *MapFlag or map[string]string, got %T", value)
+		}
+	}
+}
+
+// AssureMapNotLength ensures a map has exactly the specified length.
+// It accepts *MapFlag, *map[string]string, or map[string]string and returns an error
+// if the length differs or the type is invalid.
+var AssureMapNotLength = func(length int) ValidatorFunc {
+	return func(value interface{}) error {
+		switch m := value.(type) {
+		case *MapFlag:
+			if m == nil {
+				return fmt.Errorf("map is nil")
+			}
+			if len(*m.values) == length {
+				return fmt.Errorf("map must not have length %d, got %d", length, len(*m.values))
+			}
+			return nil
+		case *map[string]string:
+			if m == nil {
+				return fmt.Errorf("map is nil")
+			}
+			if len(*m) == length {
+				return fmt.Errorf("map must not have length %d, got %d", length, len(*m))
+			}
+			return nil
+		case map[string]string:
+			if len(m) == length {
+				return fmt.Errorf("map must not have length %d, got %d", length, len(m))
 			}
 			return nil
 		default:

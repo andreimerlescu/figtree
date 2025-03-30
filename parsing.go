@@ -7,38 +7,38 @@ import (
 // Parsing Configuration
 
 // Parse uses Tree.flagSet to run flag.Parse() on the registered figs and returns nil for validated results
-func (fig *Tree) Parse() (err error) {
-	fig.activateFlagSet()
+func (tree *Tree) Parse() (err error) {
+	tree.activateFlagSet()
 	args := os.Args[1:]
-	if fig.filterTests {
+	if tree.filterTests {
 		args = filterTestFlags(args)
-		err = fig.flagSet.Parse(args)
+		err = tree.flagSet.Parse(args)
 	} else {
-		err = fig.flagSet.Parse(args)
+		err = tree.flagSet.Parse(args)
 	}
 	if err != nil {
 		return err
 	}
-	fig.readEnv()
-	return fig.validateAll()
+	tree.readEnv()
+	return tree.validateAll()
 }
 
 // ParseFile will check if filename is set and run loadFile on it.
-func (fig *Tree) ParseFile(filename string) (err error) {
-	fig.activateFlagSet()
+func (tree *Tree) ParseFile(filename string) (err error) {
+	tree.activateFlagSet()
 	args := os.Args[1:]
-	if fig.filterTests {
+	if tree.filterTests {
 		args = filterTestFlags(args)
-		err = fig.flagSet.Parse(args)
+		err = tree.flagSet.Parse(args)
 	} else {
-		err = fig.flagSet.Parse(args)
+		err = tree.flagSet.Parse(args)
 	}
 	if err != nil {
 		return err
 	}
 	if filename != "" {
-		return fig.loadFile(filename)
+		return tree.loadFile(filename)
 	}
-	fig.readEnv()
-	return fig.validateAll()
+	tree.readEnv()
+	return tree.validateAll()
 }
