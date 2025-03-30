@@ -9,7 +9,7 @@ const (
 	DefaultJSONFile string = "config.json" // Default filename for a JSON configuration file
 	DefaultINIFile  string = "config.ini"  // Default filename for a INI configuration file
 
-	VERSION = "v1.0.1"
+	VERSION = "v2.0.0"
 
 	tString       Mutagenesis = "String"
 	tBool         Mutagenesis = "Bool"
@@ -21,6 +21,10 @@ const (
 	tList         Mutagenesis = "List"
 	tMap          Mutagenesis = "Map"
 )
+
+const CallbackAfterChange CallbackAfter = "CallbackAfterChange"
+const CallbackAfterRead CallbackAfter = "CallbackAfterRead"
+const CallbackAfterVerify CallbackAfter = "CallbackAfterVerify"
 
 // Mutageneses is the plural form of Mutagenesis and this is a slice of Mutagenesis
 var Mutageneses = []Mutagenesis{tString, tBool, tInt, tInt64, tFloat64, tDuration, tUnitDuration, tList, tMap}

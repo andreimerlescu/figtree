@@ -138,40 +138,6 @@ func TestGrow(t *testing.T) {
 	}
 }
 
-func TestTree_PollinateString(t *testing.T) {
-	figs := With(Options{Pollinate: true, Tracking: true, Germinate: true})
-	figs.NewString("test", "initial", "usage")
-	figs.WithValidator("test", AssureStringContains("ini"))
-	assert.NoError(t, figs.Parse())
-	assert.Equal(t, "initial", *figs.String("test"))
-
-	// Set environment variable
-	go func() {
-		timer := time.NewTimer(time.Second * 1)
-		checker := time.NewTicker(100 * time.Millisecond)
-		for {
-			select {
-			case <-timer.C:
-				assert.Equal(t, "updated", *figs.String("test"))
-				return
-			case <-checker.C:
-				assert.NoError(t, os.Setenv("test", "updated"))
-			}
-		}
-	}()
-	defer assert.NoError(t, os.Unsetenv("test"))
-
-	// Verify mutation
-	mutation, ok := <-figs.Mutations()
-	if ok {
-		assert.Equal(t, "test", mutation.Property)
-		assert.Equal(t, "string", mutation.Kind)
-		assert.Equal(t, "StoreString", mutation.Way)
-		assert.Equal(t, "initial", mutation.Old)
-		assert.Equal(t, "updated", mutation.New)
-	}
-}
-
 func TestIsTracking(t *testing.T) {
 	// Add a timeout to ensure the test fails if it runs too long
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute+34*time.Second)
@@ -288,4 +254,59 @@ func TestIsTracking(t *testing.T) {
 		finalVal := figs.String(k)
 		assert.NotNil(t, finalVal)
 	})
+}
+
+/*
+func TestTree_PollinateInt(t *testing.T) {
+
+}
+func TestTree_PollinateInt64(t *testing.T) {
+
+}
+func TestTree_PollinateFloat64(t *testing.T) {
+
+}
+func TestTree_PollinateDuration(t *testing.T) {
+
+}
+func TestTree_PollinateUnitDuration(t *testing.T) {
+
+}
+func TestTree_PollinateList(t *testing.T) {
+
+}
+func TestTree_PollinateMap(t *testing.T) {
+
+}
+*/
+
+func TestTree_PollinateString(t *testing.T) {
+	figs := With(Options{Pollinate: true, Tracking: true, Germinate: true})
+	figs.NewString("test", "initial", "usage")
+	figs.WithValidator("test", AssureStringContains("ini"))
+	assert.NoError(t, figs.Parse())
+	assert.Equal(t, "initial", *figs.String("test"))
+	go func() {
+		timer := time.NewTimer(time.Second * 1)
+		checker := time.NewTicker(100 * time.Millisecond)
+		for {
+			select {
+			case <-timer.C:
+				assert.Equal(t, "updated", *figs.String("test"))
+				return
+			case <-checker.C:
+				assert.NoError(t, os.Setenv("test", "updated"))
+			}
+		}
+	}()
+	defer assert.NoError(t, os.Unsetenv("test"))
+	mutation, ok := <-figs.Mutations()
+	if ok {
+		assert.Equal(t, "test", mutation.Property)
+		assert.Equal(t, "string", mutation.Kind)
+		assert.Equal(t, "StoreString", mutation.Way)
+		assert.Equal(t, "initial", mutation.Old)
+		assert.Equal(t, "updated", mutation.New)
+		assert.NoError(t, mutation.Error)
+	}
 }

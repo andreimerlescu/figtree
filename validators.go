@@ -6,51 +6,61 @@ import (
 )
 
 // WithValidator adds a validator to an int flag
-func (fig *Tree) WithValidator(name string, validator func(interface{}) error) Fruit {
-	fig.mu.Lock()
-	defer fig.mu.Unlock()
-	if def, ok := fig.figs[name]; ok {
-		if def.Validator != nil {
-			fig.figs[name].Error = fmt.Errorf("validator for fig already exists, overwriting old validator")
+//
+// Example:
+//
+//			figs := figtree.With(Options{Pollinate: true, Tracking: true, IgnoreEnvironment: true})
+//			figs.NewString("domain", "", "domain name")
+//	 	figs.WithValidator("domain", figtree.AssureStringHasPrefix("https://"))
+//			err := figs.Parse() // if you're NOT using ./config.yaml
+//			OR err := figs.Load() // if you're using ./config.yaml to populate domain
+func (tree *Tree) WithValidator(name string, validator func(interface{}) error) Fruit {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	if fig, ok := tree.figs[name]; ok {
+		if fig.Validators == nil {
+			fig.Validators = make([]ValidatorFunc, 0)
 		}
-		def.Validator = validator
-		fig.figs[name] = def
+		fig.Validators = append(fig.Validators, validator)
+		tree.figs[name] = fig
 	}
-	return fig
+	return tree
 }
 
-// validateAll looks at Fig ValidatorFunc and returns the error if it fails
-func (fig *Tree) validateAll() error {
-	fig.mu.RLock()
-	defer fig.mu.RUnlock()
-	for name, fruit := range fig.figs {
+// validateAll looks at Fig ValidatorFunc and returns the error if it fails otherwise it calls Tree.runCallbacks()
+func (tree *Tree) validateAll() error {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	for name, fruit := range tree.figs {
 		if fruit.Error != nil {
 			return fruit.Error
 		}
-		if fruit != nil && fruit.Validator != nil {
-			var val interface{}
-			switch v := fruit.Flesh.(type) {
-			case *int:
-				val = *v
-			case *int64:
-				val = *v
-			case *float64:
-				val = *v
-			case *string:
-				val = *v
-			case *bool:
-				val = *v
-			case *time.Duration:
-				val = *v
-			case *ListFlag:
-				val = *v.values
-			case *MapFlag:
-				val = *v.values
-			}
-			if err := fruit.Validator(val); err != nil {
-				return fmt.Errorf("validation failed for %s: %v", name, err)
+		for _, validator := range fruit.Validators {
+			if fruit != nil && validator != nil {
+				var val interface{}
+				switch v := fruit.Flesh.(type) {
+				case *int:
+					val = *v
+				case *int64:
+					val = *v
+				case *float64:
+					val = *v
+				case *string:
+					val = *v
+				case *bool:
+					val = *v
+				case *time.Duration:
+					val = *v
+				case *ListFlag:
+					val = *v.values
+				case *MapFlag:
+					val = *v.values
+				}
+				if err := validator(val); err != nil {
+					return fmt.Errorf("validation failed for %s: %v", name, err)
+				}
 			}
 		}
 	}
-	return nil
+	return tree.runCallbacks(CallbackAfterVerify)
 }

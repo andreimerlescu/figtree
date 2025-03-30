@@ -18,7 +18,7 @@ import (
 // CONFIGURABLE INTERNAL FUNCTIONS
 
 // loadFile will parse the filename for .yaml or .ini or .json and run the related loadJSON, loadYAML, or loadINI on it
-func (fig *Tree) loadFile(filename string) error {
+func (tree *Tree) loadFile(filename string) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err
@@ -26,96 +26,209 @@ func (fig *Tree) loadFile(filename string) error {
 	ext := strings.ToLower(filepath.Ext(filename))
 	switch ext {
 	case ".json":
-		return fig.loadJSON(data)
+		return tree.loadJSON(data)
 	case ".yaml", ".yml":
-		return fig.loadYAML(data)
+		return tree.loadYAML(data)
 	case ".ini":
-		return fig.loadINI(data)
+		return tree.loadINI(data)
 	default:
 		return errors.New("unsupported file extension")
 	}
 }
 
 // loadJSON parses the DefaultJSONFile or the value of the EnvironmentKey or ConfigFilePath into json.Unmarshal
-func (fig *Tree) loadJSON(data []byte) error {
+func (tree *Tree) loadJSON(data []byte) error {
 	var jsonData map[string]interface{}
 	if err := json.Unmarshal(data, &jsonData); err != nil {
 		return err
 	}
-	return fig.setValuesFromMap(jsonData)
+	return tree.setValuesFromMap(jsonData)
 }
 
 // loadYAML parses the DefaultYAMLFile or the value of the EnvironmentKey or ConfigFilePath into yaml.Unmarshal
-func (fig *Tree) loadYAML(data []byte) error {
+func (tree *Tree) loadYAML(data []byte) error {
 	var yamlData map[string]interface{}
 	if err := yaml.Unmarshal(data, &yamlData); err != nil {
 		return err
 	}
-	fig.mu.Lock()
-	defer fig.mu.Unlock()
-	fig.activateFlagSet()
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.activateFlagSet()
 	for n, d := range yamlData {
-		t := fig.MutagensisOf(d)
+		t := tree.MutagensisOf(d)
 		var fruit *Fig
 		var exists bool
-		if fruit, exists = fig.figs[n]; exists && fruit != nil {
-			tf := fig.MutagensisOf(fruit.Flesh)
+		if fruit, exists = tree.figs[n]; exists && fruit != nil {
+			tf := tree.MutagensisOf(fruit.Flesh)
 			if strings.EqualFold(string(tf), string(t)) {
-				fig.figs[n].Flesh = d
+				tree.figs[n].Flesh = d
 				continue
 			}
 		}
+
 		switch d.(type) {
 		case *string:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tString, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tString, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tString,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tString,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *bool:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tBool, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tBool, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tBool,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tBool,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *int:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tInt, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tInt, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tInt,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tInt,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *int64:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tInt64, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tInt64, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tInt64,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tInt64,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *float64:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tFloat64, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tFloat64, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tFloat64,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tFloat64,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *time.Duration:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tDuration, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tDuration, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tDuration,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tDuration,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *[]string:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tList, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tList, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tList,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tList,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		case *map[string]string:
-			fig.figs[n] = &Fig{Flesh: d, Mutagenesis: tMap, Mutations: make([]Mutation, 0)}
-			fig.withered[n] = Fig{Flesh: d, Mutagenesis: tMap, Mutations: make([]Mutation, 0)}
+			tree.figs[n] = &Fig{
+				Flesh:         d,
+				Mutagenesis:   tMap,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
+			tree.withered[n] = Fig{
+				Flesh:         d,
+				Mutagenesis:   tMap,
+				Mutations:     make([]Mutation, 0),
+				Validators:    make([]ValidatorFunc, 0),
+				Callbacks:     make([]Callback, 0),
+				CallbackAfter: CallbackAfterVerify,
+			}
 		}
 	}
 
-	return fig.setValuesFromMap(yamlData)
+	return tree.setValuesFromMap(yamlData)
 }
 
 // loadINI parses the DefaultINIFile or the value of the EnvironmentKey or ConfigFilePath into ini.Load()
-func (fig *Tree) loadINI(data []byte) error {
+func (tree *Tree) loadINI(data []byte) error {
 	cfg, err := ini.Load(data)
 	if err != nil {
 		return err
 	}
 	iniData := make(map[string]interface{})
-	for key := range fig.figs {
+	for key := range tree.figs {
 		if val := cfg.Section("").Key(key).String(); val != "" {
 			iniData[key] = val
 		}
 	}
-	return fig.setValuesFromMap(iniData)
+	return tree.setValuesFromMap(iniData)
 }
 
 // setValuesFromMap uses the data map to store the configurable figs
-func (fig *Tree) setValuesFromMap(data map[string]interface{}) error {
+func (tree *Tree) setValuesFromMap(data map[string]interface{}) error {
 	for key, value := range data {
-		if _, exists := fig.figs[key]; exists {
-			if err := fig.mutateFig(key, value); err != nil {
+		if _, exists := tree.figs[key]; exists {
+			if err := tree.mutateFig(key, value); err != nil {
 				return fmt.Errorf("error setting key %s: %w", key, err)
 			}
 		}
@@ -123,9 +236,9 @@ func (fig *Tree) setValuesFromMap(data map[string]interface{}) error {
 	return nil
 }
 
-func (fig *Tree) setValue(flagVal interface{}, value interface{}) error {
-	fig.mu.Lock()
-	defer fig.mu.Unlock()
+func (tree *Tree) setValue(flagVal interface{}, value interface{}) error {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
 	switch ptr := flagVal.(type) {
 	case *int:
 		if v, ok := value.(int); ok {
@@ -210,46 +323,48 @@ func (fig *Tree) setValue(flagVal interface{}, value interface{}) error {
 }
 
 // readEnv checks the os.LookupEnv on each Fig in the Tree
-func (fig *Tree) readEnv() {
-	for name := range fig.figs {
-		fig.checkAndSetFromEnv(name)
+func (tree *Tree) readEnv() {
+	for name := range tree.figs {
+		tree.checkAndSetFromEnv(name)
 	}
 }
 
 // checkAndSetFromEnv uses os.LookupEnv and assigns it to the figs name value
-func (fig *Tree) checkAndSetFromEnv(name string) {
-	if val, exists := os.LookupEnv(name); exists {
-		_ = fig.mutateFig(name, val)
+func (tree *Tree) checkAndSetFromEnv(name string) {
+	if !tree.ignoreEnv {
+		if val, exists := os.LookupEnv(name); exists {
+			_ = tree.mutateFig(name, val)
+		}
 	}
 }
 
 // mutateFig replaces the value interface{} and sends a Mutation into Mutations
-func (fig *Tree) mutateFig(name string, value interface{}) error {
-	def, ok := fig.figs[name]
+func (tree *Tree) mutateFig(name string, value interface{}) error {
+	def, ok := tree.figs[name]
 	if !ok || def == nil {
-		fig.Resurrect(name)
-		def = fig.figs[name]
+		tree.Resurrect(name)
+		def = tree.figs[name]
 	}
 	if def == nil {
 		return fmt.Errorf("no definition for key %s", name)
 	}
 	var old interface{}
 	var dead interface{}
-	witheredFig, ok := fig.withered[name]
+	witheredFig, ok := tree.withered[name]
 	dead = witheredFig.Flesh
 	old = def.Flesh
 	def.Flesh = value
-	t1 := fig.MutagensisOf(&old)
-	t2 := fig.MutagensisOf(value)
+	t1 := tree.MutagensisOf(&old)
+	t2 := tree.MutagensisOf(value)
 	if t1 == "" && t2 != "" {
 		t1 = t2
 	}
 	if !strings.EqualFold(string(t1), string(t2)) {
 		return fmt.Errorf("type mismatch for key %s", name)
 	}
-	// if fig.tracking && old != dead && dead != value
-	if fig.tracking && !reflect.DeepEqual(old, dead) && !reflect.DeepEqual(dead, value) {
-		fig.mutationsCh <- Mutation{
+	// if tree.tracking && old != dead && dead != value
+	if tree.tracking && !reflect.DeepEqual(old, dead) && !reflect.DeepEqual(dead, value) {
+		tree.mutationsCh <- Mutation{
 			Property: name,
 			Kind:     fmt.Sprintf("%T", value),
 			Way:      "mutateFig",
@@ -262,15 +377,15 @@ func (fig *Tree) mutateFig(name string, value interface{}) error {
 }
 
 // activateFlagSet sets flag.CommandLine to Tree.flagSet
-func (fig *Tree) activateFlagSet() Fruit {
-	flag.CommandLine = fig.flagSet
-	return fig
+func (tree *Tree) activateFlagSet() Fruit {
+	flag.CommandLine = tree.flagSet
+	return tree
 }
 
 // assignFlagSet assigns a new *flag.FlagSet to Tree.flagSet
-func (fig *Tree) assignFlagSet(newSet *flag.FlagSet) Fruit {
-	fig.flagSet = newSet
-	return fig
+func (tree *Tree) assignFlagSet(newSet *flag.FlagSet) Fruit {
+	tree.flagSet = newSet
+	return tree
 }
 
 // filterTestFlags removes test-specific flags (e.g., -test.v) from the args slice

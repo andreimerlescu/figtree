@@ -45,16 +45,33 @@ func Grow() Fruit {
 	return With(Options{Tracking: true})
 }
 
+// With creates a new fig Tree with predefined Options
+//
+// Example:
+//
+//		figs := With(Options{
+//			ConfigFilePath: "/opt/app/production.config.yaml",
+//			Pollinate: true,
+//			Tracking: true,
+//			Harvest: 369,
+//		})
+//		// define your figs.New<Mutagenesis>() here...
+//		figs.NewString("domain", "", "Domain name")
+//		figs.WithValidator("domain", figtree.AssureStringNotEmpty)
+//	 err := figs.Load()
+//	 domainInProductionConfigYamlFile := *figs.String("domain")
 func With(opts Options) Fruit {
 	angel := atomic.Bool{}
 	angel.Store(true)
 	fig := &Tree{
 		ConfigFilePath: opts.ConfigFile,
+		ignoreEnv:      opts.IgnoreEnvironment,
 		filterTests:    opts.Germinate,
 		pollinate:      opts.Pollinate,
 		tracking:       opts.Tracking,
 		harvest:        opts.Harvest,
 		angel:          &angel,
+		problems:       make([]error, 0),
 		figs:           make(map[string]*Fig),
 		withered:       make(map[string]Fig),
 		mu:             sync.RWMutex{},
@@ -62,5 +79,8 @@ func With(opts Options) Fruit {
 		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
 	angel.Store(false)
+	if opts.IgnoreEnvironment {
+		os.Clearenv()
+	}
 	return fig
 }
