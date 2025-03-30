@@ -7,6 +7,62 @@ import (
 	"time"
 )
 
+// AssureStringHasSuffix ensures a string ends with a suffix
+// Returns a ValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringHasSuffix = func(suffix string) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(string); ok {
+			if !strings.HasSuffix(v, suffix) {
+				return fmt.Errorf("string must have suffix substring %q, got %q", suffix, v)
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringHasPrefix ensures a string begins with a prefix
+// Returns a ValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringHasPrefix = func(prefix string) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(string); ok {
+			if !strings.HasPrefix(v, prefix) {
+				return fmt.Errorf("string must have prefix substring %q, got %q", prefix, v)
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringLengthLessThan ensures the string is less than an int
+// Returns a ValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringLengthLessThan = func(length int) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(string); ok {
+			if len(v) > length {
+				return fmt.Errorf("string must be less than %d chars, got %d", length, len(v))
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringLengthGreaterThan ensures the string is greater than an int
+// Returns a ValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringLengthGreaterThan = func(length int) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(string); ok {
+			if len(v) < length {
+				return fmt.Errorf("string must be greater than %d chars, got %d", length, len(v))
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
 // AssureStringSubstring ensures a string contains a specific substring.
 // Returns a ValidatorFunc that checks for the substring (case-sensitive).
 var AssureStringSubstring = func(sub string) ValidatorFunc {
@@ -183,9 +239,9 @@ var AssureInt64LessThan = func(below int64) ValidatorFunc {
 	}
 }
 
-// AssurePositiveInt64 ensures an int64 is positive.
+// AssureInt64Positive ensures an int64 is positive.
 // Returns an error if the value is zero or negative, or not an int64.
-var AssurePositiveInt64 = func(value interface{}) error {
+var AssureInt64Positive = func(value interface{}) error {
 	if v, ok := value.(int64); ok {
 		if v <= 0 {
 			return fmt.Errorf("value must be positive, got %d", v)
@@ -193,6 +249,20 @@ var AssurePositiveInt64 = func(value interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("invalid type, expected int64, got %T", value)
+}
+
+// AssureInt64InRange ensures an int64 is within a specified range (inclusive).
+// Returns a ValidatorFunc that checks the value against min and max.
+var AssureInt64InRange = func(min, max int64) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(int64); ok {
+			if v < min || v > max {
+				return fmt.Errorf("value must be between %d and %d, got %d", min, max, v)
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected int64, got %T", value)
+	}
 }
 
 // AssureFloat64Positive ensures a float64 is positive.
@@ -251,6 +321,18 @@ var AssureFloat64LessThan = func(below float64) ValidatorFunc {
 	}
 }
 
+// AssureFloat64NotNaN ensures a float64 is not NaN.
+// Returns an error if the value is NaN or not a float64.
+var AssureFloat64NotNaN = func(value interface{}) error {
+	if v, ok := value.(float64); ok {
+		if math.IsNaN(v) {
+			return fmt.Errorf("value must not be NaN, got %f", v)
+		}
+		return nil
+	}
+	return fmt.Errorf("invalid type, expected float64, got %T", value)
+}
+
 // AssureDurationGreaterThan ensures a time.Duration is greater than (but not including) a time.Duration.
 // Returns an error if the value is below, or not an int.
 var AssureDurationGreaterThan = func(above time.Duration) ValidatorFunc {
@@ -297,6 +379,20 @@ var AssureDurationPositive = func(value interface{}) error {
 		return nil
 	}
 	return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
+}
+
+// AssureDurationMin ensures a time.Duration is at least a minimum value.
+// Returns a ValidatorFunc that checks the duration against the minimum.
+var AssureDurationMin = func(min time.Duration) ValidatorFunc {
+	return func(value interface{}) error {
+		if v, ok := value.(time.Duration); ok {
+			if v < min {
+				return fmt.Errorf("duration must be at least %s, got %s", min, v)
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
+	}
 }
 
 // AssureDurationMax ensures a time.Duration does not exceed a maximum value.
@@ -363,6 +459,108 @@ var AssureListMinLength = func(min int) ValidatorFunc {
 	}
 }
 
+// AssureListContains ensures a list contains a specific string value.
+// Returns a ValidatorFunc that checks for the presence of the value.
+var AssureListContains = func(value string) ValidatorFunc {
+	return func(v interface{}) error {
+		if list, ok := v.(*ListFlag); ok && list != nil {
+			for _, item := range *list.values {
+				if item == value {
+					return nil
+				}
+			}
+		}
+		if list, ok := v.(*[]string); ok && list != nil {
+			for _, item := range *list {
+				if item == value {
+					return nil
+				}
+			}
+		}
+		if list, ok := v.([]string); ok && list != nil {
+			for _, item := range list {
+				if item == value {
+					return nil
+				}
+			}
+			return fmt.Errorf("list must contain %q, got %v", value, list)
+		}
+		return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
+	}
+}
+
+// AssureListContainsKey ensures a list contains a specific string.
+// It accepts *ListFlag, *[]string, or []string and returns an error if the key string is not found
+// or the type is invalid.
+var AssureListContainsKey = func(key string) ValidatorFunc {
+	return func(value interface{}) error {
+		switch list := value.(type) {
+		case *ListFlag:
+			if list == nil {
+				return fmt.Errorf("list is nil")
+			}
+			for _, item := range *list.values {
+				if item == key {
+					return nil
+				}
+			}
+			return fmt.Errorf("list must contain %q, got %v", key, *list.values)
+		case *[]string:
+			if list == nil {
+				return fmt.Errorf("list is nil")
+			}
+			for _, item := range *list {
+				if item == key {
+					return nil
+				}
+			}
+			return fmt.Errorf("list must contain %q, got %v", key, *list)
+		case []string:
+			for _, item := range list {
+				if item == key {
+					return nil
+				}
+			}
+			return fmt.Errorf("list must contain %q, got %v", key, list)
+		default:
+			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
+		}
+	}
+}
+
+// AssureListLength ensures a list has exactly the specified length.
+// It accepts *ListFlag, *[]string, or []string and returns an error if the length differs
+// or the type is invalid.
+var AssureListLength = func(length int) ValidatorFunc {
+	return func(value interface{}) error {
+		switch list := value.(type) {
+		case *ListFlag:
+			if list == nil {
+				return fmt.Errorf("list is nil")
+			}
+			if len(*list.values) != length {
+				return fmt.Errorf("list must have length %d, got %d", length, len(*list.values))
+			}
+			return nil
+		case *[]string:
+			if list == nil {
+				return fmt.Errorf("list is nil")
+			}
+			if len(*list) != length {
+				return fmt.Errorf("list must have length %d, got %d", length, len(*list))
+			}
+			return nil
+		case []string:
+			if len(list) != length {
+				return fmt.Errorf("list must have length %d, got %d", length, len(list))
+			}
+			return nil
+		default:
+			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
+		}
+	}
+}
+
 // AssureMapNotEmpty ensures a map is not empty.
 // Returns an error if the map has no entries or is not a MapFlag.
 var AssureMapNotEmpty = func(value interface{}) error {
@@ -410,76 +608,6 @@ var AssureMapHasKey = func(key string) ValidatorFunc {
 		default:
 			return fmt.Errorf("invalid type, got %T", value)
 		}
-	}
-}
-
-// AssureInt64InRange ensures an int64 is within a specified range (inclusive).
-// Returns a ValidatorFunc that checks the value against min and max.
-var AssureInt64InRange = func(min, max int64) ValidatorFunc {
-	return func(value interface{}) error {
-		if v, ok := value.(int64); ok {
-			if v < min || v > max {
-				return fmt.Errorf("value must be between %d and %d, got %d", min, max, v)
-			}
-			return nil
-		}
-		return fmt.Errorf("invalid type, expected int64, got %T", value)
-	}
-}
-
-// AssureFloat64NotNaN ensures a float64 is not NaN.
-// Returns an error if the value is NaN or not a float64.
-var AssureFloat64NotNaN = func(value interface{}) error {
-	if v, ok := value.(float64); ok {
-		if math.IsNaN(v) {
-			return fmt.Errorf("value must not be NaN, got %f", v)
-		}
-		return nil
-	}
-	return fmt.Errorf("invalid type, expected float64, got %T", value)
-}
-
-// AssureDurationMin ensures a time.Duration is at least a minimum value.
-// Returns a ValidatorFunc that checks the duration against the minimum.
-var AssureDurationMin = func(min time.Duration) ValidatorFunc {
-	return func(value interface{}) error {
-		if v, ok := value.(time.Duration); ok {
-			if v < min {
-				return fmt.Errorf("duration must be at least %s, got %s", min, v)
-			}
-			return nil
-		}
-		return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
-	}
-}
-
-// AssureListContains ensures a list contains a specific string value.
-// Returns a ValidatorFunc that checks for the presence of the value.
-var AssureListContains = func(value string) ValidatorFunc {
-	return func(v interface{}) error {
-		if list, ok := v.(*ListFlag); ok && list != nil {
-			for _, item := range *list.values {
-				if item == value {
-					return nil
-				}
-			}
-		}
-		if list, ok := v.(*[]string); ok && list != nil {
-			for _, item := range *list {
-				if item == value {
-					return nil
-				}
-			}
-		}
-		if list, ok := v.([]string); ok && list != nil {
-			for _, item := range list {
-				if item == value {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", value, list)
-		}
-		return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
 	}
 }
 
@@ -555,78 +683,6 @@ var AssureMapHasKeys = func(keys []string) ValidatorFunc {
 			return fmt.Errorf("map must contain keys %v, missing %v", keys, missing)
 		}
 		return nil
-	}
-}
-
-// AssureListContainsKey ensures a list contains a specific string.
-// It accepts *ListFlag, *[]string, or []string and returns an error if the key string is not found
-// or the type is invalid.
-var AssureListContainsKey = func(key string) ValidatorFunc {
-	return func(value interface{}) error {
-		switch list := value.(type) {
-		case *ListFlag:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			for _, item := range *list.values {
-				if item == key {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", key, *list.values)
-		case *[]string:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			for _, item := range *list {
-				if item == key {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", key, *list)
-		case []string:
-			for _, item := range list {
-				if item == key {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", key, list)
-		default:
-			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
-		}
-	}
-}
-
-// AssureListLength ensures a list has exactly the specified length.
-// It accepts *ListFlag, *[]string, or []string and returns an error if the length differs
-// or the type is invalid.
-var AssureListLength = func(length int) ValidatorFunc {
-	return func(value interface{}) error {
-		switch list := value.(type) {
-		case *ListFlag:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			if len(*list.values) != length {
-				return fmt.Errorf("list must have length %d, got %d", length, len(*list.values))
-			}
-			return nil
-		case *[]string:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			if len(*list) != length {
-				return fmt.Errorf("list must have length %d, got %d", length, len(*list))
-			}
-			return nil
-		case []string:
-			if len(list) != length {
-				return fmt.Errorf("list must have length %d, got %d", length, len(list))
-			}
-			return nil
-		default:
-			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
-		}
 	}
 }
 

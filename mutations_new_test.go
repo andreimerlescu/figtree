@@ -33,9 +33,9 @@ func BenchmarkMutations(b *testing.B) {
 
 func TestTree_String(t *testing.T) {
 	figs := With(Options{Germinate: true})
-	figs.NewString("test", "default", "usage")
+	figs.NewString(t.Name(), "default", "usage")
 	assert.Nil(t, figs.Parse())
-	assert.Equal(t, *figs.String("test"), "default")
+	assert.Equal(t, "default", *figs.String(t.Name()))
 }
 
 func TestTree_Bool(t *testing.T) {

@@ -1,9 +1,10 @@
 package figtree
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTree_WithValidator(t *testing.T) {
@@ -14,7 +15,31 @@ func TestTree_WithValidator(t *testing.T) {
 		fig.WithValidator(t.Name(), AssureStringNotEmpty)
 		assert.NotNil(t, fig.Parse())
 	})
-	t.Run("AssureStringLength ", func(t *testing.T) {
+	t.Run("AssureStringLengthLessThan", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "i love yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringLengthLessThan(99))
+		assert.Nil(t, fig.Parse())
+	})
+	t.Run("AssureStringLengthGreaterThan", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "i love yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringLengthGreaterThan(3))
+		assert.Nil(t, fig.Parse())
+	})
+	t.Run("AssureStringHasSuffix", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "i love yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringHasSuffix("yahuah"))
+		assert.Nil(t, fig.Parse())
+	})
+	t.Run("AssureStringHasPrefix", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "i love yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringHasPrefix("i love"))
+		assert.Nil(t, fig.Parse())
+	})
+	t.Run("AssureStringLength", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
 		fig.NewString(t.Name(), "i love yahuah", "usage")
 		fig.WithValidator(t.Name(), AssureStringLength(13))
@@ -92,10 +117,10 @@ func TestTree_WithValidator(t *testing.T) {
 		fig.WithValidator(t.Name(), AssureInt64LessThan(33))
 		assert.Nil(t, fig.Parse())
 	})
-	t.Run("AssurePositiveInt64 ", func(t *testing.T) {
+	t.Run("AssureInt64Positive ", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
 		fig.NewInt64(t.Name(), 17, "usage")
-		fig.WithValidator(t.Name(), AssurePositiveInt64)
+		fig.WithValidator(t.Name(), AssureInt64Positive)
 		assert.Nil(t, fig.Parse())
 	})
 	t.Run("AssureFloat64Positive ", func(t *testing.T) {

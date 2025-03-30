@@ -9,7 +9,7 @@ const (
 	DefaultJSONFile string = "config.json" // Default filename for a JSON configuration file
 	DefaultINIFile  string = "config.ini"  // Default filename for a INI configuration file
 
-	VERSION = "v1.0.0"
+	VERSION = "v1.0.1"
 
 	tString       Mutagenesis = "String"
 	tBool         Mutagenesis = "Bool"

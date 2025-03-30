@@ -3,10 +3,12 @@ package figtree
 import (
 	"flag"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"sync"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTree_checkAndSetFromEnv(t *testing.T) {
@@ -32,13 +34,24 @@ func TestTree_checkAndSetFromEnv(t *testing.T) {
 	// verify assignment
 	assert.Equal(t, 10, *figs.Int(k))
 
-	// clear ENV
-	os.Clearenv()
-
 	// set env for k to 17
-	err := os.Setenv(k, "17")
-	assert.NoError(t, err)
-
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		timer := time.NewTimer(time.Second * 1)
+		checker := time.NewTicker(100 * time.Millisecond)
+		for {
+			select {
+			case <-timer.C:
+				return
+			case <-checker.C:
+				assert.NoError(t, os.Setenv(k, "17"))
+			}
+		}
+	}()
+	defer assert.NoError(t, os.Unsetenv(k))
+	wg.Wait()
 	figs.checkAndSetFromEnv(k)
 	assert.Equal(t, 17, *figs.Int(k))
 }

@@ -3,12 +3,13 @@ package figtree
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWith(t *testing.T) {
@@ -134,6 +135,40 @@ func TestGrow(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestTree_PollinateString(t *testing.T) {
+	figs := With(Options{Pollinate: true, Tracking: true, Germinate: true})
+	figs.NewString("test", "initial", "usage")
+	figs.WithValidator("test", AssureStringContains("ini"))
+	assert.NoError(t, figs.Parse())
+	assert.Equal(t, "initial", *figs.String("test"))
+
+	// Set environment variable
+	go func() {
+		timer := time.NewTimer(time.Second * 1)
+		checker := time.NewTicker(100 * time.Millisecond)
+		for {
+			select {
+			case <-timer.C:
+				assert.Equal(t, "updated", *figs.String("test"))
+				return
+			case <-checker.C:
+				assert.NoError(t, os.Setenv("test", "updated"))
+			}
+		}
+	}()
+	defer assert.NoError(t, os.Unsetenv("test"))
+
+	// Verify mutation
+	mutation, ok := <-figs.Mutations()
+	if ok {
+		assert.Equal(t, "test", mutation.Property)
+		assert.Equal(t, "string", mutation.Kind)
+		assert.Equal(t, "StoreString", mutation.Way)
+		assert.Equal(t, "initial", mutation.Old)
+		assert.Equal(t, "updated", mutation.New)
 	}
 }
 
