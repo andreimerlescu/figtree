@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/term"
@@ -11,7 +12,6 @@ import (
 
 // Usage prints a helpful table of figs in a human-readable format
 func (tree *Tree) Usage() string {
-	// Determine terminal width (default to 80 if unavailable)
 	termWidth := 80
 	if term.IsTerminal(int(os.Stdout.Fd())) {
 		if width, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
@@ -19,7 +19,6 @@ func (tree *Tree) Usage() string {
 		}
 	}
 
-	// Calculate the longest flag name (including default if shown)
 	maxFlagLen := 0
 	flag.VisitAll(func(f *flag.Flag) {
 		flagStr := f.Name
@@ -36,11 +35,9 @@ func (tree *Tree) Usage() string {
 		}
 	})
 
-	// Build the usage string
 	var sb strings.Builder
-	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", os.Args[0], Version())
+	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", filepath.Base(os.Args[0]), Version())
 	flag.VisitAll(func(f *flag.Flag) {
-		// Format the flag name and default value
 		flagStr := f.Name
 		defValue := f.DefValue
 		if defValue == `""` || defValue == "[]" || defValue == "{}" {
@@ -50,7 +47,6 @@ func (tree *Tree) Usage() string {
 			flagStr = fmt.Sprintf("%s[=%s]", f.Name, defValue)
 		}
 
-		// Get the type from tree.figs
 		typeStr := "Unknown"
 		tree.mu.RLock()
 		if fig, ok := tree.figs[f.Name]; ok && fig != nil {
@@ -59,7 +55,6 @@ func (tree *Tree) Usage() string {
 		tree.mu.RUnlock()
 		typeField := fmt.Sprintf("[%s]", typeStr)
 
-		// Start building the line
 		line := fmt.Sprintf("   -%-*s   %-8s   %s", maxFlagLen, flagStr, typeField, f.Usage)
 
 		// Wrap the usage text if it exceeds terminal width
@@ -85,7 +80,7 @@ func wrapText(line string, termWidth int, indentLen int) []string {
 		return []string{""}
 	}
 
-	lines := []string{}
+	var lines []string
 	currentLine := words[0]
 	spaceLeft := termWidth - len(words[0])
 
@@ -96,7 +91,7 @@ func wrapText(line string, termWidth int, indentLen int) []string {
 			spaceLeft = termWidth - indentLen - len(word)
 		} else {
 			currentLine += " " + word
-			spaceLeft -= (len(word) + 1)
+			spaceLeft -= len(word) + 1
 		}
 	}
 	lines = append(lines, currentLine)
