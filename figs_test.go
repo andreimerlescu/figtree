@@ -138,6 +138,12 @@ func TestGrow(t *testing.T) {
 	}
 }
 
+func TestVersion(t *testing.T) {
+	assert.Empty(t, currentVersion, "currentVersion should return an empty string")
+	assert.NotEmpty(t, Version(), "Version() should not return an empty string")
+	assert.Equal(t, currentVersion, Version(), "Version() should return the current version")
+}
+
 func TestIsTracking(t *testing.T) {
 	// Add a timeout to ensure the test fails if it runs too long
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute+34*time.Second)
