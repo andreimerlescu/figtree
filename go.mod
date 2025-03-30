@@ -1,4 +1,4 @@
-module github.com/andreimerlescu/figtree
+module github.com/andreimerlescu/figtree/v2
 
 go 1.23.7
 

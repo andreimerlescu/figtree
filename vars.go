@@ -1,15 +1,25 @@
 package figtree
 
 import (
+	"embed"
 	"path/filepath"
 )
+
+//go:embed VERSION
+var versionBytes embed.FS
+
+func Version() string {
+	versionBytes, err := versionBytes.ReadFile("VERSION")
+	if err != nil {
+		return ""
+	}
+	return string(versionBytes)
+}
 
 const (
 	DefaultYAMLFile string = "config.yml"  // Default filename for a YAML configuration file
 	DefaultJSONFile string = "config.json" // Default filename for a JSON configuration file
 	DefaultINIFile  string = "config.ini"  // Default filename for a INI configuration file
-
-	VERSION = "v2.0.0"
 
 	tString       Mutagenesis = "String"
 	tBool         Mutagenesis = "Bool"

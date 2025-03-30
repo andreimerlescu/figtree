@@ -38,7 +38,7 @@ func (tree *Tree) Usage() string {
 
 	// Build the usage string
 	var sb strings.Builder
-	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", os.Args[0], VERSION)
+	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", os.Args[0], Version())
 	flag.VisitAll(func(f *flag.Flag) {
 		// Format the flag name and default value
 		flagStr := f.Name
