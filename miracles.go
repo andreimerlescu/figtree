@@ -42,12 +42,11 @@ func (tree *Tree) Resurrect(name string) {
 				ptr := new(string)
 				*ptr = strings.Clone(val) // Use strings.Clone as requested
 				tree.figs[name] = &Fig{
-					Flesh:         ptr,
-					Mutagenesis:   tree.MutagensisOf(val),
-					Validators:    make([]ValidatorFunc, 0),
-					Callbacks:     make([]Callback, 0),
-					Mutations:     make([]Mutation, 0),
-					CallbackAfter: CallbackAfterRead,
+					Flesh:       ptr,
+					Mutagenesis: tree.MutagensisOf(val),
+					Validators:  make([]ValidatorFunc, 0),
+					Callbacks:   make([]Callback, 0),
+					Mutations:   make([]Mutation, 0),
 				}
 				flag.String(name, val, "Resurrected from environment")
 				return
@@ -83,12 +82,11 @@ func (tree *Tree) Resurrect(name string) {
 								ptr := new(string)
 								*ptr = strings.Clone(strVal)
 								tree.figs[name] = &Fig{
-									Flesh:         ptr,
-									Mutagenesis:   tree.MutagensisOf(ptr),
-									Validators:    make([]ValidatorFunc, 0),
-									Callbacks:     make([]Callback, 0),
-									Mutations:     make([]Mutation, 0),
-									CallbackAfter: CallbackAfterRead,
+									Flesh:       ptr,
+									Mutagenesis: tree.MutagensisOf(ptr),
+									Validators:  make([]ValidatorFunc, 0),
+									Callbacks:   make([]Callback, 0),
+									Mutations:   make([]Mutation, 0),
 								}
 								flag.String(name, strVal, "Resurrected from JSON")
 								return
@@ -100,12 +98,11 @@ func (tree *Tree) Resurrect(name string) {
 								ptr := new(string)
 								*ptr = strings.Clone(strVal)
 								tree.figs[name] = &Fig{
-									Flesh:         ptr,
-									Mutagenesis:   tree.MutagensisOf(ptr),
-									Validators:    make([]ValidatorFunc, 0),
-									Callbacks:     make([]Callback, 0),
-									Mutations:     make([]Mutation, 0),
-									CallbackAfter: CallbackAfterRead,
+									Flesh:       ptr,
+									Mutagenesis: tree.MutagensisOf(ptr),
+									Validators:  make([]ValidatorFunc, 0),
+									Callbacks:   make([]Callback, 0),
+									Mutations:   make([]Mutation, 0),
 								}
 								flag.String(name, strVal, "Resurrected from YAML")
 								return
@@ -117,12 +114,11 @@ func (tree *Tree) Resurrect(name string) {
 								ptr := new(string)
 								*ptr = strings.Clone(val)
 								tree.figs[name] = &Fig{
-									Flesh:         ptr,
-									Mutagenesis:   tree.MutagensisOf(ptr),
-									Validators:    make([]ValidatorFunc, 0),
-									Callbacks:     make([]Callback, 0),
-									Mutations:     make([]Mutation, 0),
-									CallbackAfter: CallbackAfterRead,
+									Flesh:       ptr,
+									Mutagenesis: tree.MutagensisOf(ptr),
+									Validators:  make([]ValidatorFunc, 0),
+									Callbacks:   make([]Callback, 0),
+									Mutations:   make([]Mutation, 0),
 								}
 								flag.String(name, val, "Resurrected from INI")
 								return
@@ -137,12 +133,11 @@ func (tree *Tree) Resurrect(name string) {
 		ptr := new(string)
 		*ptr = ""
 		tree.figs[name] = &Fig{
-			Flesh:         ptr,
-			Mutagenesis:   tree.MutagensisOf(ptr),
-			Validators:    make([]ValidatorFunc, 0),
-			Callbacks:     make([]Callback, 0),
-			Mutations:     make([]Mutation, 0),
-			CallbackAfter: CallbackAfterRead,
+			Flesh:       ptr,
+			Mutagenesis: tree.MutagensisOf(ptr),
+			Validators:  make([]ValidatorFunc, 0),
+			Callbacks:   make([]Callback, 0),
+			Mutations:   make([]Mutation, 0),
 		}
 		flag.String(name, "", "Resurrected configuration")
 	}

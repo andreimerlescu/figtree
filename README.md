@@ -7,9 +7,6 @@ application's runtime.
 
 ![Figtree](/figtree.jpg "Figtree by xAI Grok 3")
 
-This package is biblically inspired by YAHUAH, the only man who was mocked by the Jews for being
-crucified and came down from that cross to deliver the judgement of 70 AD. YAHUAH has returned.
-
 ## Installation
 
 To use `figtree` in your project, `go get` it...
@@ -51,7 +48,7 @@ Configurable properties have whats called metagenesis to them, which are types, 
 
 | Mutagenesis     | Getter                                | Setter                                  | Fruit Getter            |
 |-----------------|---------------------------------------|-----------------------------------------|-------------------------|
-| `tString`       | `keyValue := *figs.String(key)`       | `figs.Store(tString, key, value)`       | `fig := figs.Fig(key)`  |
+| `tString`       | `keyValue := *figs.String(key)`       | `figs.Store(tString, key, value)`       | `figs := figs.Fig(key)` |
 | `tInt`          | `keyValue := *figs.Int(key)`          | `figs.Store(tInt, key, value)`          | `figs := figs.Fig(key)` |
 | `tInt64`        | `keyValue := *figs.Int64(key)`        | `figs.Store(tInt64, key, value)`        | `figs := figs.Fig(key)` |
 | `tFloat64`      | `keyValue := *figs.Float64(key)`      | `figs.Store(tFloat64, key, value)`      | `figs := figs.Fig(key)` |
@@ -226,140 +223,243 @@ At the end of the day, you'll know what's best to use. I build what I build beca
 package main
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "os"
-    "os/signal"
-    "path/filepath"
-    "strings"
-    "syscall"
-    "time"
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"syscall"
+	"strconv"
+	"time"
 
-    "github.com/andreimerlescu/figtree/v2"
+	"github.com/andreimerlescu/figtree/v2"
+    check "github.com/andreimerlescu/checkfs"
+    "github.com/andreimerlescu/checkfs/file"
 )
 
 func main() {
-    // Create a context that can be canceled on SIGINT/SIGTERM
-    ctx, cancel := context.WithCancel(context.Background())
-    defer cancel()
+	// Create a context that can be canceled on SIGINT/SIGTERM
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-    // Set up signal handling for graceful shutdown
-    sigCh := make(chan os.Signal, 1)
-    signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	// Set up signal handling for graceful shutdown
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 
-    // Plant the fig tree with mutation tracking enabled
-    figs := figtree.Grow()
-    // Note: Grow() sets Options{Tracking: true}, enabling mutation tracking via mutationsCh
+	// Plant the fig tree 
+	var figs figtree.Fruit
 
-    // Define all configuration types with initial values and validators
-    figs.NewInt("workers", 10, "Number of workers")
-    figs.WithValidator("workers", func(v interface{}) error {
-        if val, ok := v.(int); ok && val < 1 {
-            return fmt.Errorf("workers must be at least 1")
-        }
-        return nil
-    })
-    figs.NewInt64("maxRetries", 5, "Maximum retry attempts")
-    figs.WithValidator("maxRetries", figtree.AssurePositiveInt64)
-    figs.NewFloat64("threshold", 0.75, "Threshold value")
-    figs.WithValidator("threshold", func(v interface{}) error {
-        if val, ok := v.(float64); ok && (val < 0 || val > 1) {
-            return fmt.Errorf("threshold must be between 0 and 1")
-        }
-        return nil
-    })
-    figs.NewString("endpoint", "http://example.com", "API endpoint")
-    figs.WithValidator("endpoint", func(v interface{}) error {
-        if val, ok := v.(string); ok && !strings.HasPrefix(val, "http") {
-            return fmt.Errorf("endpoint must start with http")
-        }
-        return nil
-    })
-    figs.NewBool("debug", false, "Enable debug mode")
-    figs.NewDuration("timeout", 30*time.Second, "Request timeout")
-    figs.NewUnitDuration("interval", 1, time.Minute, "Polling interval in minutes")
-    figs.WithValidator("interval", figtree.AssureDurationGreaterThan(30*time.Second))
-    figs.NewList("servers", []string{"server1", "server2"}, "List of servers")
-    figs.NewMap("metadata", map[string]string{"env": "prod", "version": "1.0"}, "Metadata key-value pairs")
-    // Note: Each New* method registers a flag and initializes withered; WithValidator adds validation logic
+	// change internals of figtree to use new file for default .Load()
+	figtree.ConfigFilePath = filepath.Join("/opt", "app", "default.config.json")
 
-    // Attempt to load from a config file, falling back to defaults
-    configFile := filepath.Join(".", "config.yaml")
-    if err := figs.ParseFile(configFile); err != nil {
-        log.Printf("No config file at %s, using defaults: %v", configFile, err)
-        err := figs.Parse() // Parse command-line flags and environment variables
-        if err != nil {
+	// You can build your options before passing them in
+	options := figtree.Options{ // init with options baked in
+		Tracking:  true, // setup the .Mutations() channel
+		Germinate: true, // ignore -test arguments in CLI
+	}
+	if _, ok := os.LookupEnv("NOENV"); ok { // NOENV=1 go run . 
+		options.IgnoreEnvironment = true
+	}
+	if path, ok := os.LookupEnv("MYCONFIGFILE"); ok { // MYCONFIGFILE=/opt/app/config.yaml go run .
+		options.ConfigFile = path
+	}
+	if harvestStr, ok := os.LookupEnv("HARVEST"); ok { // HARVEST=1776 go run .
+		harvest, harvestErr := strconv.ParseInt(harvestStr, 10, 64)
+		if harvestErr != nil {
+			options.Harvest = harvest
+		}
+	}
+	if val, ok := os.LookupEnv("POLLINATE_FIGTREE"); ok {
+		b, bErr := strconv.ParseBool(val)
+		if bErr != nil {
+			options.Pollinate = b
+		}
+	}
+
+	// create a new figtree
+	figs = figtree.With(options)
+
+	// Define all configuration types with initial values and validators
+	
+    // arg -workers int
+    
+	figs.NewInt("workers", 10, "Number of workers")
+   
+    // You can work directly with the Fig of "workers"
+	workersFig := figs.Fig("workers")
+	// there is no way to send your own copy of *figtree.Fig back into an issued figtree.Grow()
+	// but you can access the underlying *figtree.Fig if you need to access the figtree.ValidatorFunc
+	// or the figtree.Callback type
+	for _, callback := range workersFig.Callbacks {
+		if callback.CallbackAfter == figtree.CallbackAfterRead {
+			callbackErr := callback.CallbackFunc(workersFig.Flesh)
+			if callbackErr != nil {
+				log.Println(callbackErr)
+			}
+		}
+	}
+	// but this for loop will automatically be called on figtree.Parse() or figtree.Load() depending
+	// on if you're using `figs := figtree.With(figtree.Options{ConfigFile: "/opt/app/config.yaml", IgnoreEnvironment: true})`
+	// or if you're only using `figs := figtree.Grow()` for mutation tracking only
+
+	// this validator allows you to define n-workers between 1 and number of CPUs 
+	figs.WithValidator("workers", figtree.AssureIntInRange(1, runtime.GOMAXPROCS(0)))
+
+	// arg -maxRetries int
+    
+	figs.NewInt64("maxRetries", 5, "Maximum retry attempts")
+	figs.WithValidator("maxRetries", figtree.AssureInt64Positive)
+	figs.WithCallback("maxRetries", figtree.CallbackAfterChange, func(value interface{}) error {
+		log.Printf("fig maxRetries changed to %q\n", value)
+		return nil
+	})
+
+	// arg -threshold float64 
+    
+	figs.NewFloat64("threshold", 0.75, "Threshold value")
+	figs.WithValidator("threshold", figtree.AssureFloat64InRange(0.0, 1.0))
+	figs.WithCallback("threshold", figtree.CallbackAfterChange, func(value interface{}) error {
+		switch v := value.(type) {
+		case *float64:
+			log.Printf("fig threshold changed to %f", v)
+		case float64:
+			log.Printf("fig threshold changed to %f", v)
+		}
+		return nil
+	})
+    
+    // arg --endpoint "value"
+
+	figs.NewString("endpoint", "http://example.com", "API endpoint")
+	figs.WithValidator("endpoint", figtree.AssureStringHasPrefix("http"))
+
+    // arg -debug <true|false> 
+    
+	figs.NewBool("debug", false, "Enable debug mode")
+	figs.WithCallback("debug", figtree.CallbackAfterVerify, func(v interface{}) error {
+		log.Println("ACTIVATING DEBUG MODE!")
+		return nil
+	})
+
+    // arg -timeout defaults to 30s but -timeout <int> becomes <int> seconds
+	
+	figs.NewUnitDuration("timeout", 30*time.Second, time.Second, "Request timeout")
+	figs.WithValidator("timeout", figtree.AssureDurationMin(10*time.Second))
+	figs.WithValidator("timeout", figtree.AssureDurationMax(time.Hour*12))
+
+    // arg -interval <int> becomes <int> minutes
+	
+	figs.NewUnitDuration("interval", 1, time.Minute, "Polling interval in minutes")
+	figs.WithValidator("interval", figtree.AssureDurationGreaterThan(30*time.Second))
+    
+    // arg -servers "ONE,TWO,THREE" becomes []string{"ONE", "TWO", "THREE"}
+    
+	figs.NewList("servers", []string{"server1", "server2"}, "List of servers")
+	figs.WithValidator("servers", figtree.AssureListNotEmpty)
+	figs.WithCallback("servers", figtree.CallbackAfterChange, func(value interface{}) error {
+		var val []string
+		switch v := value.(type) {
+		case *figtree.ListFlag:
+			val = make([]string, len(*v.values))
+			copy(val, *val.values)
+		case *[]string:
+			copy(val, *v)
+		case []string:
+			copy(val, v)
+		}
+		log.Printf("-servers value changed! new value = %s", strings.Join(val, ", "))
+		return nil
+	})
+    
+    // arg -metadata "KEY=VALUE,KEY=VALUE"
+
+	figs.NewMap("metadata", map[string]string{"env": "prod", "version": "1.0"}, "Metadata key-value pairs")
+	figs.WithValidator("metadata", figtree.AssureMapHasKeys([]string{"env", "version"}))
+
+	// Attempt to load from a config file, falling back to defaults
+	configFile := filepath.Join(".", "config.yaml")
+    if err := check.File(figtree.ConfigFilePath, file.Options{Exists: true}); err != nil {
+        if err = figs.Load(); err != nil {
             log.Fatal(err)
         }
-    }
-    // Note: LoadFile tries the specified file, then env vars; Parse handles flags/env if file fails
-
-    // Demonstrate Resurrect by accessing an undefined key
-    undefined := figs.String("undefined")
-    log.Printf("Resurrected undefined key: %s", *undefined)
-    // Note: Resurrect creates a new string entry if undefined, checking env and files first
-
-    // Print initial configuration using Usage
-    log.Println("Initial configuration:")
-    log.Println(figs.Usage())
-    // Note: Usage displays all registered flags in a human-readable format
-
-    // Simulate periodic access in a goroutine to check for mutations
-    go func() {
-        ticker := time.NewTicker(5 * time.Second)
-        defer ticker.Stop()
-        for {
-            select {
-            case <-ctx.Done():
-                log.Println("Worker shutting down due to context cancellation")
-                return
-            case <-ticker.C:
-                // Access all config values, triggering mutation checks
-                log.Printf("Workers: %d, MaxRetries: %d, Threshold: %.2f, Endpoint: %s, Debug: %t, Timeout: %s, Interval: %s, Servers: %v, Metadata: %v",
-                    *figs.Int("workers"),
-                    *figs.Int64("maxRetries"),
-                    *figs.Float64("threshold"),
-                    *figs.String("endpoint"),
-                    *figs.Bool("debug"),
-                    *figs.Duration("timeout"),
-                    *figs.UnitDuration("interval"),
-                    *figs.List("servers"),
-                    *figs.Map("metadata"),
-                )
-                // Note: Getters check env against withered values, sending mutations if tracking is on
-            }
+    } else if err := check.File(configFile, file.Options{Exists: true}); err != nil {
+		if err = figs.ParseFile(configFile); err != nil {
+			log.Fatal(err)
         }
-    }()
-
-    // Demonstrate Curse and Recall by toggling tracking
-    log.Println("Cursing the tree (disabling tracking)...")
-    figs.Curse()
-    time.Sleep(2 * time.Second) // Let some ticks pass
-    log.Println("Recalling the tree (re-enabling tracking)...")
-    figs.Recall()
-    // Note: Curse locks the tree and closes mutationsCh; Recall unlocks and reopens it
-
-    // Main loop to listen for signals and mutations
-    for {
-        select {
-        case <-ctx.Done():
-            log.Println("Context canceled, shutting down")
-            return
-        case sig := <-sigCh:
-            log.Printf("Received signal: %v, initiating shutdown", sig)
-            cancel() // Cancel context to stop goroutines
-            // Note: SIGINT/SIGTERM triggers shutdown by canceling the context
-        case mutation, ok := <-figs.Mutations():
-            if !ok {
-                log.Println("Mutations channel closed, shutting down")
-                return
-            }
-            log.Printf("Mutation detected: %s changed from %v to %v at %s",
-                mutation.Property, mutation.Old, mutation.New, mutation.When)
-            // Note: This logs a mutation (e.g., change "workers" to 20 in env)
-        }
+	} else {
+		if err := figs.Parse(); err != nil {
+			log.Fatal(err)
+		}
     }
+	// Note: LoadFile tries the specified file, then env vars; Parse handles flags/env if file fails
+
+	// Demonstrate Resurrect by accessing an undefined key
+	undefined := figs.String("undefined")
+	log.Printf("Resurrected undefined key: %s", *undefined)
+	// Note: Resurrect creates a new string entry if undefined, checking env and files first
+
+	// Print initial configuration using Usage
+	log.Println("Initial configuration:")
+	log.Println(figs.Usage())
+	// Note: Usage displays all registered flags in a human-readable format
+
+	// Simulate periodic access in a goroutine to check for mutations
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				log.Println("Worker shutting down due to context cancellation")
+				return
+			case <-ticker.C:
+				// Access all config values, triggering mutation checks
+				log.Printf("Workers: %d, MaxRetries: %d, Threshold: %.2f, Endpoint: %s, Debug: %t, Timeout: %s, Interval: %s, Servers: %v, Metadata: %v",
+					*figs.Int("workers"),
+					*figs.Int64("maxRetries"),
+					*figs.Float64("threshold"),
+					*figs.String("endpoint"),
+					*figs.Bool("debug"),
+					*figs.Duration("timeout"),
+					*figs.UnitDuration("interval"),
+					*figs.List("servers"),
+					*figs.Map("metadata"),
+				)
+				// Note: Getters check env against withered values, sending mutations if tracking is on
+			}
+		}
+	}()
+
+	// Demonstrate Curse and Recall by toggling tracking
+	log.Println("Cursing the tree (disabling tracking)...")
+	figs.Curse()
+	time.Sleep(2 * time.Second) // Let some ticks pass
+	log.Println("Recalling the tree (re-enabling tracking)...")
+	figs.Recall()
+	// Note: Curse locks the tree and closes mutationsCh; Recall unlocks and reopens it
+
+	// Main loop to listen for signals and mutations
+	for {
+		select {
+		case <-ctx.Done():
+			log.Println("Context canceled, shutting down")
+			return
+		case sig := <-sigCh:
+			log.Printf("Received signal: %v, initiating shutdown", sig)
+			cancel() // Cancel context to stop goroutines
+			// Note: SIGINT/SIGTERM triggers shutdown by canceling the context
+		case mutation, ok := <-figs.Mutations():
+			if !ok {
+				log.Println("Mutations channel closed, shutting down")
+				return
+			}
+			log.Printf("Mutation detected: %s changed from %v to %v at %s",
+				mutation.Property, mutation.Old, mutation.New, mutation.When)
+			// Note: This logs a mutation (e.g., change "workers" to 20 in env)
+		}
+	}
 }
 
 // Example config.yaml (create in the same directory):
@@ -515,9 +615,9 @@ Passing an empty string to `Parse()` means it will only parse the command-line a
 You can access the values of your configuration variables using the respective getter methods:
 
 ```go
-fmt.Println("Port:", *cfigs.Int(kPort))
-fmt.Println("Timeout:", *cfigs.UnitDuration(kTimeout, time.Second))
-fmt.Println("Debug mode:", *cfigs.String(kDebug))
+fmt.Println("Port:", *figs.Int(kPort))
+fmt.Println("Timeout:", *figs.UnitDuration(kTimeout, time.Second))
+fmt.Println("Debug mode:", *figs.String(kDebug))
 ```
 
 `UnitDuration` and `Duration` are interchangeable as they both rely on `*time.Duration`.
@@ -571,62 +671,16 @@ Enjoy using the Figtree package in your projects!
 
 The figtree package mirrors the biological life cycle of a fig tree, weaving a metaphor 
 that reflects both nature’s complexity and the reality of software development. In biology, 
-a fig tree grows from a seed (New or Grow), its roots drawing sustenance from the 
-environment (config files and environment variables via Load or Parse), while its branches 
-bear fruit (Fig)—the configurable values developers access. The Pollinate option mimics how 
+a fig tree grows from a seed (`.New()` or `.Grow()`), its roots drawing sustenance from the 
+environment (config files and environment variables via `.Load()` or `.Parse()`), while its branches 
+bear fruit (`Fig{}`)—the configurable values developers access. The `Pollinate` option mimics how 
 fig trees rely on wasps for pollination, actively pulling in external changes (environment 
-updates) to keep the fruit fresh. Mutation tracking (Mutations) parallels genetic adaptations, 
-capturing how values evolve over time, while Resurrect reflects a tree’s ability to regrow 
-from dormant roots, reviving lost configurations. Curse and Recall embody the duality of 
-dormancy and renewal, locking or unlocking the tree’s vitality. Validators (WithValidator) 
+updates) to keep the fruit fresh. Mutation tracking (`Mutations{}`) parallels genetic adaptations, 
+capturing how values evolve over time, while `.Resurrect()` reflects a tree’s ability to regrow 
+from dormant roots, reviving lost configurations. `.Curse()` and `.Recall()` embody the duality of 
+dormancy and renewal, locking or unlocking the tree’s vitality. Validators (`.WithValidator()`) 
 act like natural selection, ensuring only fit values survive, and the versioning shift to 
 github.com/andreimerlescu/figtree/v2 echoes speciation—a new lineage emerging as the package 
 matures. This memetic design makes figtree not just a tool, but a living system, accessed 
 intuitively as it branches out into the developer ecosystem.
-
-In the beginning, figtree sprouts forth, a creation born of faith, echoing Genesis 1:11 where 
-YAHUAH declares, “Let the earth bring forth… the fruit tree yielding fruit after his kind.” With 
-New and Grow, we plant this seed, trusting it to rise like the mustard seed of Matthew 13:31-32, 
-small yet destined to shelter many. I am Andrei, once Michael, now quantum by the grace of YAHUAH, 
-who shaped me through trials—like surviving mind control trauma in 2000, where Archangel Michael 
-whispered victory if I held fast to the Creator of the Universe (Hebrews 11:6). This package bears 
-fruit—String, Int, Map—fulfilling Luke 13:7’s call to produce, its roots drinking deeply from 
-config files and environment variables through Load and Parse. It’s the configuration powerhouse 
-behind Project Apario, a search engine for the JFK and Epstein files, exposing raw, uncensored 
-truth—like Israel’s secrets—without Israeli hands in its making. President Kennedy, in prayer, 
-urged me, “MY FILES, ANDREI, MY FILES!” and I answered, “HOW MAY I SERVE?” He replied, “I NEED 
-A SEARCH ENGINE FOR THEM!”—for NARA released them unsearchable. By YAHUAH’s grace, I said I’d 
-try, like Sam Carter in Stargate SG-1’s “Red Sky,” defying odds with faith (Matthew 17:20).
-
-Yet some figs wither, as in Matthew 21:19, where YAHUAH finds no fruit—stored in withered, a 
-shadow of what could be. I am a sinner and a saint, quantum, one of Yah’s children having an 
-experience, shaped by a near-death encounter last year when YAHUAH said, “YAH, I AM YAHUAH,” 
-and I cried, “DADDY, I LOVE YOU!” before He pushed me back to life (Psalm 116:8). Mutations 
-ripple through Mutations(), a record of transformation, like the seed dying to live anew 
-(John 12:24), reflecting my own journey—program or be programmed, as Tom MacDonald’s Can’t 
-Cancel All Of Us defiantly proclaims. They tried to cancel Apario, to silence the truth, 
-but our words create reality (Proverbs 18:21). figtree is a metaphor to craft trees that bear 
-fruit, resisting those who’d depopulate the planet, aligning us with our co-creative power 
-through speech—seven years after I said, “We’re saving Israel for last,” now look at the world.
-
-Resurrection dwells within, as Resurrect revives the barren from environment or files, echoing 
-Ezekiel 37:5’s breath into dry bones. I belong in a furnace, yet here I am, building tools 
-worth over $434,434 in open-source AGPL-3 value, driven by faith in YAHUAH through 
-TS_SCI_MAJIC12 / Q3614’s “INFORMATION WARFARE” for all humanity—friend and foe alike. 
-Free will shines in IgnoreEnvironment, letting us choose our path as Romans 12:2 urges 
-nonconformity, while Germinate strips away test risks, nurturing growth as we’re rooted 
-in Him (Colossians 2:7). But Curse falls when fruit fails, as in Mark 11:21, locking the 
-tree—yet Recall lifts it, a recall from exile (Jeremiah 29:11-14), restoring fruitfulness 
-by His mercy. YAHUAH saved my life, and now look at figtree—a suite of tools, non-condemning, 
-non-judgmental, for all under the U.S. Constitution’s shield of free speech, where we’re free 
-to honor the Creator as we see Him (Galatians 3:28). YAHUAH loves you too, whoever you are—your 
-faith, your journey, is yours to walk, and this tree bears no dogma, only fruit for those who 
-tend it.
-
-This figtree isn’t about my faith alone—though I am who I am by YAHUAH’s grace, “I AM Q” in 
-His “I AM”—it’s about yours, too. It’s not what others claim of me or you; it’s the Creator’s 
-love, universal and unjudging (John 3:16), inviting all to co-create, to speak truth, and to 
-bear fruit in a world that can’t cancel us all. Use it, and let it align you with the power of
-our words, a mirror of reality where freedom and faith intertwine.
-
 

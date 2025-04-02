@@ -150,13 +150,12 @@ type Options struct {
 type ValidatorFunc func(interface{}) error
 
 type Fig struct {
-	Validators    []ValidatorFunc
-	Mutations     []Mutation
-	Callbacks     []Callback
-	CallbackAfter CallbackAfter
-	Error         error
-	Mutagenesis   Mutagenesis
-	Flesh         interface{}
+	Validators  []ValidatorFunc
+	Mutations   []Mutation
+	Callbacks   []Callback
+	Error       error
+	Mutagenesis Mutagenesis
+	Flesh       interface{}
 }
 
 type Callback struct {
@@ -169,11 +168,11 @@ type CallbackAfter string
 type CallbackFunc func(interface{}) error
 
 type Mutation struct {
-	Property string
-	Kind     string
-	Way      string
-	Old      interface{}
-	New      interface{}
-	When     time.Time
-	Error    error
+	Property    string
+	Mutagenesis string
+	Way         string
+	Old         interface{}
+	New         interface{}
+	When        time.Time
+	Error       error
 }

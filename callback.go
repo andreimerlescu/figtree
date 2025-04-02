@@ -36,7 +36,6 @@ func (tree *Tree) WithCallback(name string, whenCallback CallbackAfter, runThis 
 	if fruit == nil {
 		return tree
 	}
-	fruit.CallbackAfter = whenCallback
 	fruit.Callbacks = append(fruit.Callbacks, Callback{
 		CallbackAfter: whenCallback,
 		CallbackFunc:  runThis,

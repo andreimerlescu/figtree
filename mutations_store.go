@@ -44,13 +44,12 @@ func (tree *Tree) Store(mut Mutagenesis, name string, value interface{}) Fruit {
 	}
 	if _, exists := tree.withered[name]; !exists {
 		tree.withered[name] = Fig{
-			Flesh:         fruit.Flesh,
-			Mutagenesis:   tString,
-			Error:         fmt.Errorf("missing withered value for %s", name),
-			Mutations:     make([]Mutation, 0),
-			Validators:    make([]ValidatorFunc, 0),
-			Callbacks:     make([]Callback, 0),
-			CallbackAfter: CallbackAfterVerify,
+			Flesh:       fruit.Flesh,
+			Mutagenesis: tString,
+			Error:       fmt.Errorf("missing withered value for %s", name),
+			Mutations:   make([]Mutation, 0),
+			Validators:  make([]ValidatorFunc, 0),
+			Callbacks:   make([]Callback, 0),
 		}
 	}
 	changed, previous, current := tree.persist(fruit, mut, name, value)
@@ -64,13 +63,13 @@ func (tree *Tree) Store(mut Mutagenesis, name string, value interface{}) Fruit {
 	tree.figs[name] = fruit
 	if tree.tracking {
 		tree.mutationsCh <- Mutation{
-			Property: name,
-			Kind:     strings.ToLower(string(mut)),
-			Way:      "Store" + string(mut),
-			Old:      previous,
-			New:      current,
-			When:     time.Now(),
-			Error:    err,
+			Property:    name,
+			Mutagenesis: strings.ToLower(string(mut)),
+			Way:         "Store" + string(mut),
+			Old:         previous,
+			New:         current,
+			When:        time.Now(),
+			Error:       err,
 		}
 	}
 	return tree
@@ -112,13 +111,12 @@ func (tree *Tree) StoreStringOld(name, value string) Fruit {
 	}
 	if _, exists := tree.withered[name]; !exists {
 		tree.withered[name] = Fig{
-			Flesh:         fruit.Flesh,
-			Mutagenesis:   tString,
-			Error:         fmt.Errorf("missing withered value for %s", name),
-			Callbacks:     make([]Callback, 0),
-			Validators:    make([]ValidatorFunc, 0),
-			Mutations:     make([]Mutation, 0),
-			CallbackAfter: CallbackAfterVerify,
+			Flesh:       fruit.Flesh,
+			Mutagenesis: tString,
+			Error:       fmt.Errorf("missing withered value for %s", name),
+			Callbacks:   make([]Callback, 0),
+			Validators:  make([]ValidatorFunc, 0),
+			Mutations:   make([]Mutation, 0),
 		}
 	}
 	old, err := toString(fruit.Flesh)
@@ -136,12 +134,12 @@ func (tree *Tree) StoreStringOld(name, value string) Fruit {
 	changed := !strings.EqualFold(old, current) // string
 	if tree.tracking && changed {
 		tree.mutationsCh <- Mutation{
-			Property: name,
-			Kind:     "string",
-			Way:      "StoreString",
-			Old:      old,
-			New:      current,
-			When:     time.Now(),
+			Property:    name,
+			Mutagenesis: "string",
+			Way:         "StoreString",
+			Old:         old,
+			New:         current,
+			When:        time.Now(),
 		}
 	}
 	return tree

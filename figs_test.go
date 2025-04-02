@@ -309,7 +309,7 @@ func TestTree_PollinateString(t *testing.T) {
 	mutation, ok := <-figs.Mutations()
 	if ok {
 		assert.Equal(t, "test", mutation.Property)
-		assert.Equal(t, "string", mutation.Kind)
+		assert.Equal(t, "string", mutation.Mutagenesis)
 		assert.Equal(t, "StoreString", mutation.Way)
 		assert.Equal(t, "initial", mutation.Old)
 		assert.Equal(t, "updated", mutation.New)

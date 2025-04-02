@@ -61,21 +61,19 @@ func (tree *Tree) NewString(name string, value string, usage string) *string {
 	tree.activateFlagSet()
 	ptr := flag.String(name, value, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tString,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tString,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(string),
-		Mutagenesis:   tString,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(string),
+		Mutagenesis: tString,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.(*string) = value
 	return ptr
@@ -88,21 +86,19 @@ func (tree *Tree) NewBool(name string, value bool, usage string) *bool {
 	tree.activateFlagSet()
 	ptr := flag.Bool(name, value, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tBool,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tBool,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(bool),
-		Mutagenesis:   tBool,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(bool),
+		Mutagenesis: tBool,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.(*bool) = value
 	return ptr
@@ -118,21 +114,19 @@ func (tree *Tree) NewInt(name string, value int, usage string) *int {
 	tree.activateFlagSet()
 	ptr := flag.Int(name, value, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tInt,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tInt,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(int),
-		Mutagenesis:   tInt,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(int),
+		Mutagenesis: tInt,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	} // Initialize withered with a copy
 	*tree.withered[name].Flesh.(*int) = value
 	return ptr
@@ -145,21 +139,19 @@ func (tree *Tree) NewInt64(name string, value int64, usage string) *int64 {
 	tree.activateFlagSet()
 	ptr := flag.Int64(name, value, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tInt64,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tInt64,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(int64),
-		Mutagenesis:   tInt64,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(int64),
+		Mutagenesis: tInt64,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.(*int64) = value
 	return ptr
@@ -172,21 +164,19 @@ func (tree *Tree) NewFloat64(name string, value float64, usage string) *float64 
 	tree.activateFlagSet()
 	ptr := flag.Float64(name, value, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tFloat64,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tFloat64,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(float64),
-		Mutagenesis:   tFloat64,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(float64),
+		Mutagenesis: tFloat64,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.(*float64) = value
 	return ptr
@@ -199,21 +189,19 @@ func (tree *Tree) NewDuration(name string, value time.Duration, usage string) *t
 	tree.activateFlagSet()
 	ptr := flag.Duration(name, value, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tDuration,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tDuration,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(time.Duration),
-		Mutagenesis:   tDuration,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(time.Duration),
+		Mutagenesis: tDuration,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.(*time.Duration) = value
 	return ptr
@@ -226,21 +214,19 @@ func (tree *Tree) NewUnitDuration(name string, value, units time.Duration, usage
 	tree.activateFlagSet()
 	ptr := flag.Duration(name, value*units, usage)
 	def := &Fig{
-		Flesh:         ptr,
-		Mutagenesis:   tUnitDuration,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       ptr,
+		Mutagenesis: tUnitDuration,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	tree.withered[name] = Fig{
-		Flesh:         new(time.Duration),
-		Mutagenesis:   tUnitDuration,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       new(time.Duration),
+		Mutagenesis: tUnitDuration,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.(*time.Duration) = value * units
 	return ptr
@@ -254,23 +240,21 @@ func (tree *Tree) NewList(name string, value []string, usage string) *[]string {
 	tree.activateFlagSet()
 	flag.Var(l, name, usage)
 	def := &Fig{
-		Flesh:         l,
-		Mutagenesis:   tList,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       l,
+		Mutagenesis: tList,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	witheredVal := make([]string, len(value))
 	copy(witheredVal, value)
 	tree.withered[name] = Fig{
-		Flesh:         &ListFlag{values: &witheredVal},
-		Mutagenesis:   tList,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       &ListFlag{values: &witheredVal},
+		Mutagenesis: tList,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	return l.values
 }
@@ -283,12 +267,11 @@ func (tree *Tree) NewMap(name string, value map[string]string, usage string) *ma
 	tree.activateFlagSet()
 	flag.Var(m, name, usage)
 	def := &Fig{
-		Flesh:         m,
-		Mutagenesis:   tMap,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Flesh:       m,
+		Mutagenesis: tMap,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	tree.figs[name] = def
 	witheredVal := make(map[string]string)
@@ -299,11 +282,10 @@ func (tree *Tree) NewMap(name string, value map[string]string, usage string) *ma
 		Flesh: &MapFlag{
 			values: &witheredVal,
 		},
-		Mutagenesis:   tMap,
-		Mutations:     make([]Mutation, 0),
-		Validators:    make([]ValidatorFunc, 0),
-		Callbacks:     make([]Callback, 0),
-		CallbackAfter: CallbackAfterVerify,
+		Mutagenesis: tMap,
+		Mutations:   make([]Mutation, 0),
+		Validators:  make([]ValidatorFunc, 0),
+		Callbacks:   make([]Callback, 0),
 	}
 	return m.values
 }

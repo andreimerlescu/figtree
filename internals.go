@@ -69,139 +69,123 @@ func (tree *Tree) loadYAML(data []byte) error {
 		switch d.(type) {
 		case *string:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tString,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tString,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tString,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tString,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *bool:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tBool,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tBool,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tBool,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tBool,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *int:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tInt,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tInt,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tInt,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tInt,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *int64:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tInt64,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tInt64,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tInt64,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tInt64,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *float64:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tFloat64,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tFloat64,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tFloat64,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tFloat64,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *time.Duration:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tDuration,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tDuration,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tDuration,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tDuration,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *[]string:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tList,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tList,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tList,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tList,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		case *map[string]string:
 			tree.figs[n] = &Fig{
-				Flesh:         d,
-				Mutagenesis:   tMap,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tMap,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 			tree.withered[n] = Fig{
-				Flesh:         d,
-				Mutagenesis:   tMap,
-				Mutations:     make([]Mutation, 0),
-				Validators:    make([]ValidatorFunc, 0),
-				Callbacks:     make([]Callback, 0),
-				CallbackAfter: CallbackAfterVerify,
+				Flesh:       d,
+				Mutagenesis: tMap,
+				Mutations:   make([]Mutation, 0),
+				Validators:  make([]ValidatorFunc, 0),
+				Callbacks:   make([]Callback, 0),
 			}
 		}
 	}
@@ -365,12 +349,12 @@ func (tree *Tree) mutateFig(name string, value interface{}) error {
 	// if tree.tracking && old != dead && dead != value
 	if tree.tracking && !reflect.DeepEqual(old, dead) && !reflect.DeepEqual(dead, value) {
 		tree.mutationsCh <- Mutation{
-			Property: name,
-			Kind:     fmt.Sprintf("%T", value),
-			Way:      "mutateFig",
-			Old:      old,
-			New:      value,
-			When:     time.Now(),
+			Property:    name,
+			Mutagenesis: fmt.Sprintf("%T", value),
+			Way:         "mutateFig",
+			Old:         old,
+			New:         value,
+			When:        time.Now(),
 		}
 	}
 	return nil
