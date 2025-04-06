@@ -10,6 +10,50 @@ type MapFlag struct {
 	values *map[string]string
 }
 
+func (tree *figTree) MapKeys(name string) []string {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	fruit, exists := tree.figs[name]
+	if !exists {
+		return []string{}
+	}
+	switch v := fruit.Flesh.Flesh.(type) {
+	case nil:
+		return []string{}
+	case map[string]string:
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		return keys
+	case *map[string]string:
+		keys := make([]string, 0, len(*v))
+		for k := range *v {
+			keys = append(keys, k)
+		}
+		return keys
+	case *MapFlag:
+		keys := make([]string, 0, len(*v.values))
+		for k := range *v.values {
+			keys = append(keys, k)
+		}
+		return keys
+	default:
+		return []string{}
+	}
+}
+
+func (m *MapFlag) Keys() []string {
+	if m.values == nil {
+		return []string{}
+	}
+	var keys []string
+	for key := range *m.values {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
 // String returns the map[string]string as string=string,string=string,...
 func (m *MapFlag) String() string {
 	if m.values == nil {

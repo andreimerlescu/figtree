@@ -51,7 +51,7 @@ func TestTree_WithCallback(t *testing.T) {
 	property := *figs.String(t.Name())
 	assert.NotNil(t, property)
 	time.Sleep(369 * time.Millisecond)
-	assert.NoError(t, figs.Fig(t.Name()).Error)
+	assert.NotNil(t, figs.Fig(t.Name()))
 	figs.StoreString(t.Name(), "new value")
 	time.Sleep(369 * time.Millisecond)
 

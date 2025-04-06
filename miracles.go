@@ -3,36 +3,37 @@ package figtree
 import (
 	"encoding/json"
 	"flag"
+	"os"
+	"path/filepath"
+	"strings"
+
 	check "github.com/andreimerlescu/checkfs"
 	"github.com/andreimerlescu/checkfs/file"
 	"github.com/go-ini/ini"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 // Mutations returns a receiver channel of Mutation data
-func (tree *Tree) Mutations() <-chan Mutation {
+func (tree *figTree) Mutations() <-chan Mutation {
 	return tree.mutationsCh
 }
 
-// Recall is when you bring the mutations channel back to life and you unlock making further changes to the fig *Tree
-func (tree *Tree) Recall() {
+// Recall is when you bring the mutations channel back to life and you unlock making further changes to the fig *figTree
+func (tree *figTree) Recall() {
 	tree.angel.Store(false)
 	tree.mutationsCh = make(chan Mutation, tree.harvest)
 	tree.tracking = true
 }
 
-// Curse is when you lock the fig *Tree from further changes, stop tracking and close the channel
-func (tree *Tree) Curse() {
+// Curse is when you lock the fig *figTree from further changes, stop tracking and close the channel
+func (tree *figTree) Curse() {
 	tree.angel.Store(true)
 	tree.tracking = false
 	close(tree.mutationsCh)
 }
 
 // Resurrect revives a missing or nil definition, checking env and config files first
-func (tree *Tree) Resurrect(name string) {
+func (tree *figTree) Resurrect(name string) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	if _, exists := tree.figs[name]; !exists {
@@ -41,10 +42,10 @@ func (tree *Tree) Resurrect(name string) {
 			if val, ok := os.LookupEnv(name); ok {
 				ptr := new(string)
 				*ptr = strings.Clone(val) // Use strings.Clone as requested
-				tree.figs[name] = &Fig{
-					Flesh:       ptr,
-					Mutagenesis: tree.MutagensisOf(val),
-					Validators:  make([]ValidatorFunc, 0),
+				tree.figs[name] = &figFruit{
+					Flesh:       figFlesh{ptr},
+					Mutagenesis: tree.MutagenesisOf(val),
+					Validators:  make([]FigValidatorFunc, 0),
 					Callbacks:   make([]Callback, 0),
 					Mutations:   make([]Mutation, 0),
 				}
@@ -81,10 +82,10 @@ func (tree *Tree) Resurrect(name string) {
 							if strVal, err := toString(m[name]); err == nil {
 								ptr := new(string)
 								*ptr = strings.Clone(strVal)
-								tree.figs[name] = &Fig{
-									Flesh:       ptr,
-									Mutagenesis: tree.MutagensisOf(ptr),
-									Validators:  make([]ValidatorFunc, 0),
+								tree.figs[name] = &figFruit{
+									Flesh:       figFlesh{ptr},
+									Mutagenesis: tree.MutagenesisOf(ptr),
+									Validators:  make([]FigValidatorFunc, 0),
 									Callbacks:   make([]Callback, 0),
 									Mutations:   make([]Mutation, 0),
 								}
@@ -97,10 +98,10 @@ func (tree *Tree) Resurrect(name string) {
 							if strVal, err := toString(m[name]); err == nil {
 								ptr := new(string)
 								*ptr = strings.Clone(strVal)
-								tree.figs[name] = &Fig{
-									Flesh:       ptr,
-									Mutagenesis: tree.MutagensisOf(ptr),
-									Validators:  make([]ValidatorFunc, 0),
+								tree.figs[name] = &figFruit{
+									Flesh:       figFlesh{ptr},
+									Mutagenesis: tree.MutagenesisOf(ptr),
+									Validators:  make([]FigValidatorFunc, 0),
 									Callbacks:   make([]Callback, 0),
 									Mutations:   make([]Mutation, 0),
 								}
@@ -113,10 +114,10 @@ func (tree *Tree) Resurrect(name string) {
 							if val := cfg.Section("").Key(name).String(); val != "" {
 								ptr := new(string)
 								*ptr = strings.Clone(val)
-								tree.figs[name] = &Fig{
-									Flesh:       ptr,
-									Mutagenesis: tree.MutagensisOf(ptr),
-									Validators:  make([]ValidatorFunc, 0),
+								tree.figs[name] = &figFruit{
+									Flesh:       figFlesh{ptr},
+									Mutagenesis: tree.MutagenesisOf(ptr),
+									Validators:  make([]FigValidatorFunc, 0),
 									Callbacks:   make([]Callback, 0),
 									Mutations:   make([]Mutation, 0),
 								}
@@ -132,10 +133,10 @@ func (tree *Tree) Resurrect(name string) {
 		// Default to empty string if no value found
 		ptr := new(string)
 		*ptr = ""
-		tree.figs[name] = &Fig{
-			Flesh:       ptr,
-			Mutagenesis: tree.MutagensisOf(ptr),
-			Validators:  make([]ValidatorFunc, 0),
+		tree.figs[name] = &figFruit{
+			Flesh:       figFlesh{ptr},
+			Mutagenesis: tree.MutagenesisOf(ptr),
+			Validators:  make([]FigValidatorFunc, 0),
 			Callbacks:   make([]Callback, 0),
 			Mutations:   make([]Mutation, 0),
 		}
@@ -143,13 +144,13 @@ func (tree *Tree) Resurrect(name string) {
 	}
 }
 
-// Fig returns a Fig on the fig Tree
-func (tree *Tree) Fig(name string) *Fig {
+// Fig returns a figFruit on the fig figTree
+func (tree *figTree) Fig(name string) Flesh {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, exists := tree.figs[name]
 	if !exists {
 		return nil
 	}
-	return fruit
+	return &fruit.Flesh
 }

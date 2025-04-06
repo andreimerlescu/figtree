@@ -10,13 +10,13 @@ import (
 )
 
 // Reload will readEnv on each flag in the configurable package
-func (tree *Tree) Reload() error {
+func (tree *figTree) Reload() error {
 	tree.readEnv()
 	return tree.validateAll()
 }
 
 // Load uses the EnvironmentKey and the DefaultJSONFile, DefaultYAMLFile, and DefaultINIFile to run ParseFile if it exists
-func (tree *Tree) Load() (err error) {
+func (tree *figTree) Load() (err error) {
 	tree.activateFlagSet()
 	args := os.Args[1:]
 	if tree.filterTests {
@@ -52,8 +52,8 @@ func (tree *Tree) Load() (err error) {
 	return tree.validateAll()
 }
 
-// LoadFile accepts a path and uses it to populate the Tree
-func (tree *Tree) LoadFile(path string) (err error) {
+// LoadFile accepts a path and uses it to populate the figTree
+func (tree *figTree) LoadFile(path string) (err error) {
 	tree.activateFlagSet()
 	args := os.Args[1:]
 	if tree.filterTests {

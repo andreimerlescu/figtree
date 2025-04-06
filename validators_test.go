@@ -36,6 +36,44 @@ func TestTree_WithValidator(t *testing.T) {
 		fig.WithValidator(t.Name(), AssureStringNotLength(len(k)))
 		assert.Error(t, fig.Parse())
 	})
+
+	t.Run("AssureStringNoPrefix", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringNoPrefix("no"))
+		assert.NoError(t, fig.Parse())
+	})
+	t.Run("AssureStringNoSuffix", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringNoSuffix("no"))
+		assert.NoError(t, fig.Parse())
+	})
+	t.Run("AssureStringHasPrefixes", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringHasPrefixes([]string{"yah", "ya"}))
+		assert.NoError(t, fig.Parse())
+	})
+	t.Run("AssureStringHasSuffixes", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringHasSuffixes([]string{"uah", "ah"}))
+		assert.NoError(t, fig.Parse())
+	})
+	t.Run("AssureStringNoPrefixes", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringNoPrefixes([]string{"no"}))
+		assert.NoError(t, fig.Parse())
+	})
+	t.Run("AssureStringNoSuffixes", func(t *testing.T) {
+		fig := With(Options{Germinate: true, Tracking: false})
+		fig.NewString(t.Name(), "yahuah", "usage")
+		fig.WithValidator(t.Name(), AssureStringNoSuffixes([]string{"no"}))
+		assert.NoError(t, fig.Parse())
+	})
+
 	t.Run("AssureStringNotLength", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
 		fig.NewString(t.Name(), "yahuah", "usage")
@@ -114,16 +152,16 @@ func TestTree_WithValidator(t *testing.T) {
 		fig.WithValidator(t.Name(), AssureBoolFalse)
 		assert.NoError(t, fig.Parse())
 	})
-	t.Run("AssurePositiveInt ", func(t *testing.T) {
+	t.Run("AssureIntPositive ", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
 		fig.NewInt(t.Name(), 17, "usage")
-		fig.WithValidator(t.Name(), AssurePositiveInt)
+		fig.WithValidator(t.Name(), AssureIntPositive)
 		assert.NoError(t, fig.Parse())
 	})
-	t.Run("AssureNegativeInt ", func(t *testing.T) {
+	t.Run("AssureIntNegative ", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
 		fig.NewInt(t.Name(), -17, "usage")
-		fig.WithValidator(t.Name(), AssureNegativeInt)
+		fig.WithValidator(t.Name(), AssureIntNegative)
 		assert.NoError(t, fig.Parse())
 	})
 	t.Run("AssureIntGreaterThan ", func(t *testing.T) {

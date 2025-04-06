@@ -9,6 +9,23 @@ type ListFlag struct {
 	values *[]string
 }
 
+func (tree *figTree) ListValues(name string) []string {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	fruit, exists := tree.figs[name]
+	if !exists {
+		return []string{}
+	}
+	return fruit.Flesh.ToList()
+}
+
+func (l *ListFlag) Values() []string {
+	if l.values == nil {
+		return []string{}
+	}
+	return *l.values
+}
+
 // String returns the slice of strings using strings.Join
 func (l *ListFlag) String() string {
 	if l.values == nil {

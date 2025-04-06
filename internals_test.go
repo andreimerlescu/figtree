@@ -15,12 +15,12 @@ func TestTree_checkAndSetFromEnv(t *testing.T) {
 	const k, u = "workers-check-and-set-from-env", "usage"
 
 	// create a new fig tree
-	var figs *Tree
-	figs = &Tree{
+	var figs *figTree
+	figs = &figTree{
 		harvest:     1,
-		figs:        make(map[string]*Fig),
+		figs:        make(map[string]*figFruit),
 		tracking:    false,
-		withered:    make(map[string]Fig),
+		withered:    make(map[string]figFruit),
 		flagSet:     flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 		mu:          sync.RWMutex{},
 		mutationsCh: make(chan Mutation, 1),
@@ -59,8 +59,8 @@ func TestTree_checkAndSetFromEnv(t *testing.T) {
 func TestTree_setValue(t *testing.T) {
 	type fields struct {
 		ConfigFilePath string
-		figs           map[string]*Fig
-		withered       map[string]Fig
+		figs           map[string]*figFruit
+		withered       map[string]figFruit
 		mu             sync.RWMutex
 		tracking       bool
 		mutationsCh    chan Mutation
@@ -79,8 +79,8 @@ func TestTree_setValue(t *testing.T) {
 		{
 			name: "Set int value",
 			fields: fields{
-				figs:        make(map[string]*Fig),
-				withered:    make(map[string]Fig),
+				figs:        make(map[string]*figFruit),
+				withered:    make(map[string]figFruit),
 				mutationsCh: make(chan Mutation, 1),
 			},
 			args: args{
@@ -93,8 +93,8 @@ func TestTree_setValue(t *testing.T) {
 		{
 			name: "Set string value",
 			fields: fields{
-				figs:        make(map[string]*Fig),
-				withered:    make(map[string]Fig),
+				figs:        make(map[string]*figFruit),
+				withered:    make(map[string]figFruit),
 				mutationsCh: make(chan Mutation, 1),
 			},
 			args: args{
@@ -107,8 +107,8 @@ func TestTree_setValue(t *testing.T) {
 		{
 			name: "Invalid type",
 			fields: fields{
-				figs:        make(map[string]*Fig),
-				withered:    make(map[string]Fig),
+				figs:        make(map[string]*figFruit),
+				withered:    make(map[string]figFruit),
 				mutationsCh: make(chan Mutation, 1),
 			},
 			args: args{
@@ -120,7 +120,7 @@ func TestTree_setValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fig := &Tree{
+			fig := &figTree{
 				ConfigFilePath: tt.fields.ConfigFilePath,
 				figs:           tt.fields.figs,
 				withered:       tt.fields.withered,
@@ -149,9 +149,9 @@ func TestTree_setValue(t *testing.T) {
 }
 
 func TestTree_setValuesFromMap(t *testing.T) {
-	tree := &Tree{
-		figs:        make(map[string]*Fig),
-		withered:    make(map[string]Fig),
+	tree := &figTree{
+		figs:        make(map[string]*figFruit),
+		withered:    make(map[string]figFruit),
 		mu:          sync.RWMutex{},
 		tracking:    false,
 		mutationsCh: make(chan Mutation, 1),
