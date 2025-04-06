@@ -393,7 +393,7 @@ var AssureInt64Positive = func(value interface{}) error {
 var AssureInt64InRange = func(min, max int64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value}
-		if v.IsInt64() {
+		if !v.IsInt64() {
 			return fmt.Errorf("invalid type, expected int64, got %T", value)
 		}
 		i := v.ToInt64()
@@ -590,26 +590,25 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 
 // AssureListContains ensures a list contains a specific string value.
 // Returns a figValidatorFunc that checks for the presence of the value.
-var AssureListContains = func(value string) FigValidatorFunc {
+var AssureListContains = func(inside string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value}
 		if !v.IsList() {
 			return fmt.Errorf("invalid type, expected ListFlag or []string, got %T", value)
 		}
 		l := v.ToList()
-
 		for _, item := range l {
-			if item == value {
+			if item == inside {
 				return nil
 			}
 		}
-		return fmt.Errorf("list must contain %q, got %v", value, l)
+		return fmt.Errorf("list must contain %q, got %v", inside, l)
 	}
 }
 
 // AssureListNotContains ensures a list contains a specific string value.
 // Returns a figValidatorFunc that checks for the presence of the value.
-var AssureListNotContains = func(value string) FigValidatorFunc {
+var AssureListNotContains = func(not string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value}
 		if !v.IsList() {
@@ -617,7 +616,7 @@ var AssureListNotContains = func(value string) FigValidatorFunc {
 		}
 		l := v.ToList()
 		for _, item := range l {
-			if item == value {
+			if item == not {
 				return fmt.Errorf("list cannot contain %s", item)
 			}
 		}
@@ -709,7 +708,7 @@ var AssureMapHasNoKey = func(key string) FigValidatorFunc {
 
 // AssureMapValueMatches ensures a map has a specific key with a matching value.
 // Returns a figValidatorFunc that checks for the key-value pair.
-var AssureMapValueMatches = func(key, value string) FigValidatorFunc {
+var AssureMapValueMatches = func(key, match string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value}
 		if !v.IsMap() {
@@ -717,8 +716,8 @@ var AssureMapValueMatches = func(key, value string) FigValidatorFunc {
 		}
 		m := v.ToMap()
 		if val, exists := m[key]; exists {
-			if val != value {
-				return fmt.Errorf("map value %q must have value %q, got %q", key, value, val)
+			if val != match {
+				return fmt.Errorf("map value %q must have value %q, got %q", key, match, val)
 			}
 			return nil
 		}

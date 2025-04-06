@@ -184,13 +184,13 @@ func TestTree_WithValidator(t *testing.T) {
 	})
 	t.Run("AssureInt64GreaterThan", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
-		fig.NewInt(t.Name(), 17, "usage")
+		fig.NewInt64(t.Name(), 17, "usage")
 		fig.WithValidator(t.Name(), AssureInt64GreaterThan(3))
 		assert.NoError(t, fig.Parse())
 	})
 	t.Run("AssureInt64LessThan ", func(t *testing.T) {
 		fig := With(Options{Germinate: true, Tracking: false})
-		fig.NewInt(t.Name(), 17, "usage")
+		fig.NewInt64(t.Name(), 17, "usage")
 		fig.WithValidator(t.Name(), AssureInt64LessThan(33))
 		assert.NoError(t, fig.Parse())
 	})
