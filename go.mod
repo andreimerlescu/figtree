@@ -1,6 +1,6 @@
 module github.com/andreimerlescu/figtree/v2
 
-go 1.23.7
+go 1.23.4
 
 require (
 	github.com/andreimerlescu/checkfs v1.0.1
