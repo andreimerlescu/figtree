@@ -36,6 +36,9 @@ func (tree *figTree) WithCallback(name string, whenCallback CallbackWhen, runThi
 	if fruit == nil {
 		return tree
 	}
+	if fruit.HasRule(RuleNoCallbacks) {
+		return tree
+	}
 	fruit.Callbacks = append(fruit.Callbacks, Callback{
 		CallbackWhen: whenCallback,
 		CallbackFunc: runThis,
@@ -52,6 +55,9 @@ func (tree *figTree) runCallbacks(callbackOn CallbackWhen) error {
 		if len(fig.Callbacks) == 0 {
 			continue
 		}
+		if fig.HasRule(RuleNoCallbacks) {
+			continue
+		}
 		err := fig.runCallbacks(callbackOn)
 		if err != nil {
 			return err
@@ -64,6 +70,9 @@ func (tree *figTree) runCallbacks(callbackOn CallbackWhen) error {
 func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
 	if fig.Error != nil {
 		return fig.Error
+	}
+	if fig.HasRule(RuleNoCallbacks) {
+		return nil
 	}
 	errs := make([]error, len(fig.Callbacks))
 	for _, callback := range fig.Callbacks {

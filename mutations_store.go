@@ -30,6 +30,9 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 	if fruit == nil {
 		return tree
 	}
+	if tree.HasRule(RulePreventChange) || fruit.HasRule(RulePreventChange) {
+		return tree
+	}
 	if tree.angel.Load() {
 		tree.figs[name].Error = errors.Join(tree.figs[name].Error, fmt.Errorf("tree fruit is an angel so we cannot store %s inside %s", tree.MutagenesisOf(value), tree.MutagenesisOf(fruit.Flesh)))
 		return tree
@@ -127,6 +130,12 @@ func (tree *figTree) StoreMap(name string, value map[string]string) Plant {
 
 // persist requires the figTree.mu to be locked before using this func and is an internal func
 func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, value interface{}) (changed bool, previous, current interface{}) {
+	if fruit.HasRule(RulePreventChange) {
+		return false, fruit, fruit
+	}
+	if fruit.HasRule(RulePanicOnChange) {
+		panic("RuleOnPanicChange triggered for " + fruit.name)
+	}
 	flesh := fruit.Flesh
 	switch mut {
 	case tMap:

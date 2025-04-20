@@ -3,6 +3,7 @@ package figtree
 import (
 	"encoding/json"
 	"flag"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,6 +37,9 @@ func (tree *figTree) Curse() {
 func (tree *figTree) Resurrect(name string) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	if tree.HasRule(RuleCondemnedFromResurrection) {
+		log.Fatalf("resurrection %q condemned", name)
+	}
 	if _, exists := tree.figs[name]; !exists {
 		// Check environment first
 		if !tree.ignoreEnv {

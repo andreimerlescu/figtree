@@ -18,6 +18,9 @@ func (tree *figTree) WithValidator(name string, validator func(interface{}) erro
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	if fig, ok := tree.figs[name]; ok {
+		if fig.HasRule(RuleNoValidations) {
+			return tree
+		}
 		if fig.Validators == nil {
 			fig.Validators = make([]FigValidatorFunc, 0)
 		}
@@ -54,6 +57,9 @@ func (tree *figTree) validateAll() error {
 	for name, fruit := range tree.figs {
 		if fruit.Error != nil {
 			return fruit.Error
+		}
+		if fruit.HasRule(RuleNoValidations) {
+			continue
 		}
 		for _, validator := range fruit.Validators {
 			if fruit != nil && validator != nil {

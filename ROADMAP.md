@@ -22,9 +22,13 @@ The package `figtree` was upgraded this year to `v2` that supports `.WithValidat
 - **Map**
     - [X] `figs.MapKeys() []string`
 - **Callbacks**
-    - [ ] `figs.WithCallback(key, figtree.CallbackBeforeVerify, func(value interface{}) error {})` (before verify, run this)
-    - [ ] `figs.WithCallback(key, figtree.CallbackBeforeChange, func(value interface{}) error {})` (before change, run this)
-    - [ ] `figs.WithCallback(key, figtree.CallbackBeforeRead, func(value interface{}) error {})` (before read, run this)
+    - [X] `figs.WithCallback(key, figtree.CallbackBeforeVerify, func(value interface{}) error {})` (before verify, run this)
+    - [X] `figs.WithCallback(key, figtree.CallbackBeforeChange, func(value interface{}) error {})` (before change, run this)
+    - [X] `figs.WithCallback(key, figtree.CallbackBeforeRead, func(value interface{}) error {})` (before read, run this)
+- **Rules**
+    - [X] `figs.WithRule(key, figtree.RulePreventChange)` (if property is changed, block the attempt)
+    - [X] `figs.WithRule(key, figtree.RulePanicOnChange)` (call `panic()` when value changes)
+    - [X] `figs.WithRule(key, figtree.RuleNoVerify)` (disable verification on rule))
      
 ### v2.1.0 Planned Release
 
@@ -59,11 +63,6 @@ Adding two new **Mutagenesis** types called `File` and `Directory`.
     - [ ] `figs.WithValidator(key, figtree.AssureDirChmod(os.FileMode)` (checks for chmod value of dir)
     - [ ] `figs.WithValidator(key, figtree.AssureDirMorePermissiveThan(os.FileMode))` (checks for chmod value of dir)
     - [ ] `figs.WithValidator(key, figtree.AssureDirLessPermissiveThan(os.FileMode))` (checks for chmod value of dir)
-- **Rules**
-    - [ ] `figs.WithRule(key, figtree.RulePreventChange)` (if property is changed, block the attempt)
-    - [ ] `figs.WithRule(key, figtree.RuleCreateIfNotExists)` (if `Mutagenesis` is `File` or `Directory` then create if not exists)
-    - [ ] `figs.WithRule(key, figtree.RulePanicOnChange)` (call `panic()` when value changes)
-    - [ ] `figs.WithRule(key, figtree.RuleNoVerify)` (disable verification on rule))
 
 This update is going to incorporate the https://github.com/andreimerlescu/checkfs into the `figtree`
 to support `File` and `Directory` `Mutagenesis` types. 

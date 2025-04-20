@@ -65,6 +65,7 @@ func (tree *figTree) NewString(name string, value string, usage string) *string 
 	tree.activateFlagSet()
 	ptr := flag.String(name, value, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tString,
 		Mutations:   make([]Mutation, 0),
@@ -73,6 +74,7 @@ func (tree *figTree) NewString(name string, value string, usage string) *string 
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{},
 		Mutagenesis: tString,
 		Mutations:   make([]Mutation, 0),
@@ -94,6 +96,7 @@ func (tree *figTree) NewBool(name string, value bool, usage string) *bool {
 	tree.activateFlagSet()
 	ptr := flag.Bool(name, value, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tBool,
 		Mutations:   make([]Mutation, 0),
@@ -102,6 +105,7 @@ func (tree *figTree) NewBool(name string, value bool, usage string) *bool {
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{new(bool)},
 		Mutagenesis: tBool,
 		Mutations:   make([]Mutation, 0),
@@ -124,6 +128,7 @@ func (tree *figTree) NewInt(name string, value int, usage string) *int {
 	tree.activateFlagSet()
 	ptr := flag.Int(name, value, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tInt,
 		Mutations:   make([]Mutation, 0),
@@ -132,6 +137,7 @@ func (tree *figTree) NewInt(name string, value int, usage string) *int {
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{new(int)},
 		Mutagenesis: tInt,
 		Mutations:   make([]Mutation, 0),
@@ -149,6 +155,7 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) *int64 {
 	tree.activateFlagSet()
 	ptr := flag.Int64(name, value, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tInt64,
 		Mutations:   make([]Mutation, 0),
@@ -157,6 +164,7 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) *int64 {
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{new(int64)},
 		Mutagenesis: tInt64,
 		Mutations:   make([]Mutation, 0),
@@ -174,6 +182,7 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) *float
 	tree.activateFlagSet()
 	ptr := flag.Float64(name, value, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tFloat64,
 		Mutations:   make([]Mutation, 0),
@@ -182,6 +191,7 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) *float
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{new(float64)},
 		Mutagenesis: tFloat64,
 		Mutations:   make([]Mutation, 0),
@@ -199,6 +209,7 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	tree.activateFlagSet()
 	ptr := flag.Duration(name, value, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tDuration,
 		Mutations:   make([]Mutation, 0),
@@ -207,6 +218,7 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{new(time.Duration)},
 		Mutagenesis: tDuration,
 		Mutations:   make([]Mutation, 0),
@@ -224,6 +236,7 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	tree.activateFlagSet()
 	ptr := flag.Duration(name, value*units, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tUnitDuration,
 		Mutations:   make([]Mutation, 0),
@@ -232,6 +245,7 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	}
 	tree.figs[name] = def
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{new(time.Duration)},
 		Mutagenesis: tUnitDuration,
 		Mutations:   make([]Mutation, 0),
@@ -246,10 +260,14 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 func (tree *figTree) NewList(name string, value []string, usage string) *[]string {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	if tree.HasRule(RuleNoLists) {
+		return nil
+	}
 	ptr := &ListFlag{values: &value}
 	tree.activateFlagSet()
 	flag.Var(ptr, name, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tList,
 		Mutations:   make([]Mutation, 0),
@@ -260,6 +278,7 @@ func (tree *figTree) NewList(name string, value []string, usage string) *[]strin
 	witheredVal := make([]string, len(value))
 	copy(witheredVal, value)
 	tree.withered[name] = figFruit{
+		name:        name,
 		Flesh:       figFlesh{&ListFlag{values: &witheredVal}},
 		Mutagenesis: tList,
 		Mutations:   make([]Mutation, 0),
@@ -273,10 +292,14 @@ func (tree *figTree) NewList(name string, value []string, usage string) *[]strin
 func (tree *figTree) NewMap(name string, value map[string]string, usage string) *map[string]string {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	if tree.HasRule(RuleNoMaps) {
+		return nil
+	}
 	ptr := &MapFlag{values: &value}
 	tree.activateFlagSet()
 	flag.Var(ptr, name, usage)
 	def := &figFruit{
+		name:        name,
 		Flesh:       figFlesh{ptr},
 		Mutagenesis: tMap,
 		Mutations:   make([]Mutation, 0),
@@ -289,6 +312,7 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 		witheredVal[k] = v
 	}
 	tree.withered[name] = figFruit{
+		name: name,
 		Flesh: figFlesh{&MapFlag{
 			values: &witheredVal,
 		}},

@@ -126,6 +126,7 @@ type Plant interface {
 // figTree stores figs that are defined by their name and figFruit as well as a mutations channel and tracking bool for Options.Tracking
 type figTree struct {
 	ConfigFilePath string
+	GlobalRules    []RuleKind
 	harvest        int
 	pollinate      bool
 	figs           map[string]*figFruit
@@ -168,9 +169,11 @@ type figFruit struct {
 	Validators  []FigValidatorFunc
 	Mutations   []Mutation
 	Callbacks   []Callback
+	Rules       []RuleKind
 	Error       error
 	Mutagenesis Mutagenesis
 	Flesh       figFlesh
+	name        string
 }
 
 type figFlesh struct {
