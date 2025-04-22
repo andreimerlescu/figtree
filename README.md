@@ -93,6 +93,49 @@ func main() {
 }
 ```
 
+### Available Rules
+
+| RuleKind                        | Notes                                                             |
+|---------------------------------|-------------------------------------------------------------------|
+| `RuleUndefined`                 | is default and does no action                                     |
+| `RulePreventChange`             | blocks Mutagensis Store methods                                   | 
+| `RulePanicOnChange`             | will throw a panic on the Mutagenesis Store methods               | 
+| `RuleNoValidations`             | will skip over all WithValidator assignments                      | 
+| `RuleNoCallbacks`               | will skip over all WithCallback assignments                       | 
+| `RuleCondemnedFromResurrection` | will panic if there is an attempt to resurrect a condemned fig    |
+| `RuleNoMaps`                    | blocks NewMap, StoreMap, and Map from being called on the Tree    | 
+| `RuleNoLists`                   | blocks NewList, StoreList, and List from being called on the Tree | 
+| `RuleNoFlags`                   | disables the flag package from the Tree                           |
+| `RuleNoEnv`                     | skips over all os.Getenv related logic                            |
+
+
+#### Global Rules
+
+```go
+package main
+
+import (
+    "github.com/andreimerlescu/figtree/v2"
+    "log"
+)
+
+func main() {
+	figs := figtree.Grow()
+	figs.WithTreeRule(figtree.RuleNoFlags)
+	figs.NewString("name", "", "your name")
+    figs.WithValidator("name", figtree.AssureStringNotEmpty) // validate no empty strings
+	figs.WithRule("name", figtree.RuleNoValidations) // turn off validations
+	err := figs.Parse() // no error
+	if err != nil {
+		log.Println(err)
+	}
+	figs.StoreString("name", "Yeshua")
+	log.Printf("Hello %s", *figs.String("name"))
+}
+```
+
+#### Property Rules
+
 ### Available Validators
 
 | Mutagenesis | `figtree.ValidatorFunc`   | Notes                                                                            |
@@ -103,6 +146,12 @@ func main() {
 | tString     | AssureStringNotEmpty      | Ensures a string is not empty.                                                   |
 | tString     | AssureStringContains      | Ensures a string contains a specific substring.                                  |
 | tString     | AssureStringNotContains   | Ensures a string does not contains a specific substring.                         |
+| tString     | AssureStringHasPrefix     | Ensures a string has a prefix.                                                   |
+| tString     | AssureStringHasSuffix     | Ensures a string has a suffix.                                                   |
+| tString     | AssureStringNoPrefix      | Ensures a string does not have a prefix.                                         |
+| tString     | AssureStringNoSuffix      | Ensures a string does not have a suffix.                                         |
+| tString     | AssureStringNoPrefixes    | Ensures a string does not have a prefixes.                                       |
+| tString     | AssureStringNoSuffixes    | Ensures a string does not have a suffixes.                                       |
 | tBool       | AssureBoolTrue            | Ensures a boolean value is true.                                                 |
 | tBool       | AssureBoolFalse           | Ensures a boolean value is false.                                                |
 | tInt        | AssurePositiveInt         | Ensures an integer is positive (greater than zero).                              |

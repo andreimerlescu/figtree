@@ -10,7 +10,7 @@ import (
 )
 
 // String with mutation tracking
-func (tree *Tree) String(name string) *string {
+func (tree *figTree) String(name string) *string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -20,8 +20,19 @@ func (tree *Tree) String(name string) *string {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
-	s, _ := toString(fruit.Flesh)
-	if !tree.ignoreEnv && tree.pollinate {
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	s, err := toString(fruit.Flesh.Flesh)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		envs := os.Environ()
 		var e string
 		var ok bool
@@ -44,7 +55,7 @@ func (tree *Tree) String(name string) *string {
 			}
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -53,7 +64,7 @@ func (tree *Tree) String(name string) *string {
 }
 
 // Bool with mutation tracking
-func (tree *Tree) Bool(name string) *bool {
+func (tree *figTree) Bool(name string) *bool {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -63,8 +74,14 @@ func (tree *Tree) Bool(name string) *bool {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
-	s, _ := toBool(fruit.Flesh)
-	if !tree.ignoreEnv && tree.pollinate {
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	s := fruit.Flesh.ToBool()
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			pb, err := strconv.ParseBool(e)
@@ -84,7 +101,7 @@ func (tree *Tree) Bool(name string) *bool {
 			}
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -93,7 +110,7 @@ func (tree *Tree) Bool(name string) *bool {
 }
 
 // Int with mutation tracking
-func (tree *Tree) Int(name string) *int {
+func (tree *figTree) Int(name string) *int {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -103,8 +120,14 @@ func (tree *Tree) Int(name string) *int {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
-	s, _ := toInt(fruit.Flesh)
-	if !tree.ignoreEnv && tree.pollinate {
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	s := fruit.Flesh.ToInt()
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := strconv.Atoi(e)
@@ -125,7 +148,7 @@ func (tree *Tree) Int(name string) *int {
 
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -134,7 +157,7 @@ func (tree *Tree) Int(name string) *int {
 }
 
 // Int64 with mutation tracking
-func (tree *Tree) Int64(name string) *int64 {
+func (tree *figTree) Int64(name string) *int64 {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -144,8 +167,14 @@ func (tree *Tree) Int64(name string) *int64 {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
-	s, _ := toInt64(fruit.Flesh)
-	if !tree.ignoreEnv && tree.pollinate {
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	s := fruit.Flesh.ToInt64()
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := strconv.ParseInt(e, 10, 64)
@@ -166,7 +195,7 @@ func (tree *Tree) Int64(name string) *int64 {
 
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -175,7 +204,7 @@ func (tree *Tree) Int64(name string) *int64 {
 }
 
 // Float64 with mutation tracking
-func (tree *Tree) Float64(name string) *float64 {
+func (tree *figTree) Float64(name string) *float64 {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -185,8 +214,14 @@ func (tree *Tree) Float64(name string) *float64 {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
-	s, _ := toFloat64(fruit.Flesh)
-	if !tree.ignoreEnv && tree.pollinate {
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	s := fruit.Flesh.ToFloat64()
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := strconv.ParseFloat(e, 64)
@@ -207,7 +242,7 @@ func (tree *Tree) Float64(name string) *float64 {
 
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -216,7 +251,7 @@ func (tree *Tree) Float64(name string) *float64 {
 }
 
 // Duration with mutation tracking
-func (tree *Tree) Duration(name string) *time.Duration {
+func (tree *figTree) Duration(name string) *time.Duration {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -226,8 +261,14 @@ func (tree *Tree) Duration(name string) *time.Duration {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
 	var d time.Duration
-	switch f := fruit.Flesh.(type) {
+	switch f := fruit.Flesh.Flesh.(type) {
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -235,7 +276,7 @@ func (tree *Tree) Duration(name string) *time.Duration {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := time.ParseDuration(e)
@@ -255,7 +296,7 @@ func (tree *Tree) Duration(name string) *time.Duration {
 			}
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -264,7 +305,7 @@ func (tree *Tree) Duration(name string) *time.Duration {
 }
 
 // UnitDuration with mutation tracking
-func (tree *Tree) UnitDuration(name string) *time.Duration {
+func (tree *figTree) UnitDuration(name string) *time.Duration {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -274,8 +315,14 @@ func (tree *Tree) UnitDuration(name string) *time.Duration {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
 	var d time.Duration
-	switch f := fruit.Flesh.(type) {
+	switch f := fruit.Flesh.Flesh.(type) {
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -283,7 +330,7 @@ func (tree *Tree) UnitDuration(name string) *time.Duration {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := time.ParseDuration(e)
@@ -303,7 +350,7 @@ func (tree *Tree) UnitDuration(name string) *time.Duration {
 			}
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -312,7 +359,7 @@ func (tree *Tree) UnitDuration(name string) *time.Duration {
 }
 
 // List with mutation tracking
-func (tree *Tree) List(name string) *[]string {
+func (tree *figTree) List(name string) *[]string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -322,8 +369,14 @@ func (tree *Tree) List(name string) *[]string {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
 	var v []string
-	switch f := fruit.Flesh.(type) {
+	switch f := fruit.Flesh.Flesh.(type) {
 	case *ListFlag:
 		v = make([]string, len(*f.values))
 		copy(v, *f.values)
@@ -336,7 +389,7 @@ func (tree *Tree) List(name string) *[]string {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			i := strings.Split(e, ",")
@@ -347,7 +400,7 @@ func (tree *Tree) List(name string) *[]string {
 				tree.Store(fruit.Mutagenesis, name, i)
 				tree.mu.RLock()
 				fruit = tree.figs[name]
-				switch f := fruit.Flesh.(type) {
+				switch f := fruit.Flesh.Flesh.(type) {
 				case *ListFlag:
 					v = make([]string, len(*f.values))
 					copy(v, *f.values)
@@ -361,7 +414,7 @@ func (tree *Tree) List(name string) *[]string {
 			}
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -370,7 +423,7 @@ func (tree *Tree) List(name string) *[]string {
 }
 
 // Map with mutation tracking
-func (tree *Tree) Map(name string) *map[string]string {
+func (tree *figTree) Map(name string) *map[string]string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, ok := tree.figs[name]
@@ -380,8 +433,14 @@ func (tree *Tree) Map(name string) *map[string]string {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
+	err := fruit.runCallbacks(CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
 	var v map[string]string
-	switch f := fruit.Flesh.(type) {
+	switch f := fruit.Flesh.Flesh.(type) {
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
 		v = make(map[string]string, len(*f.values))
@@ -401,7 +460,7 @@ func (tree *Tree) Map(name string) *map[string]string {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			i := strings.Split(e, ",")
@@ -431,7 +490,7 @@ func (tree *Tree) Map(name string) *map[string]string {
 					tree.Store(fruit.Mutagenesis, name, newMap)
 					tree.mu.RLock()
 					fruit = tree.figs[name]
-					switch f := fruit.Flesh.(type) {
+					switch f := fruit.Flesh.Flesh.(type) {
 					case *MapFlag:
 						v = make(map[string]string, len(*f.values))
 						for k, val := range *f.values {
@@ -452,7 +511,7 @@ func (tree *Tree) Map(name string) *map[string]string {
 			}
 		}
 	}
-	err := fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit

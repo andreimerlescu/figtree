@@ -13,7 +13,7 @@ func TestSomeAssurances(t *testing.T) {
 	figs.WithValidator(k1, AssureStringSubstring("def"))
 
 	figs.NewInt(k2, 17, "usage")
-	figs.WithValidator(k2, AssurePositiveInt)
+	figs.WithValidator(k2, AssureIntPositive)
 	figs.WithValidator(k2, AssureIntGreaterThan(1))
 	assert.NoError(t, figs.ErrorFor(k2))
 

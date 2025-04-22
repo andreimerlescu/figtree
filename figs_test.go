@@ -44,10 +44,10 @@ func TestWith(t *testing.T) {
 			os.Clearenv()
 
 			figs := With(tt.args.opts)
-			assert.Equal(t, tt.wantNil, figs == nil, "With(%v) should return a non-nil Fruit", tt.args.opts)
+			assert.Equal(t, tt.wantNil, figs == nil, "With(%v) should return a non-nil Plant", tt.args.opts)
 			if !tt.wantNil {
-				tree, ok := figs.(*Tree)
-				assert.True(t, ok, "With() should return a *Tree")
+				tree, ok := figs.(*figTree)
+				assert.True(t, ok, "With() should return a *figTree")
 				assert.Equal(t, tt.wantTrack, tree.tracking, "With() should set tracking to %v", tt.wantTrack)
 				assert.NotNil(t, tree.figs, "With() should initialize figs map")
 				assert.NotNil(t, tree.withered, "With() should initialize withered map")
@@ -82,10 +82,10 @@ func TestNew(t *testing.T) {
 			os.Clearenv()
 
 			figs := New()
-			assert.Equal(t, tt.wantNil, figs == nil, "New() should return a non-nil Fruit")
+			assert.Equal(t, tt.wantNil, figs == nil, "New() should return a non-nil Plant")
 			if !tt.wantNil {
-				tree, ok := figs.(*Tree)
-				assert.True(t, ok, "New() should return a *Tree")
+				tree, ok := figs.(*figTree)
+				assert.True(t, ok, "New() should return a *figTree")
 				assert.Equal(t, tt.wantTrack, tree.tracking, "New() should disable tracking by default")
 				assert.NotNil(t, tree.figs, "New() should initialize figs map")
 				assert.NotNil(t, tree.withered, "New() should initialize withered map")
@@ -119,10 +119,10 @@ func TestGrow(t *testing.T) {
 			os.Clearenv()
 
 			figs := Grow()
-			assert.Equal(t, tt.wantNil, figs == nil, "Grow() should return a non-nil Fruit")
+			assert.Equal(t, tt.wantNil, figs == nil, "Grow() should return a non-nil Plant")
 			if !tt.wantNil {
-				tree, ok := figs.(*Tree)
-				assert.True(t, ok, "Grow() should return a *Tree")
+				tree, ok := figs.(*figTree)
+				assert.True(t, ok, "Grow() should return a *figTree")
 				assert.True(t, tree.tracking, "Grow() should enable tracking")
 				assert.NotNil(t, tree.figs, "Grow() should initialize figs map")
 				assert.NotNil(t, tree.withered, "Grow() should initialize withered map")

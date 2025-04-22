@@ -7,13 +7,32 @@ import (
 	"time"
 )
 
-// AssureStringHasSuffix ensures a string ends with a suffix
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringHasSuffix = func(suffix string) ValidatorFunc {
+// AssureStringHasSuffix ensures a string ends with the given suffix.
+var AssureStringHasSuffix = func(suffix string) FigValidatorFunc {
+	return makeStringValidator(
+		func(s string) bool { return strings.HasSuffix(s, suffix) },
+		"string must have suffix %q, got %q",
+	)
+}
+
+// AssureStringHasPrefix ensures a string starts with the given prefix.
+var AssureStringHasPrefix = func(prefix string) FigValidatorFunc {
+	return makeStringValidator(
+		func(s string) bool { return strings.HasPrefix(s, prefix) },
+		"string must have prefix %q, got %q",
+	)
+}
+
+// AssureStringNoSuffixes ensures a string ends with a suffix
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringNoSuffixes = func(suffixes []string) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if !strings.HasSuffix(v, suffix) {
-				return fmt.Errorf("string must have suffix substring %q, got %q", suffix, v)
+		v := figFlesh{value}
+		if v.IsString() {
+			for _, suffix := range suffixes {
+				if strings.HasSuffix(v.ToString(), suffix) {
+					return fmt.Errorf("string must not have suffix substring %q, got %q", suffix, v)
+				}
 			}
 			return nil
 		}
@@ -21,13 +40,82 @@ var AssureStringHasSuffix = func(suffix string) ValidatorFunc {
 	}
 }
 
-// AssureStringHasPrefix ensures a string begins with a prefix
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringHasPrefix = func(prefix string) ValidatorFunc {
+// AssureStringNoPrefixes ensures a string begins with a prefix
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringNoPrefixes = func(prefixes []string) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if !strings.HasPrefix(v, prefix) {
-				return fmt.Errorf("string must have prefix substring %q, got %q", prefix, v)
+		v := figFlesh{value}
+		if v.IsString() {
+			for _, prefix := range prefixes {
+				if strings.HasPrefix(v.ToString(), prefix) {
+					return fmt.Errorf("string must not have prefix %q, got %q", prefix, v)
+				}
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringHasSuffixes ensures a string ends with a suffix
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringHasSuffixes = func(suffixes []string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if v.IsString() {
+			for _, suffix := range suffixes {
+				if !strings.HasSuffix(v.ToString(), suffix) {
+					return fmt.Errorf("string must have suffix %q, got %q", suffix, v)
+				}
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringHasPrefixes ensures a string begins with a prefix
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringHasPrefixes = func(prefixes []string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if v.IsString() {
+			for _, prefix := range prefixes {
+				if !strings.HasPrefix(v.ToString(), prefix) {
+					return fmt.Errorf("string must have prefix %q, got %q", prefix, v)
+				}
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringNoSuffix ensures a string ends with a suffix
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringNoSuffix = func(suffix string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if strings.HasSuffix(vs, suffix) {
+				return fmt.Errorf("string must not have suffix substring %q, got %q", suffix, vs)
+			}
+			return nil
+		}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
+	}
+}
+
+// AssureStringNoPrefix ensures a string begins with a prefix
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringNoPrefix = func(prefix string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if strings.HasPrefix(vs, prefix) {
+				return fmt.Errorf("string must not have prefix substring %q, got %q", prefix, vs)
 			}
 			return nil
 		}
@@ -36,12 +124,14 @@ var AssureStringHasPrefix = func(prefix string) ValidatorFunc {
 }
 
 // AssureStringLengthLessThan ensures the string is less than an int
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringLengthLessThan = func(length int) ValidatorFunc {
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringLengthLessThan = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if len(v) > length {
-				return fmt.Errorf("string must be less than %d chars, got %d", length, len(v))
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if len(vs) > length {
+				return fmt.Errorf("string must be less than %d chars, got %d", length, len(vs))
 			}
 			return nil
 		}
@@ -50,12 +140,14 @@ var AssureStringLengthLessThan = func(length int) ValidatorFunc {
 }
 
 // AssureStringLengthGreaterThan ensures the string is greater than an int
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringLengthGreaterThan = func(length int) ValidatorFunc {
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringLengthGreaterThan = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if len(v) < length {
-				return fmt.Errorf("string must be greater than %d chars, got %d", length, len(v))
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if len(vs) < length {
+				return fmt.Errorf("string must be greater than %d chars, got %d", length, len(vs))
 			}
 			return nil
 		}
@@ -64,12 +156,14 @@ var AssureStringLengthGreaterThan = func(length int) ValidatorFunc {
 }
 
 // AssureStringSubstring ensures a string contains a specific substring.
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringSubstring = func(sub string) ValidatorFunc {
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringSubstring = func(sub string) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if !strings.Contains(v, sub) {
-				return fmt.Errorf("string must contain substring %q, got %q", sub, v)
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if !strings.Contains(vs, sub) {
+				return fmt.Errorf("string must contain substring %q, got %q", sub, vs)
 			}
 			return nil
 		}
@@ -78,26 +172,31 @@ var AssureStringSubstring = func(sub string) ValidatorFunc {
 }
 
 // AssureStringLength ensures a string contains a specific substring.
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringLength = func(length int) ValidatorFunc {
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if len(v) < length {
-				return fmt.Errorf("string must be at least %d chars, got %q", length, len(v))
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if len(vs) < length {
+				return fmt.Errorf("string must be at least %d chars, got %q", length, len(vs))
 			}
 			return nil
+
 		}
 		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
 // AssureStringNotLength ensures a string contains a specific substring.
-// Returns a ValidatorFunc that checks for the substring (case-sensitive).
-var AssureStringNotLength = func(length int) ValidatorFunc {
+// Returns a figValidatorFunc that checks for the substring (case-sensitive).
+var AssureStringNotLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if len(v) == length {
-				return fmt.Errorf("string must not be %d chars, got %q", length, len(v))
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if len(vs) == length {
+				return fmt.Errorf("string must not be %d chars, got %q", length, len(vs))
 			}
 			return nil
 		}
@@ -108,8 +207,9 @@ var AssureStringNotLength = func(length int) ValidatorFunc {
 // AssureStringNotEmpty ensures a string is not empty.
 // Returns an error if the value is an empty string or not a string.
 var AssureStringNotEmpty = func(value interface{}) error {
-	if v, ok := value.(string); ok {
-		if len(v) == 0 {
+	v := figFlesh{value}
+	if v.IsString() {
+		if len(v.ToString()) == 0 {
 			return fmt.Errorf("empty string")
 		}
 		return nil
@@ -119,33 +219,22 @@ var AssureStringNotEmpty = func(value interface{}) error {
 
 // AssureStringContains ensures a string contains a specific substring.
 // Returns an error if the substring is not found or if the value is not a string.
-var AssureStringContains = func(substring string) ValidatorFunc {
-	return func(value interface{}) error {
-		if v, ok := value.(string); ok {
-			if !strings.Contains(v, substring) {
-				return fmt.Errorf("string must contain %q, got %q", substring, v)
-			}
-			return nil
-		}
-		return fmt.Errorf("invalid type, got %T", value)
-	}
+var AssureStringContains = func(substring string) FigValidatorFunc {
+	return makeStringValidator(
+		func(s string) bool { return strings.Contains(s, substring) },
+		"string must contain %q, got %q",
+	)
 }
 
 // AssureStringNotContains ensures a string contains a specific substring.
 // Returns an error if the substring is not found or if the value is not a string.
-var AssureStringNotContains = func(substring string) ValidatorFunc {
+var AssureStringNotContains = func(substring string) FigValidatorFunc {
 	return func(value interface{}) error {
-		v, ok := value.(string)
-		if ok {
-			if strings.Contains(v, substring) {
-				return fmt.Errorf("string must not contain %q, got %q", substring, v)
-			}
-			return nil
-		}
-		v2, ok2 := value.(*string)
-		if ok2 {
-			if strings.Contains(*v2, substring) {
-				return fmt.Errorf("string must not contain %q, got %q", substring, *v2)
+		v := figFlesh{value}
+		if v.IsString() {
+			vs := v.ToString()
+			if strings.Contains(vs, substring) {
+				return fmt.Errorf("string must not contain %q, got %q", substring, vs)
 			}
 			return nil
 		}
@@ -156,8 +245,9 @@ var AssureStringNotContains = func(substring string) ValidatorFunc {
 // AssureBoolTrue ensures a boolean value is true.
 // Returns an error if the value is false or not a bool.
 var AssureBoolTrue = func(value interface{}) error {
-	if v, ok := value.(bool); ok {
-		if !v {
+	v := figFlesh{value}
+	if v.IsBool() {
+		if !v.ToBool() {
 			return fmt.Errorf("value must be true, got false")
 		}
 		return nil
@@ -168,8 +258,9 @@ var AssureBoolTrue = func(value interface{}) error {
 // AssureBoolFalse ensures a boolean value is false.
 // Returns an error if the value is true or not a bool.
 var AssureBoolFalse = func(value interface{}) error {
-	if v, ok := value.(bool); ok {
-		if v {
+	v := figFlesh{value}
+	if v.IsBool() {
+		if v.ToBool() {
 			return fmt.Errorf("value must be false, got true")
 		}
 		return nil
@@ -177,24 +268,26 @@ var AssureBoolFalse = func(value interface{}) error {
 	return fmt.Errorf("invalid type, expected bool, got %T", value)
 }
 
-// AssurePositiveInt ensures an integer is positive.
+// AssureIntPositive ensures an integer is positive.
 // Returns an error if the value is zero or negative, or not an int.
-var AssurePositiveInt = func(value interface{}) error {
-	if v, ok := value.(int); ok {
-		if v <= 0 {
-			return fmt.Errorf("value must be positive, got %d", v)
+var AssureIntPositive = func(value interface{}) error {
+	v := figFlesh{value}
+	if v.IsInt() {
+		if v.ToInt() < 0 {
+			return fmt.Errorf("value must be positive, got %d", v.ToInt())
 		}
 		return nil
 	}
 	return fmt.Errorf("invalid type, expected int, got %T", value)
 }
 
-// AssureNegativeInt ensures an integer is negative.
+// AssureIntNegative ensures an integer is negative.
 // Returns an error if the value is zero or positive, or not an int.
-var AssureNegativeInt = func(value interface{}) error {
-	if v, ok := value.(int); ok {
-		if v >= 0 {
-			return fmt.Errorf("value must be negative, got %d", v)
+var AssureIntNegative = func(value interface{}) error {
+	v := figFlesh{value}
+	if v.IsInt() {
+		if v.ToInt() > 0 {
+			return fmt.Errorf("value must be negative, got %d", v.ToInt())
 		}
 		return nil
 	}
@@ -203,183 +296,199 @@ var AssureNegativeInt = func(value interface{}) error {
 
 // AssureIntGreaterThan ensures an integer is greater than (but not including) an int.
 // Returns an error if the value is below, or not an int.
-var AssureIntGreaterThan = func(above int) ValidatorFunc {
+var AssureIntGreaterThan = func(above int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, err := toInt(value); err == nil {
-			if v < above {
-				return fmt.Errorf("value must be below %d", v)
-			}
-			return nil
-		} else {
-			return err
+		v := figFlesh{value}
+		if !v.IsInt() {
+			return fmt.Errorf("invalid type, expected int, got %T", value)
 		}
+		i := v.ToInt()
+		if i < above {
+			return fmt.Errorf("value must be below %d", i)
+		}
+		return nil
 	}
 }
 
 // AssureIntLessThan ensures an integer is less than (but not including) an int.
 // Returns an error if the value is above, or not an int.
-var AssureIntLessThan = func(below int) ValidatorFunc {
+var AssureIntLessThan = func(below int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, err := toInt(value); err == nil {
-			if v > below {
-				return fmt.Errorf("value must be below %d", v)
-			}
-			return nil
-		} else {
-			return err
+		v := figFlesh{value}
+		if !v.IsInt() {
+			return fmt.Errorf("invalid type, expected int, got %T", value)
 		}
+		i := v.ToInt()
+		if i > below {
+			return fmt.Errorf("value must be below %d", i)
+		}
+		return nil
 	}
 }
 
 // AssureIntInRange ensures an integer is within a specified range (inclusive).
 // Returns an error if the value is outside the range or not an int.
-var AssureIntInRange = func(min, max int) ValidatorFunc {
+var AssureIntInRange = func(min, max int) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(int); ok {
-			if v < min || v > max {
-				return fmt.Errorf("value must be between %d and %d, got %d", min, max, v)
-			}
-			return nil
+		v := figFlesh{value}
+		if !v.IsInt() {
+			return fmt.Errorf("invalid type, expected int, got %T", value)
 		}
-		return fmt.Errorf("invalid type, expected int, got %T", value)
+		i := v.ToInt()
+		if i < min || i > max {
+			return fmt.Errorf("value must be between %d and %d, got %d", min, max, i)
+		}
+		return nil
 	}
 }
 
 // AssureInt64GreaterThan ensures an integer is greater than (but not including) an int.
 // Returns an error if the value is below, or not an int.
-var AssureInt64GreaterThan = func(above int64) ValidatorFunc {
+var AssureInt64GreaterThan = func(above int64) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, err := toInt64(value); err == nil {
-			if v < above {
-				return fmt.Errorf("value must be below %d", v)
-			}
-			return nil
-		} else {
-			return err
+		v := figFlesh{value}
+		if !v.IsInt64() {
+			return fmt.Errorf("invalid type, expected int64, got %T", value)
 		}
+		i := v.ToInt64()
+		if i < above {
+			return fmt.Errorf("value must be below %d", i)
+		}
+		return nil
 	}
 }
 
 // AssureInt64LessThan ensures an integer is less than (but not including) an int.
 // Returns an error if the value is above, or not an int.
-var AssureInt64LessThan = func(below int64) ValidatorFunc {
+var AssureInt64LessThan = func(below int64) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, err := toInt64(value); err == nil {
-			if v > below {
-				return fmt.Errorf("value must be below %d", v)
-			}
-			return nil
-		} else {
-			return err
+		v := figFlesh{value}
+		if !v.IsInt64() {
+			return fmt.Errorf("value must be int64, got %d", value)
 		}
+		i := v.ToInt64()
+		if i > below {
+			return fmt.Errorf("value must be below %d", i)
+		}
+		return nil
 	}
 }
 
 // AssureInt64Positive ensures an int64 is positive.
 // Returns an error if the value is zero or negative, or not an int64.
 var AssureInt64Positive = func(value interface{}) error {
-	if v, ok := value.(int64); ok {
-		if v <= 0 {
-			return fmt.Errorf("value must be positive, got %d", v)
-		}
-		return nil
+	v := figFlesh{value}
+	if !v.IsInt64() {
+		return fmt.Errorf("invalid type, expected int64, got %T", value)
 	}
-	return fmt.Errorf("invalid type, expected int64, got %T", value)
+	i := v.ToInt64()
+	if i <= 0 {
+		return fmt.Errorf("value must be positive, got %d", i)
+	}
+	return nil
 }
 
 // AssureInt64InRange ensures an int64 is within a specified range (inclusive).
-// Returns a ValidatorFunc that checks the value against min and max.
-var AssureInt64InRange = func(min, max int64) ValidatorFunc {
+// Returns a figValidatorFunc that checks the value against min and max.
+var AssureInt64InRange = func(min, max int64) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(int64); ok {
-			if v < min || v > max {
-				return fmt.Errorf("value must be between %d and %d, got %d", min, max, v)
-			}
-			return nil
+		v := figFlesh{value}
+		if !v.IsInt64() {
+			return fmt.Errorf("invalid type, expected int64, got %T", value)
 		}
-		return fmt.Errorf("invalid type, expected int64, got %T", value)
+		i := v.ToInt64()
+		if i < min || i > max {
+			return fmt.Errorf("value must be between %d and %d, got %d", min, max, i)
+		}
+		return nil
 	}
 }
 
 // AssureFloat64Positive ensures a float64 is positive.
 // Returns an error if the value is zero or negative, or not a float64.
 var AssureFloat64Positive = func(value interface{}) error {
-	if v, ok := value.(float64); ok {
-		if v <= 0 {
-			return fmt.Errorf("value must be positive, got %f", v)
-		}
-		return nil
+	v := figFlesh{value}
+	if !v.IsFloat64() {
+		return fmt.Errorf("invalid type, expected float64, got %T", value)
 	}
-	return fmt.Errorf("invalid type, expected float64, got %T", value)
+	f := v.ToFloat64()
+	if f <= 0 {
+		return fmt.Errorf("value must be positive, got %f", f)
+	}
+	return nil
 }
 
 // AssureFloat64InRange ensures a float64 is within a specified range (inclusive).
 // Returns an error if the value is outside the range or not a float64.
-var AssureFloat64InRange = func(min, max float64) ValidatorFunc {
+var AssureFloat64InRange = func(min, max float64) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(float64); ok {
-			if v < min || v > max {
-				return fmt.Errorf("value must be between %f and %f, got %f", min, max, v)
-			}
-			return nil
+		v := figFlesh{value}
+		if !v.IsFloat64() {
+			return fmt.Errorf("invalid type, expected float64, got %T", value)
 		}
-		return fmt.Errorf("invalid type, expected float64, got %T", value)
+		f := v.ToFloat64()
+		if f < min || f > max {
+			return fmt.Errorf("value must be between %f and %f, got %f", min, max, f)
+		}
+		return nil
 	}
 }
 
 // AssureFloat64GreaterThan ensures an integer is greater than (but not including) an int.
 // Returns an error if the value is below, or not an int.
-var AssureFloat64GreaterThan = func(above float64) ValidatorFunc {
+var AssureFloat64GreaterThan = func(above float64) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, err := toFloat64(value); err == nil {
-			if v < above {
-				return fmt.Errorf("value must be below %f", v)
-			}
-			return nil
-		} else {
-			return err
+		v := figFlesh{value}
+		if !v.IsFloat64() {
+			return fmt.Errorf("invalid type, expected float64, got %T", value)
 		}
+		f := v.ToFloat64()
+		if f < above {
+			return fmt.Errorf("value must be below %f", f)
+		}
+		return nil
 	}
 }
 
 // AssureFloat64LessThan ensures an integer is less than (but not including) an int.
 // Returns an error if the value is above, or not an int.
-var AssureFloat64LessThan = func(below float64) ValidatorFunc {
+var AssureFloat64LessThan = func(below float64) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, err := toFloat64(value); err == nil {
-			if v > below {
-				return fmt.Errorf("value must be below %f", v)
-			}
-			return nil
-		} else {
-			return err
+		v := figFlesh{value}
+		if !v.IsFloat64() {
+			return fmt.Errorf("invalid type, expected float64, got %T", value)
 		}
+		f := v.ToFloat64()
+		if f > below {
+			return fmt.Errorf("value must be below %f", f)
+		}
+		return nil
 	}
 }
 
 // AssureFloat64NotNaN ensures a float64 is not NaN.
 // Returns an error if the value is NaN or not a float64.
 var AssureFloat64NotNaN = func(value interface{}) error {
-	if v, ok := value.(float64); ok {
-		if math.IsNaN(v) {
-			return fmt.Errorf("value must not be NaN, got %f", v)
-		}
-		return nil
+	v := figFlesh{value}
+	if !v.IsFloat64() {
+		return fmt.Errorf("invalid type, expected float64, got %T", value)
 	}
-	return fmt.Errorf("invalid type, expected float64, got %T", value)
+	n := v.ToFloat64()
+	if math.IsNaN(n) {
+		return fmt.Errorf("value must not be NaN, got %f", n)
+	}
+	return nil
 }
 
 // AssureDurationGreaterThan ensures a time.Duration is greater than (but not including) a time.Duration.
 // Returns an error if the value is below, or not an int.
-var AssureDurationGreaterThan = func(above time.Duration) ValidatorFunc {
+var AssureDurationGreaterThan = func(above time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
-		var t time.Duration
-		if v, ok := value.(time.Duration); ok {
-			t = v
+		v := figFlesh{value}
+		if !v.IsDuration() {
+			return fmt.Errorf("value must be a duration, got %v", value)
 		}
-		if v, ok := value.(*time.Duration); ok {
-			t = *v
-		}
+		t := v.ToDuration()
 		if t < above {
 			return fmt.Errorf("value must be above %v, got = %v", above, t)
 		}
@@ -389,15 +498,13 @@ var AssureDurationGreaterThan = func(above time.Duration) ValidatorFunc {
 
 // AssureDurationLessThan ensures a time.Duration is less than (but not including) a time.Duration.
 // Returns an error if the value is below, or not an int.
-var AssureDurationLessThan = func(below time.Duration) ValidatorFunc {
+var AssureDurationLessThan = func(below time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
-		var t time.Duration
-		if v, ok := value.(time.Duration); ok {
-			t = v
+		v := figFlesh{value}
+		if !v.IsDuration() {
+			return fmt.Errorf("value must be a duration, got %v", value)
 		}
-		if v, ok := value.(*time.Duration); ok {
-			t = *v
-		}
+		t := v.ToDuration()
 		if t > below {
 			return fmt.Errorf("value must be below %v, got = %v", below, t)
 		}
@@ -408,370 +515,230 @@ var AssureDurationLessThan = func(below time.Duration) ValidatorFunc {
 // AssureDurationPositive ensures a time.Duration is positive.
 // Returns an error if the value is zero or negative, or not a time.Duration.
 var AssureDurationPositive = func(value interface{}) error {
-	if v, ok := value.(time.Duration); ok {
-		if v <= 0 {
-			return fmt.Errorf("duration must be positive, got %s", v)
-		}
-		return nil
+	v := figFlesh{value}
+	if !v.IsDuration() {
+		return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
 	}
-	return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
+	d := v.ToDuration()
+	if d <= 0 {
+		return fmt.Errorf("duration must be positive, got %s", d)
+	}
+	return nil
 }
 
 // AssureDurationMin ensures a time.Duration is at least a minimum value.
-// Returns a ValidatorFunc that checks the duration against the minimum.
-var AssureDurationMin = func(min time.Duration) ValidatorFunc {
+// Returns a figValidatorFunc that checks the duration against the minimum.
+var AssureDurationMin = func(min time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(time.Duration); ok {
-			if v < min {
-				return fmt.Errorf("duration must be at least %s, got %s", min, v)
-			}
-			return nil
+		v := figFlesh{value}
+		if !v.IsDuration() {
+			return fmt.Errorf("value must be a duration, got %s", v)
 		}
-		return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
+		d := v.ToDuration()
+		if d < min {
+			return fmt.Errorf("duration must be at least %s, got %s", min, d)
+		}
+		return nil
 	}
 }
 
 // AssureDurationMax ensures a time.Duration does not exceed a maximum value.
 // Returns an error if the value exceeds the max or is not a time.Duration.
-var AssureDurationMax = func(max time.Duration) ValidatorFunc {
+var AssureDurationMax = func(max time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
-		if v, ok := value.(time.Duration); ok {
-			if v > max {
-				return fmt.Errorf("duration must not exceed %s, got %s", max, v)
-			}
-			return nil
+		v := figFlesh{value}
+		if !v.IsDuration() {
+			return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
 		}
-		return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
+		d := v.ToDuration()
+		if d > max {
+			return fmt.Errorf("duration must not exceed %s, got %s", max, d)
+		}
+		return nil
 	}
 }
 
 // AssureListNotEmpty ensures a list is not empty.
 // Returns an error if the list has no elements or is not a ListFlag.
 var AssureListNotEmpty = func(value interface{}) error {
-	switch v := value.(type) {
-	case *ListFlag:
-		if v == nil || len(*v.values) == 0 {
-			return fmt.Errorf("list is empty")
-		}
-		return nil
-	case *[]string:
-		if len(*v) == 0 {
-			return fmt.Errorf("list is empty")
-		}
-		return nil
-	case []string:
-		if len(v) == 0 {
-			return fmt.Errorf("list is empty")
-		}
-		return nil
-	default:
+	v := figFlesh{value}
+	if !v.IsList() {
 		return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
 	}
+	l := v.ToList()
+	if len(l) == 0 {
+		return fmt.Errorf("list is empty")
+	}
+	return nil
 }
 
 // AssureListMinLength ensures a list has at least a minimum number of elements.
 // Returns an error if the list is too short or not a ListFlag.
-var AssureListMinLength = func(min int) ValidatorFunc {
+var AssureListMinLength = func(min int) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch v := value.(type) {
-		case *ListFlag:
-			if len(*v.values) < min {
-				return fmt.Errorf("list must have at least %d elements, got %d", min, len(*v.values))
-			}
-			return nil
-		case *[]string:
-			if len(*v) < min {
-				return fmt.Errorf("list is empty")
-			}
-			return nil
-		case []string:
-			if len(v) < min {
-				return fmt.Errorf("list is empty")
-			}
-			return nil
-		default:
+		v := figFlesh{value}
+		if !v.IsList() {
 			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
 		}
+		l := v.ToList()
+		if len(l) < min {
+			return fmt.Errorf("list is empty")
+		}
+		return nil
 	}
 }
 
 // AssureListContains ensures a list contains a specific string value.
-// Returns a ValidatorFunc that checks for the presence of the value.
-var AssureListContains = func(value string) ValidatorFunc {
-	return func(v interface{}) error {
-		if list, ok := v.(*ListFlag); ok && list != nil {
-			for _, item := range *list.values {
-				if item == value {
-					return nil
-				}
+// Returns a figValidatorFunc that checks for the presence of the value.
+var AssureListContains = func(inside string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if !v.IsList() {
+			return fmt.Errorf("invalid type, expected ListFlag or []string, got %T", value)
+		}
+		l := v.ToList()
+		for _, item := range l {
+			if item == inside {
+				return nil
 			}
 		}
-		if list, ok := v.(*[]string); ok && list != nil {
-			for _, item := range *list {
-				if item == value {
-					return nil
-				}
-			}
-		}
-		if list, ok := v.([]string); ok && list != nil {
-			for _, item := range list {
-				if item == value {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", value, list)
-		}
-		return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
+		return fmt.Errorf("list must contain %q, got %v", inside, l)
 	}
 }
 
 // AssureListNotContains ensures a list contains a specific string value.
-// Returns a ValidatorFunc that checks for the presence of the value.
-var AssureListNotContains = func(value string) ValidatorFunc {
-	return func(v interface{}) error {
-		if list, ok := v.(*ListFlag); ok && list != nil {
-			for _, item := range *list.values {
-				if item == value {
-					return fmt.Errorf("list cannot contain %s", item)
-				}
-			}
-			return nil
+// Returns a figValidatorFunc that checks for the presence of the value.
+var AssureListNotContains = func(not string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if !v.IsList() {
+			return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
 		}
-		if list, ok := v.(*[]string); ok && list != nil {
-			for _, item := range *list {
-				if item == value {
-					return fmt.Errorf("list cannot contain %s", item)
-				}
+		l := v.ToList()
+		for _, item := range l {
+			if item == not {
+				return fmt.Errorf("list cannot contain %s", item)
 			}
-			return nil
 		}
-		if list, ok := v.([]string); ok && list != nil {
-			for _, item := range list {
-				if item == value {
-					return fmt.Errorf("list cannot contain %s", item)
-				}
-			}
-			return nil
-		}
-		return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
+		return nil
 	}
 }
 
 // AssureListContainsKey ensures a list contains a specific string.
 // It accepts *ListFlag, *[]string, or []string and returns an error if the key string is not found
 // or the type is invalid.
-var AssureListContainsKey = func(key string) ValidatorFunc {
+var AssureListContainsKey = func(key string) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch list := value.(type) {
-		case *ListFlag:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			for _, item := range *list.values {
-				if item == key {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", key, *list.values)
-		case *[]string:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			for _, item := range *list {
-				if item == key {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", key, *list)
-		case []string:
-			for _, item := range list {
-				if item == key {
-					return nil
-				}
-			}
-			return fmt.Errorf("list must contain %q, got %v", key, list)
-		default:
+		v := figFlesh{value}
+		if !v.IsList() {
 			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
 		}
+		l := v.ToList()
+		for _, item := range l {
+			if item == key {
+				return nil
+			}
+		}
+		return fmt.Errorf("list must contain %q, got %v", key, l)
 	}
 }
 
 // AssureListLength ensures a list has exactly the specified length.
 // It accepts *ListFlag, *[]string, or []string and returns an error if the length differs
 // or the type is invalid.
-var AssureListLength = func(length int) ValidatorFunc {
+var AssureListLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch list := value.(type) {
-		case *ListFlag:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			if len(*list.values) != length {
-				return fmt.Errorf("list must have length %d, got %d", length, len(*list.values))
-			}
-			return nil
-		case *[]string:
-			if list == nil {
-				return fmt.Errorf("list is nil")
-			}
-			if len(*list) != length {
-				return fmt.Errorf("list must have length %d, got %d", length, len(*list))
-			}
-			return nil
-		case []string:
-			if len(list) != length {
-				return fmt.Errorf("list must have length %d, got %d", length, len(list))
-			}
-			return nil
-		default:
+		v := figFlesh{value}
+		if !v.IsList() {
 			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
 		}
+		l := v.ToList()
+		if len(l) != length {
+			return fmt.Errorf("list must have length %d, got %d", length, len(l))
+		}
+		return nil
 	}
 }
 
 // AssureMapNotEmpty ensures a map is not empty.
 // Returns an error if the map has no entries or is not a MapFlag.
 var AssureMapNotEmpty = func(value interface{}) error {
-	switch v := value.(type) {
-	case *MapFlag:
-		if len(*v.values) == 0 {
-			return fmt.Errorf("map is empty")
-		}
-		return nil
-	case *map[string]string:
-		if len(*v) == 0 {
-			return fmt.Errorf("list is empty")
-		}
-		return nil
-	case map[string]string:
-		if len(v) == 0 {
-			return fmt.Errorf("list is empty")
-		}
-		return nil
-	default:
+	v := figFlesh{value}
+	if !v.IsMap() {
 		return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
 	}
+	m := v.ToMap()
+	if len(m) == 0 {
+		return fmt.Errorf("list is empty")
+	}
+	return nil
 }
 
 // AssureMapHasKey ensures a map contains a specific key.
 // Returns an error if the key is missing or the value is not a MapFlag.
-var AssureMapHasKey = func(key string) ValidatorFunc {
+var AssureMapHasKey = func(key string) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch v := value.(type) {
-		case *MapFlag:
-			if _, exists := (*v.values)[key]; !exists {
-				return fmt.Errorf("map must contain key %q", key)
-			}
-			return nil
-		case *map[string]string:
-			if _, exists := (*v)[key]; !exists {
-				return fmt.Errorf("map must contain key %q", key)
-			}
-			return nil
-		case map[string]string:
-			if _, exists := v[key]; !exists {
-				return fmt.Errorf("map must contain key %q", key)
-			}
-			return nil
-		default:
+		v := figFlesh{value}
+		if !v.IsMap() {
 			return fmt.Errorf("invalid type, got %T", value)
 		}
+		m := v.ToMap()
+		if _, exists := m[key]; !exists {
+			return fmt.Errorf("map must contain key %q", key)
+		}
+		return nil
 	}
 }
 
 // AssureMapHasNoKey ensures a map contains a specific key.
 // Returns an error if the key is missing or the value is not a MapFlag.
-var AssureMapHasNoKey = func(key string) ValidatorFunc {
+var AssureMapHasNoKey = func(key string) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch v := value.(type) {
-		case *MapFlag:
-			if _, exists := (*v.values)[key]; exists {
-				return fmt.Errorf("map must not contain key %q", key)
-			}
-			return nil
-		case *map[string]string:
-			if _, exists := (*v)[key]; exists {
-				return fmt.Errorf("map must not contain key %q", key)
-			}
-			return nil
-		case map[string]string:
-			if _, exists := v[key]; exists {
-				return fmt.Errorf("map must not contain key %q", key)
-			}
-			return nil
-		default:
+		v := figFlesh{value}
+		if !v.IsMap() {
 			return fmt.Errorf("invalid type, got %T", value)
 		}
+		m := v.ToMap()
+		if _, exists := m[key]; exists {
+			return fmt.Errorf("map must not contain key %q", key)
+		}
+		return nil
 	}
 }
 
 // AssureMapValueMatches ensures a map has a specific key with a matching value.
-// Returns a ValidatorFunc that checks for the key-value pair.
-var AssureMapValueMatches = func(key, value string) ValidatorFunc {
-	return func(v interface{}) error {
-		switch m := v.(type) {
-		case *MapFlag:
-			if val, exists := (*m.values)[key]; exists {
-				if val != value {
-					return fmt.Errorf("map key %q must have value %q, got %q", key, value, val)
-				}
-				return nil
-			}
-			return fmt.Errorf("map key %q does not exist", key)
-		case *map[string]string:
-			if val, exists := (*m)[key]; exists {
-				if val != value {
-					return fmt.Errorf("map value %q must have value %q, got %q", key, value, val)
-				}
-				return nil
-			}
-			return fmt.Errorf("map key %q does not exist", key)
-		case map[string]string:
-			if val, exists := m[key]; exists {
-				if val != value {
-					return fmt.Errorf("map value %q must have value %q, got %q", key, value, val)
-				}
-				return nil
-			}
-			return fmt.Errorf("map key %q does not exist", key)
-		default:
-			return fmt.Errorf("invalid type, expected map[string]string, got %T", v)
+// Returns a figValidatorFunc that checks for the key-value pair.
+var AssureMapValueMatches = func(key, match string) FigValidatorFunc {
+	return func(value interface{}) error {
+		v := figFlesh{value}
+		if !v.IsMap() {
+			return fmt.Errorf("%s is not a map", key)
 		}
+		m := v.ToMap()
+		if val, exists := m[key]; exists {
+			if val != match {
+				return fmt.Errorf("map value %q must have value %q, got %q", key, match, val)
+			}
+			return nil
+		}
+		return fmt.Errorf("map key %q does not exist", key)
 	}
 }
 
 // AssureMapHasKeys ensures a map contains all specified keys.
 // Returns an error if any key is missing or the value is not a *MapFlag.
-var AssureMapHasKeys = func(keys []string) ValidatorFunc {
+var AssureMapHasKeys = func(keys []string) FigValidatorFunc {
 	return func(value interface{}) error {
-		missing := []string{}
-		switch m := value.(type) {
-		case *MapFlag:
-			if m == nil {
-				return fmt.Errorf("map is nil")
+		var missing []string
+		v := figFlesh{value}
+		if !v.IsMap() {
+			return fmt.Errorf("invalid type, expected map[string]string, got %T", v)
+		}
+		m := v.ToMap()
+		for _, key := range keys {
+			if _, exists := m[key]; !exists {
+				missing = append(missing, key)
 			}
-			for _, key := range keys {
-				if _, exists := (*m.values)[key]; !exists {
-					missing = append(missing, key)
-				}
-			}
-		case *map[string]string:
-			if m == nil {
-				return fmt.Errorf("map is nil")
-			}
-			for _, key := range keys {
-				if _, exists := (*m)[key]; !exists {
-					missing = append(missing, key)
-				}
-			}
-		case map[string]string:
-			for _, key := range keys {
-				if _, exists := m[key]; !exists {
-					missing = append(missing, key)
-				}
-			}
-		default:
-			return fmt.Errorf("invalid type, expected *MapFlag or map[string]string, got %T", value)
 		}
 		if len(missing) > 0 {
 			return fmt.Errorf("map must contain keys %v, missing %v", keys, missing)
@@ -783,65 +750,33 @@ var AssureMapHasKeys = func(keys []string) ValidatorFunc {
 // AssureMapLength ensures a map has exactly the specified length.
 // It accepts *MapFlag, *map[string]string, or map[string]string and returns an error
 // if the length differs or the type is invalid.
-var AssureMapLength = func(length int) ValidatorFunc {
+var AssureMapLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch m := value.(type) {
-		case *MapFlag:
-			if m == nil {
-				return fmt.Errorf("map is nil")
-			}
-			if len(*m.values) != length {
-				return fmt.Errorf("map must have length %d, got %d", length, len(*m.values))
-			}
-			return nil
-		case *map[string]string:
-			if m == nil {
-				return fmt.Errorf("map is nil")
-			}
-			if len(*m) != length {
-				return fmt.Errorf("map must have length %d, got %d", length, len(*m))
-			}
-			return nil
-		case map[string]string:
-			if len(m) != length {
-				return fmt.Errorf("map must have length %d, got %d", length, len(m))
-			}
-			return nil
-		default:
+		v := figFlesh{value}
+		if !v.IsMap() {
 			return fmt.Errorf("invalid type, expected *MapFlag or map[string]string, got %T", value)
 		}
+		m := v.ToMap()
+		if len(m) != length {
+			return fmt.Errorf("map must have length %d, got %d", length, len(m))
+		}
+		return nil
 	}
 }
 
 // AssureMapNotLength ensures a map has exactly the specified length.
 // It accepts *MapFlag, *map[string]string, or map[string]string and returns an error
 // if the length differs or the type is invalid.
-var AssureMapNotLength = func(length int) ValidatorFunc {
+var AssureMapNotLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
-		switch m := value.(type) {
-		case *MapFlag:
-			if m == nil {
-				return fmt.Errorf("map is nil")
-			}
-			if len(*m.values) == length {
-				return fmt.Errorf("map must not have length %d, got %d", length, len(*m.values))
-			}
-			return nil
-		case *map[string]string:
-			if m == nil {
-				return fmt.Errorf("map is nil")
-			}
-			if len(*m) == length {
-				return fmt.Errorf("map must not have length %d, got %d", length, len(*m))
-			}
-			return nil
-		case map[string]string:
-			if len(m) == length {
-				return fmt.Errorf("map must not have length %d, got %d", length, len(m))
-			}
-			return nil
-		default:
-			return fmt.Errorf("invalid type, expected *MapFlag or map[string]string, got %T", value)
+		v := figFlesh{value}
+		if !v.IsMap() {
+			return fmt.Errorf("invalid type, got %T", value)
 		}
+		m := v.ToMap()
+		if len(m) == length {
+			return fmt.Errorf("map must not have length %d, got %d", length, len(m))
+		}
+		return nil
 	}
 }

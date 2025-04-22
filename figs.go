@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 )
 
-// New will initialize the Tree package
+// New will initialize the figTree package
 // Usage:
 //
 //				When defining:
@@ -17,7 +17,7 @@ import (
 //		      OR err := figs.Load()
 //		      OR err := figs.ParseFile("path/to/file.json")
 //	       THEN workers := *figs.Int("workers") // workers is a regular int
-func New() Fruit {
+func New() Plant {
 	return With(Options{Tracking: false})
 }
 
@@ -40,12 +40,12 @@ func New() Fruit {
 //	   }
 //	 }()
 //
-// // figs implements figtree.Fruit interface
-func Grow() Fruit {
+// // figs implements figtree.Plant interface
+func Grow() Plant {
 	return With(Options{Tracking: true})
 }
 
-// With creates a new fig Tree with predefined Options
+// With creates a new fig figTree with predefined Options
 //
 // Example:
 //
@@ -60,10 +60,10 @@ func Grow() Fruit {
 //		figs.WithValidator("domain", figtree.AssureStringNotEmpty)
 //	 err := figs.Load()
 //	 domainInProductionConfigYamlFile := *figs.String("domain")
-func With(opts Options) Fruit {
+func With(opts Options) Plant {
 	angel := atomic.Bool{}
 	angel.Store(true)
-	fig := &Tree{
+	fig := &figTree{
 		ConfigFilePath: opts.ConfigFile,
 		ignoreEnv:      opts.IgnoreEnvironment,
 		filterTests:    opts.Germinate,
@@ -72,8 +72,8 @@ func With(opts Options) Fruit {
 		harvest:        opts.Harvest,
 		angel:          &angel,
 		problems:       make([]error, 0),
-		figs:           make(map[string]*Fig),
-		withered:       make(map[string]Fig),
+		figs:           make(map[string]*figFruit),
+		withered:       make(map[string]witheredFig),
 		mu:             sync.RWMutex{},
 		mutationsCh:    make(chan Mutation),
 		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),

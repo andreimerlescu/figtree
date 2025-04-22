@@ -5,7 +5,7 @@ import (
 )
 
 // ErrorFor returns an error on a given name if one exists
-func (tree *Tree) ErrorFor(name string) error {
+func (tree *figTree) ErrorFor(name string) error {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	fruit, exists := tree.figs[name]

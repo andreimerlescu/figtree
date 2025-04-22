@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-// WithCallback allows you to assign a slice of CallbackFunc to a Fig attached to a Tree.
+// WithCallback allows you to assign a slice of CallbackFunc to a figFruit attached to a figTree.
 // A callback is executed when the value of the configurable CHANGES
 //
 // Example:
@@ -23,7 +23,7 @@ import (
 //		}
 //		// do something with the sv domain after its been verified
 //	})
-func (tree *Tree) WithCallback(name string, whenCallback CallbackAfter, runThis CallbackFunc) Fruit {
+func (tree *figTree) WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	fruit, exists := tree.figs[name]
@@ -36,20 +36,26 @@ func (tree *Tree) WithCallback(name string, whenCallback CallbackAfter, runThis 
 	if fruit == nil {
 		return tree
 	}
+	if fruit.HasRule(RuleNoCallbacks) {
+		return tree
+	}
 	fruit.Callbacks = append(fruit.Callbacks, Callback{
-		CallbackAfter: whenCallback,
-		CallbackFunc:  runThis,
+		CallbackWhen: whenCallback,
+		CallbackFunc: runThis,
 	})
 	tree.figs[name] = fruit
 	return tree
 }
 
 // runCallbacks inspects each fig fruit on the tree and executes runCallbacks() against the fig fruit
-func (tree *Tree) runCallbacks(callbackOn CallbackAfter) error {
+func (tree *figTree) runCallbacks(callbackOn CallbackWhen) error {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	for _, fig := range tree.figs {
 		if len(fig.Callbacks) == 0 {
+			continue
+		}
+		if fig.HasRule(RuleNoCallbacks) {
 			continue
 		}
 		err := fig.runCallbacks(callbackOn)
@@ -61,13 +67,16 @@ func (tree *Tree) runCallbacks(callbackOn CallbackAfter) error {
 }
 
 // runCallbacks will take each registered callback and run it against the fig fruit
-func (fig *Fig) runCallbacks(callbackOn CallbackAfter) error {
+func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
 	if fig.Error != nil {
 		return fig.Error
 	}
+	if fig.HasRule(RuleNoCallbacks) {
+		return nil
+	}
 	errs := make([]error, len(fig.Callbacks))
 	for _, callback := range fig.Callbacks {
-		if callback.CallbackAfter == callbackOn {
+		if callback.CallbackWhen == callbackOn {
 			err := callback.CallbackFunc(fig.Flesh)
 			if err != nil {
 				errs = append(errs, err)

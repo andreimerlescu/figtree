@@ -36,11 +36,14 @@ const (
 	tUnitDuration Mutagenesis = "UnitDuration"
 	tList         Mutagenesis = "List"
 	tMap          Mutagenesis = "Map"
-)
 
-const CallbackAfterChange CallbackAfter = "CallbackAfterChange"
-const CallbackAfterRead CallbackAfter = "CallbackAfterRead"
-const CallbackAfterVerify CallbackAfter = "CallbackAfterVerify"
+	CallbackAfterChange  CallbackWhen = "CallbackAfterChange"
+	CallbackAfterRead    CallbackWhen = "CallbackAfterRead"
+	CallbackAfterVerify  CallbackWhen = "CallbackAfterVerify"
+	CallbackBeforeChange CallbackWhen = "CallbackBeforeChange"
+	CallbackBeforeRead   CallbackWhen = "CallbackBeforeRead"
+	CallbackBeforeVerify CallbackWhen = "CallbackBeforeVerify"
+)
 
 // Mutageneses is the plural form of Mutagenesis and this is a slice of Mutagenesis
 var Mutageneses = []Mutagenesis{tString, tBool, tInt, tInt64, tFloat64, tDuration, tUnitDuration, tList, tMap}
