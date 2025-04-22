@@ -26,8 +26,13 @@ func (tree *figTree) String(name string) *string {
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Flesh.ToString()
-	if !tree.ignoreEnv && tree.pollinate {
+	s, err := toString(fruit.Flesh.Flesh)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return nil
+	}
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		envs := os.Environ()
 		var e string
 		var ok bool
@@ -76,7 +81,7 @@ func (tree *figTree) Bool(name string) *bool {
 		return nil
 	}
 	s := fruit.Flesh.ToBool()
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			pb, err := strconv.ParseBool(e)
@@ -122,7 +127,7 @@ func (tree *figTree) Int(name string) *int {
 		return nil
 	}
 	s := fruit.Flesh.ToInt()
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := strconv.Atoi(e)
@@ -169,7 +174,7 @@ func (tree *figTree) Int64(name string) *int64 {
 		return nil
 	}
 	s := fruit.Flesh.ToInt64()
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := strconv.ParseInt(e, 10, 64)
@@ -216,7 +221,7 @@ func (tree *figTree) Float64(name string) *float64 {
 		return nil
 	}
 	s := fruit.Flesh.ToFloat64()
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := strconv.ParseFloat(e, 64)
@@ -271,7 +276,7 @@ func (tree *figTree) Duration(name string) *time.Duration {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := time.ParseDuration(e)
@@ -325,7 +330,7 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			h, err := time.ParseDuration(e)
@@ -384,7 +389,7 @@ func (tree *figTree) List(name string) *[]string {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			i := strings.Split(e, ",")
@@ -455,7 +460,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 	default:
 		return nil
 	}
-	if !tree.ignoreEnv && tree.pollinate {
+	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
 			i := strings.Split(e, ",")

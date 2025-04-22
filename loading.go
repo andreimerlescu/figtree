@@ -17,20 +17,25 @@ func (tree *figTree) Reload() error {
 
 // Load uses the EnvironmentKey and the DefaultJSONFile, DefaultYAMLFile, and DefaultINIFile to run ParseFile if it exists
 func (tree *figTree) Load() (err error) {
-	tree.activateFlagSet()
-	args := os.Args[1:]
-	if tree.filterTests {
-		args = filterTestFlags(args)
-		err = tree.flagSet.Parse(args)
-	} else {
-		err = tree.flagSet.Parse(args)
+	if !tree.HasRule(RuleNoFlags) {
+		tree.activateFlagSet()
+		args := os.Args[1:]
+		if tree.filterTests {
+			args = filterTestFlags(args)
+			err = tree.flagSet.Parse(args)
+		} else {
+			err = tree.flagSet.Parse(args)
+		}
+		if err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
+	first := ""
+	if !tree.HasRule(RuleNoEnv) {
+		first = os.Getenv(EnvironmentKey)
 	}
-
 	files := []string{
-		os.Getenv(EnvironmentKey),
+		first,
 		tree.ConfigFilePath,
 		ConfigFilePath,
 		filepath.Join(".", DefaultJSONFile),
@@ -54,16 +59,18 @@ func (tree *figTree) Load() (err error) {
 
 // LoadFile accepts a path and uses it to populate the figTree
 func (tree *figTree) LoadFile(path string) (err error) {
-	tree.activateFlagSet()
-	args := os.Args[1:]
-	if tree.filterTests {
-		args = filterTestFlags(args)
-		err = tree.flagSet.Parse(args)
-	} else {
-		err = tree.flagSet.Parse(args)
-	}
-	if err != nil {
-		return err
+	if !tree.HasRule(RuleNoFlags) {
+		tree.activateFlagSet()
+		args := os.Args[1:]
+		if tree.filterTests {
+			args = filterTestFlags(args)
+			err = tree.flagSet.Parse(args)
+		} else {
+			err = tree.flagSet.Parse(args)
+		}
+		if err != nil {
+			return err
+		}
 	}
 	var loadErr error
 	if loadErr = check.File(path, file.Options{Exists: true}); loadErr == nil {

@@ -71,15 +71,13 @@ func (tree *figTree) NewString(name string, value string, usage string) *string 
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{},
 		Mutagenesis: tString,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	witheredFig, exists := tree.withered[name]
 	if !exists {
@@ -102,15 +100,13 @@ func (tree *figTree) NewBool(name string, value bool, usage string) *bool {
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{new(bool)},
 		Mutagenesis: tBool,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.Flesh.(*bool) = value
 	return ptr
@@ -134,15 +130,13 @@ func (tree *figTree) NewInt(name string, value int, usage string) *int {
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{new(int)},
 		Mutagenesis: tInt,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	} // Initialize withered with a copy
 	*tree.withered[name].Flesh.Flesh.(*int) = value
 	return ptr
@@ -161,15 +155,13 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) *int64 {
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{new(int64)},
 		Mutagenesis: tInt64,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.Flesh.(*int64) = value
 	return ptr
@@ -188,15 +180,13 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) *float
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{new(float64)},
 		Mutagenesis: tFloat64,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.Flesh.(*float64) = value
 	return ptr
@@ -215,15 +205,13 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{new(time.Duration)},
 		Mutagenesis: tDuration,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.Flesh.(*time.Duration) = value
 	return ptr
@@ -242,15 +230,13 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{new(time.Duration)},
 		Mutagenesis: tUnitDuration,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	*tree.withered[name].Flesh.Flesh.(*time.Duration) = value * units
 	return ptr
@@ -273,17 +259,15 @@ func (tree *figTree) NewList(name string, value []string, usage string) *[]strin
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
 	witheredVal := make([]string, len(value))
 	copy(witheredVal, value)
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name:        name,
 		Flesh:       figFlesh{&ListFlag{values: &witheredVal}},
 		Mutagenesis: tList,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	return ptr.values
 }
@@ -305,21 +289,19 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
 		Callbacks:   make([]Callback, 0),
+		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
 	witheredVal := make(map[string]string)
 	for k, v := range value {
 		witheredVal[k] = v
 	}
-	tree.withered[name] = figFruit{
+	tree.withered[name] = witheredFig{
 		name: name,
 		Flesh: figFlesh{&MapFlag{
 			values: &witheredVal,
 		}},
 		Mutagenesis: tMap,
-		Mutations:   make([]Mutation, 0),
-		Validators:  make([]FigValidatorFunc, 0),
-		Callbacks:   make([]Callback, 0),
 	}
 	return ptr.values
 }

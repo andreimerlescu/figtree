@@ -12,6 +12,17 @@ type Plant interface {
 	// WithCallback registers a new CallbackWhen with a CallbackFunc on a figFruit on the figTree by its name
 	WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant
 
+	// SaveTo will store the Tree in a path file
+	SaveTo(path string) error
+	// ReadFrom will attempt to load the file into the Tree
+	ReadFrom(path string) error
+
+	// WithRule attaches a RuleKind to a figFruit
+	WithRule(name string, rule RuleKind) Plant
+
+	// WithTreeRule assigns a global rule on the Tree
+	WithTreeRule(rule RuleKind) Plant
+
 	// Fig returns a figFruit from the figTree by its name
 	Fig(name string) Flesh
 
@@ -130,7 +141,7 @@ type figTree struct {
 	harvest        int
 	pollinate      bool
 	figs           map[string]*figFruit
-	withered       map[string]figFruit
+	withered       map[string]witheredFig
 	mu             sync.RWMutex
 	tracking       bool
 	problems       []error
@@ -165,11 +176,19 @@ type Options struct {
 
 type FigValidatorFunc func(interface{}) error
 
+type witheredFig struct {
+	Error       error
+	Mutagenesis Mutagenesis
+	Flesh       figFlesh
+	name        string
+}
+
 type figFruit struct {
 	Validators  []FigValidatorFunc
 	Mutations   []Mutation
 	Callbacks   []Callback
 	Rules       []RuleKind
+	Locker      *sync.RWMutex
 	Error       error
 	Mutagenesis Mutagenesis
 	Flesh       figFlesh

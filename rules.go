@@ -9,8 +9,10 @@ const (
 	RuleNoValidations             RuleKind = iota // RuleNoValidations will skip over all WithValidator assignments
 	RuleNoCallbacks               RuleKind = iota // RuleNoCallbacks will skip over all WithCallback assignments
 	RuleCondemnedFromResurrection RuleKind = iota // RuleCondemnedFromResurrection will panic if there is an attempt to resurrect a condemned fig
-	RuleNoMaps                    RuleKind = iota
-	RuleNoLists                   RuleKind = iota
+	RuleNoMaps                    RuleKind = iota // RuleNoMaps blocks NewMap, StoreMap, and Map from being called on the Tree
+	RuleNoLists                   RuleKind = iota // RuleNoLists blocks NewList, StoreList, and List from being called on the Tree
+	RuleNoFlags                   RuleKind = iota // RuleNoFlags disables the flag package from the Tree
+	RuleNoEnv                     RuleKind = iota // RuleNoEnv skips over all os.Getenv related logic
 )
 
 func (tree *figTree) HasRule(rule RuleKind) bool {
@@ -32,6 +34,13 @@ func (fig *figFruit) HasRule(rule RuleKind) bool {
 		}
 	}
 	return false
+}
+
+func (tree *figTree) WithTreeRule(rule RuleKind) Plant {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.GlobalRules = append(tree.GlobalRules, rule)
+	return tree
 }
 
 // WithRule attaches a Rule to to the Fig

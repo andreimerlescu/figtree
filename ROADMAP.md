@@ -29,6 +29,9 @@ The package `figtree` was upgraded this year to `v2` that supports `.WithValidat
     - [X] `figs.WithRule(key, figtree.RulePreventChange)` (if property is changed, block the attempt)
     - [X] `figs.WithRule(key, figtree.RulePanicOnChange)` (call `panic()` when value changes)
     - [X] `figs.WithRule(key, figtree.RuleNoVerify)` (disable verification on rule))
+- **Persistence**
+    - [X] `figs.SaveTo(path)` (saves the fruit to a file)
+    - [X] `figs.ReadFrom(path)` (loads fruit from a file)
      
 ### v2.1.0 Planned Release
 

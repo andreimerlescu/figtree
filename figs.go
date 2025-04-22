@@ -73,7 +73,7 @@ func With(opts Options) Plant {
 		angel:          &angel,
 		problems:       make([]error, 0),
 		figs:           make(map[string]*figFruit),
-		withered:       make(map[string]figFruit),
+		withered:       make(map[string]witheredFig),
 		mu:             sync.RWMutex{},
 		mutationsCh:    make(chan Mutation),
 		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),

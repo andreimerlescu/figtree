@@ -46,13 +46,10 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 		return tree
 	}
 	if _, exists := tree.withered[name]; !exists {
-		tree.withered[name] = figFruit{
+		tree.withered[name] = witheredFig{
 			Flesh:       fruit.Flesh,
 			Mutagenesis: tString,
 			Error:       fmt.Errorf("missing withered value for %s", name),
-			Mutations:   make([]Mutation, 0),
-			Validators:  make([]FigValidatorFunc, 0),
-			Callbacks:   make([]Callback, 0),
 		}
 	}
 	err := fruit.runCallbacks(CallbackBeforeChange)
