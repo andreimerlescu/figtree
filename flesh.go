@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+func NewFlesh(thing interface{}) Flesh {
+	return &figFlesh{Flesh: thing}
+}
+
 func (flesh *figFlesh) ToString() string {
 	f, _ := toString(flesh.Flesh)
 	return f

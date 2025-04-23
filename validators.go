@@ -65,20 +65,36 @@ func (tree *figTree) validateAll() error {
 			if fruit != nil && validator != nil {
 				var val interface{}
 				switch v := fruit.Flesh.Flesh.(type) {
+				case int:
+					val = v
 				case *int:
 					val = *v
+				case int64:
+					val = v
 				case *int64:
 					val = *v
+				case float64:
+					val = v
 				case *float64:
 					val = *v
+				case string:
+					val = v
 				case *string:
 					val = *v
+				case bool:
+					val = v
 				case *bool:
 					val = *v
+				case time.Duration:
+					val = v
 				case *time.Duration:
 					val = *v
+				case ListFlag:
+					val = v.values
 				case *ListFlag:
 					val = *v.values
+				case MapFlag:
+					val = v.values
 				case *MapFlag:
 					val = *v.values
 				}
