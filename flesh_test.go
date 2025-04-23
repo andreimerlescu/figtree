@@ -13,6 +13,9 @@ func TestNewFlesh(t *testing.T) {
 	assert.Equal(t, 0, NewFlesh(t.Name()).ToInt())
 	assert.Equal(t, map[string]string{}, NewFlesh(t.Name()).ToMap())
 	assert.Equal(t, []string{t.Name()}, NewFlesh(t.Name()).ToList())
+	var x interface{}
+	assert.NotNil(t, NewFlesh(x))
+	assert.NotNil(t, NewFlesh(x).ToString())
 }
 
 func TestFleshInterface(t *testing.T) {
