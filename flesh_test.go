@@ -7,6 +7,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewFlesh(t *testing.T) {
+	assert.NotNil(t, NewFlesh(t.Name()))
+	assert.Equal(t, t.Name(), NewFlesh(t.Name()).ToString())
+	assert.Equal(t, 0, NewFlesh(t.Name()).ToInt())
+	assert.Equal(t, map[string]string{}, NewFlesh(t.Name()).ToMap())
+	assert.Equal(t, []string{t.Name()}, NewFlesh(t.Name()).ToList())
+}
+
 func TestFleshInterface(t *testing.T) {
 	t.Run("Is", func(t *testing.T) {
 		t.Run("Map", func(t *testing.T) {
