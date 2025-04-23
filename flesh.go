@@ -8,36 +8,84 @@ import (
 )
 
 func NewFlesh(thing interface{}) Flesh {
-	return &figFlesh{Flesh: thing}
+	f := figFlesh{Flesh: thing}
+	return &f
 }
 
 func (flesh *figFlesh) ToString() string {
-	f, _ := toString(flesh.Flesh)
+	f, e := toString(flesh.Flesh)
+	if e != nil {
+		isFlesh, ok := flesh.Flesh.(*figFlesh)
+		if ok {
+			f, e = toString(isFlesh.Flesh)
+			if e != nil {
+				return ""
+			}
+		}
+	}
 	return f
 }
 
 func (flesh *figFlesh) ToInt() int {
-	f, _ := toInt(flesh.Flesh)
+	f, e := toInt(flesh.Flesh)
+	if e != nil {
+		isFlesh, ok := flesh.Flesh.(*figFlesh)
+		if ok {
+			f, e = toInt(isFlesh.Flesh)
+			if e != nil {
+				return 0
+			}
+		}
+	}
 	return f
 }
 
 func (flesh *figFlesh) ToInt64() int64 {
-	f, _ := toInt64(flesh.Flesh)
+	f, e := toInt64(flesh.Flesh)
+	if e != nil {
+		isFlesh, ok := flesh.Flesh.(*figFlesh)
+		if ok {
+			f, e = toInt64(isFlesh.Flesh)
+			if e != nil {
+				return 0
+			}
+		}
+	}
 	return f
 }
 
 func (flesh *figFlesh) ToBool() bool {
-	f, _ := toBool(flesh.Flesh)
+	f, e := toBool(flesh.Flesh)
+	if e != nil {
+		isFlesh, ok := flesh.Flesh.(*figFlesh)
+		if ok {
+			f, e = toBool(isFlesh.Flesh)
+			if e != nil {
+				return false
+			}
+		}
+	}
 	return f
 }
 
 func (flesh *figFlesh) ToFloat64() float64 {
-	f, _ := toFloat64(flesh.Flesh)
+	f, e := toFloat64(flesh.Flesh)
+	if e != nil {
+		isFlesh, ok := flesh.Flesh.(*figFlesh)
+		if ok {
+			f, e = toFloat64(isFlesh.Flesh)
+			if e != nil {
+				return 0.0
+			}
+		}
+	}
 	return f
 }
 
 func (flesh *figFlesh) ToDuration() time.Duration {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.ToDuration()
 	case time.Duration:
 		return f
 	case *time.Duration:
@@ -77,6 +125,8 @@ func (flesh *figFlesh) ToUnitDuration() time.Duration {
 
 func (flesh *figFlesh) ToList() []string {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.ToList()
 	case *ListFlag:
 		return f.Values()
 	case []string:
@@ -105,6 +155,8 @@ func (flesh *figFlesh) ToMap() map[string]string {
 		return f
 	}
 	switch ft := flesh.Flesh.(type) {
+	case *figFlesh:
+		return ft.ToMap()
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
 		fu := make(map[string]string, len(*ft.values))
@@ -152,6 +204,8 @@ func (flesh *figFlesh) Is(mutagenesis Mutagenesis) bool {
 
 func (flesh *figFlesh) IsString() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsString()
 	case string:
 		return true
 	case *string:
@@ -163,6 +217,8 @@ func (flesh *figFlesh) IsString() bool {
 
 func (flesh *figFlesh) IsInt() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsInt()
 	case int:
 		return true
 	case *int:
@@ -174,6 +230,8 @@ func (flesh *figFlesh) IsInt() bool {
 
 func (flesh *figFlesh) IsInt64() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsInt64()
 	case int64:
 		return true
 	case *int64:
@@ -185,6 +243,8 @@ func (flesh *figFlesh) IsInt64() bool {
 
 func (flesh *figFlesh) IsBool() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsBool()
 	case bool:
 		return true
 	case *bool:
@@ -197,6 +257,8 @@ func (flesh *figFlesh) IsBool() bool {
 
 func (flesh *figFlesh) IsFloat64() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsFloat64()
 	case float64:
 		return true
 	case *float64:
@@ -208,6 +270,8 @@ func (flesh *figFlesh) IsFloat64() bool {
 
 func (flesh *figFlesh) IsDuration() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsDuration()
 	case time.Duration:
 		return true
 	case *time.Duration:
@@ -220,6 +284,8 @@ func (flesh *figFlesh) IsDuration() bool {
 
 func (flesh *figFlesh) IsUnitDuration() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsUnitDuration()
 	case time.Duration:
 		return true
 	case *time.Duration:
@@ -232,6 +298,8 @@ func (flesh *figFlesh) IsUnitDuration() bool {
 
 func (flesh *figFlesh) IsList() bool {
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsList()
 	case *ListFlag:
 		return true
 	case ListFlag:
@@ -278,6 +346,8 @@ func (flesh *figFlesh) IsMap() bool {
 		return ok
 	}
 	switch f := flesh.Flesh.(type) {
+	case *figFlesh:
+		return f.IsMap()
 	case *MapFlag:
 		return true
 	case MapFlag:
