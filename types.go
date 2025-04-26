@@ -26,6 +26,9 @@ type Plant interface {
 	// Fig returns a figFruit from the figTree by its name
 	Fig(name string) Flesh
 
+	// Source runs the attached WithSource against the SourceConfig
+	Source(name string) error
+
 	// WithValidator binds a figValidatorFunc to a figFruit that returns Plant
 	WithValidator(name string, validator func(interface{}) error) Plant
 
@@ -142,6 +145,8 @@ type figTree struct {
 	pollinate      bool
 	figs           map[string]*figFruit
 	withered       map[string]witheredFig
+	sources        map[string]SourceConfig
+	sourceLocker   sync.RWMutex
 	mu             sync.RWMutex
 	tracking       bool
 	problems       []error
