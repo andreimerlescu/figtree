@@ -34,12 +34,17 @@ func (l *ListFlag) String() string {
 	return strings.Join(*l.values, ",")
 }
 
+// PolicyListAppend will apply ListFlag.Set to the list of values and not append to any existing values in the ListFlag
+var PolicyListAppend bool = false
+
 // Set unpacks a comma separated value argument and appends items to the list of []string
 func (l *ListFlag) Set(value string) error {
 	if l.values == nil {
 		l.values = &[]string{}
 	}
 	items := strings.Split(value, ",")
-	*l.values = append(*l.values, items...)
+	if PolicyListAppend {
+		*l.values = append(*l.values, items...)
+	}
 	return nil
 }
