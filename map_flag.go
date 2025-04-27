@@ -66,9 +66,14 @@ func (m *MapFlag) String() string {
 	return strings.Join(entries, ",")
 }
 
+var PolicyMapAppend = false
+
 // Set accepts a value like KEY=VALUE,KEY=VALUE,KEY=VALUE to override map values
 func (m *MapFlag) Set(value string) error {
 	if m.values == nil {
+		m.values = &map[string]string{}
+	}
+	if !PolicyMapAppend {
 		m.values = &map[string]string{}
 	}
 	pairs := strings.Split(value, ",")

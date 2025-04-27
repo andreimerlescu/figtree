@@ -45,6 +45,8 @@ func (l *ListFlag) Set(value string) error {
 	items := strings.Split(value, ",")
 	if PolicyListAppend {
 		*l.values = append(*l.values, items...)
+	} else {
+		*l.values = items
 	}
 	return nil
 }

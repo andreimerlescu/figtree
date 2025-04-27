@@ -1,11 +1,12 @@
 package figtree
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRules(t *testing.T) {
