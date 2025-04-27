@@ -1,9 +1,10 @@
 package figtree
 
 import (
-	"github.com/stretchr/testify/assert"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTree_Parse(t *testing.T) {
