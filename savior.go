@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-ini/ini"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
+
+	"github.com/go-ini/ini"
+	"gopkg.in/yaml.v3"
 )
 
 func (tree *figTree) ReadFrom(path string) error {

@@ -1,9 +1,10 @@
 package figtree
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSomeAssurances(t *testing.T) {
