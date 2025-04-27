@@ -12,16 +12,22 @@ type Plant interface {
 	// WithCallback registers a new CallbackWhen with a CallbackFunc on a figFruit on the figTree by its name
 	WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant
 
-	// SaveTo will store the Tree in a path file
-	SaveTo(path string) error
-	// ReadFrom will attempt to load the file into the Tree
-	ReadFrom(path string) error
-
 	// WithRule attaches a RuleKind to a figFruit
 	WithRule(name string, rule RuleKind) Plant
 
 	// WithTreeRule assigns a global rule on the Tree
 	WithTreeRule(rule RuleKind) Plant
+
+	// WithValidator binds a figValidatorFunc to a figFruit that returns Plant
+	WithValidator(name string, validator func(interface{}) error) Plant
+
+	// WithSource attaches a SourceKind to a figFruit that returns Plant
+	WithSource(name string, config SourceConfig) Plant
+
+	// SaveTo will store the Tree in a path file
+	SaveTo(path string) error
+	// ReadFrom will attempt to load the file into the Tree
+	ReadFrom(path string) error
 
 	// Fig returns a figFruit from the figTree by its name
 	Fig(name string) Flesh
@@ -29,8 +35,8 @@ type Plant interface {
 	// Source runs the attached WithSource against the SourceConfig
 	Source(name string) error
 
-	// WithValidator binds a figValidatorFunc to a figFruit that returns Plant
-	WithValidator(name string, validator func(interface{}) error) Plant
+	// LoadAllFromSource will attempt to load all the sources into the Tree
+	LoadAllFromSource() error
 
 	// Parse can panic but interprets command line arguments defined with single dashes -example value -another sample
 	Parse() error
