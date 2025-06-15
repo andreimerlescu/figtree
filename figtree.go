@@ -72,6 +72,7 @@ func With(opts Options) Plant {
 		harvest:        opts.Harvest,
 		angel:          &angel,
 		problems:       make([]error, 0),
+		aliases:        make(map[string]string),
 		figs:           make(map[string]*figFruit),
 		withered:       make(map[string]witheredFig),
 		sources:        make(map[string]SourceConfig),

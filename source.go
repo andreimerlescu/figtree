@@ -20,6 +20,7 @@ const (
 
 type SourceConfig interface {
 	Fetch() (string, error)
+	Kind() SourceKind
 }
 
 func (s SourceKind) String() string {
@@ -90,8 +91,6 @@ func (tree *figTree) WithSource(name string, source SourceConfig) Plant {
 }
 
 func (tree *figTree) Source(name string) error {
-	tree.sourceLocker.Lock()
-	defer tree.sourceLocker.Unlock()
 	tree.mu.RLock()
 	source, exists := tree.sources[name]
 	tree.mu.RUnlock()

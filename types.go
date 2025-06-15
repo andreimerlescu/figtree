@@ -12,6 +12,14 @@ type Plant interface {
 	// WithCallback registers a new CallbackWhen with a CallbackFunc on a figFruit on the figTree by its name
 	WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant
 
+	// WithAlias registers a short form of the name of a figFruit on the figTree
+	WithAlias(name, alias string)
+
+	// SaveTo will store the Tree in a path file
+	SaveTo(path string) error
+	// ReadFrom will attempt to load the file into the Tree
+	ReadFrom(path string) error
+
 	// WithRule attaches a RuleKind to a figFruit
 	WithRule(name string, rule RuleKind) Plant
 
@@ -23,11 +31,6 @@ type Plant interface {
 
 	// WithSource attaches a SourceKind to a figFruit that returns Plant
 	WithSource(name string, config SourceConfig) Plant
-
-	// SaveTo will store the Tree in a path file
-	SaveTo(path string) error
-	// ReadFrom will attempt to load the file into the Tree
-	ReadFrom(path string) error
 
 	// Fig returns a figFruit from the figTree by its name
 	Fig(name string) Flesh

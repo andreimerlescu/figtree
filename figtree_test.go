@@ -262,30 +262,6 @@ func TestIsTracking(t *testing.T) {
 	})
 }
 
-/*
-func TestTree_PollinateInt(t *testing.T) {
-
-}
-func TestTree_PollinateInt64(t *testing.T) {
-
-}
-func TestTree_PollinateFloat64(t *testing.T) {
-
-}
-func TestTree_PollinateDuration(t *testing.T) {
-
-}
-func TestTree_PollinateUnitDuration(t *testing.T) {
-
-}
-func TestTree_PollinateList(t *testing.T) {
-
-}
-func TestTree_PollinateMap(t *testing.T) {
-
-}
-*/
-
 func TestTree_PollinateString(t *testing.T) {
 	figs := With(Options{Pollinate: true, Tracking: true, Germinate: true})
 	figs.NewString("test", "initial", "usage")
