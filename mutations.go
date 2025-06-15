@@ -13,6 +13,9 @@ import (
 func (tree *figTree) String(name string) *string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -67,6 +70,9 @@ func (tree *figTree) String(name string) *string {
 func (tree *figTree) Bool(name string) *bool {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -113,6 +119,9 @@ func (tree *figTree) Bool(name string) *bool {
 func (tree *figTree) Int(name string) *int {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -160,6 +169,9 @@ func (tree *figTree) Int(name string) *int {
 func (tree *figTree) Int64(name string) *int64 {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -207,6 +219,9 @@ func (tree *figTree) Int64(name string) *int64 {
 func (tree *figTree) Float64(name string) *float64 {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -254,6 +269,9 @@ func (tree *figTree) Float64(name string) *float64 {
 func (tree *figTree) Duration(name string) *time.Duration {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -308,6 +326,9 @@ func (tree *figTree) Duration(name string) *time.Duration {
 func (tree *figTree) UnitDuration(name string) *time.Duration {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -362,6 +383,9 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 func (tree *figTree) List(name string) *[]string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -426,6 +450,9 @@ func (tree *figTree) List(name string) *[]string {
 func (tree *figTree) Map(name string) *map[string]string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	if _, exists := tree.aliases[name]; exists {
+		name = tree.aliases[name]
+	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()

@@ -7,126 +7,133 @@ import (
 	"time"
 )
 
-// Plant defines the interface for configuration management.
-type Plant interface {
+type Withables interface {
 	// WithCallback registers a new CallbackWhen with a CallbackFunc on a figFruit on the figTree by its name
 	WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant
-
-	// SaveTo will store the Tree in a path file
-	SaveTo(path string) error
-	// ReadFrom will attempt to load the file into the Tree
-	ReadFrom(path string) error
-
+	// WithAlias registers a short form of the name of a figFruit on the figTree
+	WithAlias(name, alias string)
 	// WithRule attaches a RuleKind to a figFruit
 	WithRule(name string, rule RuleKind) Plant
-
 	// WithTreeRule assigns a global rule on the Tree
 	WithTreeRule(rule RuleKind) Plant
-
-	// Fig returns a figFruit from the figTree by its name
-	Fig(name string) Flesh
-
-	// Source runs the attached WithSource against the SourceConfig
-	Source(name string) error
-
 	// WithValidator binds a figValidatorFunc to a figFruit that returns Plant
 	WithValidator(name string, validator func(interface{}) error) Plant
+}
 
+type Savable interface {
+	// SaveTo will store the Tree in a path file
+	SaveTo(path string) error
+}
+
+type Readable interface {
+	// ReadFrom will attempt to load the file into the Tree
+	ReadFrom(path string) error
+}
+
+type Parsable interface {
 	// Parse can panic but interprets command line arguments defined with single dashes -example value -another sample
 	Parse() error
-
 	// ParseFile can panic but also can throw an error because it will attempt to load either JSON, YAML or INI file passed into it
 	ParseFile(filename string) error
+}
 
-	// MutagenesisOfFig will look up a Fruit by name and return the Metagenesis of it
-	MutagenesisOfFig(name string) Mutagenesis
-
-	// MutagenesisOf takes anything and returns the Mutagenesis of it
-	MutagenesisOf(what interface{}) Mutagenesis
-
-	// ErrorFor returns an error attached to a named figFruit
-	ErrorFor(name string) error
-
-	// Recall allows you to unlock the figTree from changes and resume tracking
-	Recall()
-
-	// Curse allows you to lock the figTree from changes and stop tracking
-	Curse()
-
+type Mutable interface {
 	// Mutations receives Mutation data on a receiver channel
 	Mutations() <-chan Mutation
+	// MutagenesisOfFig will look up a Fruit by name and return the Metagenesis of it
+	MutagenesisOfFig(name string) Mutagenesis
+	// MutagenesisOf takes anything and returns the Mutagenesis of it
+	MutagenesisOf(what interface{}) Mutagenesis
+}
 
-	// Resurrect takes a nil figFruit in the figTree.figs map and reloads it from ENV or the config file if available
-	Resurrect(name string)
-
+type Loadable interface {
 	// Load can panic but also can throw an error but will use the Environment Variable values if they are "EXAMPLE=value" or "ANOTHER=sample"
 	Load() error
-
 	// LoadFile accepts a path to a JSON, YAML or INI file to set values
 	LoadFile(path string) error
-
 	// Reload will refresh stored values of properties with their new Environment Variable values
 	Reload() error
+}
 
-	// Usage displays the helpful menu of figs registered using -h or -help
-	Usage() string
+type Divine interface {
+	// Recall allows you to unlock the figTree from changes and resume tracking
+	Recall()
+	// Curse allows you to lock the figTree from changes and stop tracking
+	Curse()
+	// Resurrect takes a nil figFruit in the figTree.figs map and reloads it from ENV or the config file if available
+	Resurrect(name string)
+}
 
+type Intable interface {
 	// Int returns a pointer to a registered int32 by name as -name=1 a pointer to 1 is returned
 	Int(name string) *int
 	// NewInt registers a new int32 flag by name and returns a pointer to the int32 storing the initial value
 	NewInt(name string, value int, usage string) *int
 	// StoreInt replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreInt(name string, value int) Plant
+}
 
+type Intable64 interface {
 	// Int64 returns a pointer to a registered int64 by name as -name=1 a pointer to 1 is returned
 	Int64(name string) *int64
 	// NewInt64 registers a new int32 flag by name and returns a pointer to the int64 storing the initial value
 	NewInt64(name string, value int64, usage string) *int64
 	// StoreInt64 replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreInt64(name string, value int64) Plant
+}
 
+type Floatable interface {
 	// Float64 returns a pointer to a registered float64 by name as -name=1.0 a pointer to 1.0 is returned
 	Float64(name string) *float64
 	// NewFloat64 registers a new float64 flag by name and returns a pointer to the float64 storing the initial value
 	NewFloat64(name string, value float64, usage string) *float64
 	// StoreFloat64 replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreFloat64(name string, value float64) Plant
+}
 
+type String interface {
 	// String returns a pointer to stored string by -name=value
 	String(name string) *string
 	// NewString registers a new string flag by name and returns a pointer to the string storing the initial value
 	NewString(name, value, usage string) *string
 	// StoreString replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreString(name, value string) Plant
+}
 
+type Flaggable interface {
 	// Bool returns a pointer to stored bool by -name=true
 	Bool(name string) *bool
 	// NewBool registers a new bool flag by name and returns a pointer to the bool storing the initial value
 	NewBool(name string, value bool, usage string) *bool
 	// StoreBool replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreBool(name string, value bool) Plant
+}
 
+type Durable interface {
 	// Duration returns a pointer to stored time.Duration (unitless) by name like -minutes=10 (requires multiplication of * time.Minute to match memetics of "minutes" flag name and human interpretation of this)
 	Duration(name string) *time.Duration
 	// NewDuration registers a new time.Duration by name and returns a pointer to it storing the initial value
 	NewDuration(name string, value time.Duration, usage string) *time.Duration
 	// StoreDuration replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreDuration(name string, value time.Duration) Plant
-
 	// UnitDuration returns a pointer to stored time.Duration (-name=10 w/ units as time.Minute == 10 minutes time.Duration)
 	UnitDuration(name string) *time.Duration
 	// NewUnitDuration registers a new time.Duration by name and returns a pointer to it storing the initial value
 	NewUnitDuration(name string, value, units time.Duration, usage string) *time.Duration
 	// StoreUnitDuration replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreUnitDuration(name string, value, units time.Duration) Plant
+}
 
+type Listable interface {
 	// List returns a pointer to a []string containing strings
 	List(name string) *[]string
 	// NewList registers a new []string that can be assigned -name="ONE,TWO,THREE,FOUR"
 	NewList(name string, value []string, usage string) *[]string
 	// StoreList replaces name with value and can issue a Mutation when receiving on Mutations()
 	StoreList(name string, value []string) Plant
+}
 
+type Mappable interface {
 	// Map returns a pointer to a map[string]string containing strings
 	Map(name string) *map[string]string
 	// NewMap registers a new map[string]string that can be assigned -name="PROPERTY=VALUE,ANOTHER=VALUE"
@@ -137,6 +144,45 @@ type Plant interface {
 	StoreMap(name string, value map[string]string) Plant
 }
 
+type CoreAbilities interface {
+	Withables
+	Savable
+	Readable
+	Parsable
+	Mutable
+	Loadable
+	Divine
+}
+
+type CoreMutations interface {
+	Intable
+	Intable64
+	Floatable
+	String
+	Flaggable
+	Durable
+	Listable
+	Mappable
+}
+
+type Core interface {
+	// Fig returns a figFruit from the figTree by its name
+	Fig(name string) Flesh
+
+	// ErrorFor returns an error attached to a named figFruit
+	ErrorFor(name string) error
+
+	// Usage displays the helpful menu of figs registered using -h or -help
+	Usage() string
+}
+
+// Plant defines the interface for configuration management.
+type Plant interface {
+	Core
+	CoreAbilities
+	CoreMutations
+}
+
 // figTree stores figs that are defined by their name and figFruit as well as a mutations channel and tracking bool for Options.Tracking
 type figTree struct {
 	ConfigFilePath string
@@ -145,7 +191,7 @@ type figTree struct {
 	pollinate      bool
 	figs           map[string]*figFruit
 	withered       map[string]witheredFig
-	sources        map[string]SourceConfig
+	aliases        map[string]string
 	sourceLocker   sync.RWMutex
 	mu             sync.RWMutex
 	tracking       bool
