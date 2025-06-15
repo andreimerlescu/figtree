@@ -54,10 +54,14 @@ func (tree *figTree) Usage() string {
 		}
 		tree.mu.RUnlock()
 		typeField := fmt.Sprintf("[%s]", typeStr)
+		var aliasList []string
 		for alias, name := range tree.aliases {
 			if name == f.Name {
-				flagStr = fmt.Sprintf("%s|-%s", alias, flagStr)
+				aliasList = append(aliasList, alias)
 			}
+		}
+		if len(aliasList) > 0 {
+			flagStr = fmt.Sprintf("%s|-%s", strings.Join(aliasList, "|-"), flagStr)
 		}
 
 		line := fmt.Sprintf("   -%-*s   %-8s   %s", maxFlagLen, flagStr, typeField, f.Usage)
