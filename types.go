@@ -173,7 +173,7 @@ type Core interface {
 	ErrorFor(name string) error
 
 	// Usage displays the helpful menu of figs registered using -h or -help
-	Usage() string
+	Usage()
 }
 
 // Plant defines the interface for configuration management.

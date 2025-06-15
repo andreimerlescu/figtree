@@ -11,7 +11,7 @@ import (
 )
 
 // Usage prints a helpful table of figs in a human-readable format
-func (tree *figTree) Usage() string {
+func (tree *figTree) Usage() {
 	termWidth := 80
 	if term.IsTerminal(int(os.Stdout.Fd())) {
 		if width, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
@@ -79,7 +79,7 @@ func (tree *figTree) Usage() string {
 		}
 	})
 
-	return sb.String()
+	fmt.Println(sb.String())
 }
 
 // wrapText wraps a line of text to fit within the terminal width, indenting wrapped lines

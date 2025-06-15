@@ -15,7 +15,6 @@ func TestWithAlias(t *testing.T) {
 		figs.NewString(cmdLong, valueLong, usage)
 		figs.WithAlias(cmdLong, cmdAliasLong)
 		assert.NoError(t, figs.Parse())
-		t.Log(figs.Usage())
 
 		assert.Equal(t, valueLong, *figs.String(cmdLong))
 		assert.Equal(t, valueLong, *figs.String(cmdAliasLong))
@@ -33,7 +32,6 @@ func TestWithAlias(t *testing.T) {
 		figs.WithAlias(k, ka2)
 		figs.WithAlias(k, ka3)
 		assert.NoError(t, figs.Parse())
-		t.Log(figs.Usage())
 
 		assert.Equal(t, v, *figs.String(k))
 		assert.Equal(t, v, *figs.String(ka1))
@@ -56,7 +54,7 @@ func TestWithAlias(t *testing.T) {
 		figs.WithValidator(cmdShort, AssureStringNotEmpty)
 
 		assert.NoError(t, figs.Parse())
-		t.Log(figs.Usage())
+
 		// long
 		assert.Equal(t, valueLong, *figs.String(cmdLong))
 		assert.Equal(t, valueLong, *figs.String(cmdAliasLong))
@@ -73,7 +71,6 @@ func TestWithAlias(t *testing.T) {
 		figs.NewInt("count", 42, "usage")
 		figs.WithAlias("count", "c")
 		assert.NoError(t, figs.Parse())
-		t.Log(figs.Usage())
 		assert.Equal(t, 42, *figs.Int("count"))
 		assert.Equal(t, 42, *figs.Int("c"))
 	})
@@ -86,6 +83,5 @@ func TestWithAlias(t *testing.T) {
 		figs.WithAlias("two", "x") // Should this overwrite or be ignored?
 		assert.NoError(t, figs.Parse())
 		assert.Equal(t, "value1", *figs.String("x")) // Clarify expected behavior
-		t.Log(figs.Usage())
 	})
 }
