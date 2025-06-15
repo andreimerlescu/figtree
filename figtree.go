@@ -79,6 +79,7 @@ func With(opts Options) Plant {
 		mutationsCh:    make(chan Mutation),
 		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
+	fig.flagSet.Usage = fig.Usage
 	angel.Store(false)
 	if opts.IgnoreEnvironment {
 		os.Clearenv()
