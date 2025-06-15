@@ -22,10 +22,6 @@ func (tree *figTree) Parse() (err error) {
 		}
 	}
 	tree.readEnv()
-	err = tree.fetchFromSources()
-	if err != nil {
-		return err
-	}
 	return tree.validateAll()
 }
 

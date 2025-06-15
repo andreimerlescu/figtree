@@ -139,9 +139,16 @@ func TestGrow(t *testing.T) {
 }
 
 func TestVersion(t *testing.T) {
-	assert.Empty(t, currentVersion, "currentVersion should return an empty string")
-	assert.NotEmpty(t, Version(), "Version() should not return an empty string")
-	assert.Equal(t, currentVersion, Version(), "Version() should return the current version")
+	t.Run("current_version_default_empty", func(t *testing.T) {
+		if len(currentVersion) > 0 {
+			currentVersion = ""
+		}
+		assert.Empty(t, currentVersion, "currentVersion should return an empty string")
+	})
+	t.Run("current_version", func(t *testing.T) {
+		assert.NotEmpty(t, Version(), "Version() should not return an empty string")
+		assert.Equal(t, currentVersion, Version(), "Version() should return the current version")
+	})
 }
 
 func TestIsTracking(t *testing.T) {

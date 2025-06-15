@@ -17,16 +17,15 @@ func TestTree_checkAndSetFromEnv(t *testing.T) {
 	// create a new fig tree
 	var figs *figTree
 	figs = &figTree{
-		harvest:      1,
-		figs:         make(map[string]*figFruit),
-		tracking:     false,
-		withered:     make(map[string]witheredFig),
-		sources:      make(map[string]SourceConfig),
-		sourceLocker: sync.RWMutex{},
-		flagSet:      flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
-		mu:           sync.RWMutex{},
-		mutationsCh:  make(chan Mutation, 1),
-		filterTests:  true,
+		harvest:     1,
+		figs:        make(map[string]*figFruit),
+		tracking:    false,
+		withered:    make(map[string]witheredFig),
+		aliases:     make(map[string]string),
+		flagSet:     flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
+		mu:          sync.RWMutex{},
+		mutationsCh: make(chan Mutation, 1),
+		filterTests: true,
 	}
 
 	// assign an int to k
@@ -63,8 +62,7 @@ func TestTree_setValue(t *testing.T) {
 		ConfigFilePath string
 		figs           map[string]*figFruit
 		withered       map[string]witheredFig
-		sources        map[string]SourceConfig
-		sourceLocker   sync.RWMutex
+		aliases        map[string]string
 		mu             sync.RWMutex
 		tracking       bool
 		mutationsCh    chan Mutation
@@ -83,11 +81,10 @@ func TestTree_setValue(t *testing.T) {
 		{
 			name: "Set int value",
 			fields: fields{
-				figs:         make(map[string]*figFruit),
-				withered:     make(map[string]witheredFig),
-				mutationsCh:  make(chan Mutation, 1),
-				sources:      make(map[string]SourceConfig),
-				sourceLocker: sync.RWMutex{},
+				figs:        make(map[string]*figFruit),
+				withered:    make(map[string]witheredFig),
+				aliases:     make(map[string]string),
+				mutationsCh: make(chan Mutation, 1),
 			},
 			args: args{
 				flagVal: new(int),
@@ -99,11 +96,10 @@ func TestTree_setValue(t *testing.T) {
 		{
 			name: "Set string value",
 			fields: fields{
-				figs:         make(map[string]*figFruit),
-				withered:     make(map[string]witheredFig),
-				mutationsCh:  make(chan Mutation, 1),
-				sources:      make(map[string]SourceConfig),
-				sourceLocker: sync.RWMutex{},
+				figs:        make(map[string]*figFruit),
+				withered:    make(map[string]witheredFig),
+				aliases:     make(map[string]string),
+				mutationsCh: make(chan Mutation, 1),
 			},
 			args: args{
 				flagVal: new(string),
@@ -115,11 +111,10 @@ func TestTree_setValue(t *testing.T) {
 		{
 			name: "Invalid type",
 			fields: fields{
-				figs:         make(map[string]*figFruit),
-				withered:     make(map[string]witheredFig),
-				mutationsCh:  make(chan Mutation, 1),
-				sources:      make(map[string]SourceConfig),
-				sourceLocker: sync.RWMutex{},
+				figs:        make(map[string]*figFruit),
+				withered:    make(map[string]witheredFig),
+				aliases:     make(map[string]string),
+				mutationsCh: make(chan Mutation, 1),
 			},
 			args: args{
 				flagVal: new(float32), // Unsupported type
@@ -160,15 +155,14 @@ func TestTree_setValue(t *testing.T) {
 
 func TestTree_setValuesFromMap(t *testing.T) {
 	tree := &figTree{
-		figs:         make(map[string]*figFruit),
-		withered:     make(map[string]witheredFig),
-		sources:      make(map[string]SourceConfig),
-		sourceLocker: sync.RWMutex{},
-		mu:           sync.RWMutex{},
-		tracking:     false,
-		mutationsCh:  make(chan Mutation, 1),
-		flagSet:      flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
-		filterTests:  true,
+		figs:        make(map[string]*figFruit),
+		withered:    make(map[string]witheredFig),
+		aliases:     make(map[string]string),
+		mu:          sync.RWMutex{},
+		tracking:    false,
+		mutationsCh: make(chan Mutation, 1),
+		flagSet:     flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
+		filterTests: true,
 	}
 	m := map[string]interface{}{
 		"name": "yahuah",
