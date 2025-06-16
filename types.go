@@ -251,16 +251,8 @@ type figFlesh struct {
 }
 
 type Flesh interface {
-	ToString() string
-	ToInt() int
-	ToInt64() int64
-	ToBool() bool
-	ToFloat64() float64
-	ToDuration() time.Duration
-	ToUnitDuration() time.Duration
-	ToList() []string
-	ToMap() map[string]string
 	Is(mutagenesis Mutagenesis) bool
+	AsIs() interface{}
 	IsString() bool
 	IsInt() bool
 	IsInt64() bool
@@ -270,6 +262,16 @@ type Flesh interface {
 	IsUnitDuration() bool
 	IsList() bool
 	IsMap() bool
+
+	ToString() string
+	ToInt() int
+	ToInt64() int64
+	ToBool() bool
+	ToFloat64() float64
+	ToDuration() time.Duration
+	ToUnitDuration() time.Duration
+	ToList() []string
+	ToMap() map[string]string
 }
 
 type Callback struct {

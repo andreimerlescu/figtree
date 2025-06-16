@@ -7,6 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestFigFlesh_ToString(t *testing.T) {
+	name := t.Name()
+	flesh := NewFlesh(name).AsIs()
+	assert.Equal(t, name, flesh)
+}
+
 func Test_toBool(t *testing.T) {
 	type args struct {
 		value interface{}

@@ -11,6 +11,8 @@ import (
 // toInt returns an interface{} as an int or returns an error
 func toInt(value interface{}) (int, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toInt(v.AsIs())
 	case int:
 		return v, nil
 	case *int:
@@ -41,6 +43,8 @@ func toInt(value interface{}) (int, error) {
 // toInt64 returns an interface{} as an int64 or returns an error
 func toInt64(value interface{}) (int64, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toInt64(v.AsIs())
 	case int:
 		return int64(v), nil
 	case *int:
@@ -71,6 +75,8 @@ func toInt64(value interface{}) (int64, error) {
 // toFloat64 returns an interface{} as an float64 or returns an error
 func toFloat64(value interface{}) (float64, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toFloat64(v.AsIs())
 	case *float64:
 		return *v, nil
 	case float64:
@@ -95,6 +101,8 @@ func toFloat64(value interface{}) (float64, error) {
 // toString returns an interface{} as a string or returns an error
 func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toString(v.AsIs())
 	case *string:
 		return *v, nil
 	case string:
@@ -131,6 +139,8 @@ func toString(value interface{}) (string, error) {
 // toBool returns an interface{} as a bool or returns an error
 func toBool(value interface{}) (bool, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toBool(v.AsIs())
 	case *string:
 		return strconv.ParseBool(*v)
 	case string:
@@ -147,6 +157,8 @@ func toBool(value interface{}) (bool, error) {
 // toStringSlice returns an interface{} as a []string{} or returns an error
 func toStringSlice(value interface{}) ([]string, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toStringSlice(v.AsIs())
 	case []string:
 		return v, nil
 	case *[]string:
@@ -179,6 +191,8 @@ func toStringSlice(value interface{}) ([]string, error) {
 // toStringMap returns an interface{} as a map[string]string or returns an error
 func toStringMap(value interface{}) (map[string]string, error) {
 	switch v := value.(type) {
+	case *figFlesh:
+		return toStringMap(v.AsIs())
 	case map[string]string:
 		return v, nil
 	case *map[string]string:

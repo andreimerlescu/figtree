@@ -12,6 +12,10 @@ func NewFlesh(thing interface{}) Flesh {
 	return &f
 }
 
+func (flesh *figFlesh) AsIs() interface{} {
+	return flesh.Flesh
+}
+
 func (flesh *figFlesh) ToString() string {
 	f, e := toString(flesh.Flesh)
 	if e != nil {
