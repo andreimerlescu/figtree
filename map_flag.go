@@ -19,7 +19,7 @@ func (tree *figTree) MapKeys(name string) []string {
 	defer func() {
 		name = originalName // return value to original
 	}()
-	name = strings.ToLower(name)
+	name = tree.resolveName(name)
 	fruit, exists := tree.figs[name]
 	if !exists {
 		return []string{}

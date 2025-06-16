@@ -155,6 +155,8 @@ func (tree *figTree) loadFlagSet() (e error) {
 			}
 		*/
 	}()
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
 	tree.flagSet.VisitAll(func(f *flag.Flag) {
 		flagName := f.Name
 		for alias, name := range tree.aliases {

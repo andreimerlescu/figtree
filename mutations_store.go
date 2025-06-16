@@ -10,6 +10,7 @@ import (
 func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok {
 		return tree

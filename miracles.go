@@ -21,6 +21,9 @@ func (tree *figTree) Curse() {
 
 // FigFlesh returns a Flesh interface to the Value on the figTree
 func (tree *figTree) FigFlesh(name string) Flesh {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	name = tree.resolveName(name)
 	value := tree.useValue(tree.from(name))
 	return value.Flesh()
 }

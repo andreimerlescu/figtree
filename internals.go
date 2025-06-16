@@ -146,9 +146,13 @@ func (tree *figTree) loadINI(data []byte) error {
 
 // setValuesFromMap uses the data map to store the configurable figs
 func (tree *figTree) setValuesFromMap(data map[string]interface{}) error {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
 	for key, value := range data {
-		if _, exists := tree.figs[key]; exists {
-			if err := tree.mutateFig(key, value); err != nil {
+		name := tree.resolveName(key)
+		_, exists := tree.figs[name]
+		if exists {
+			if err := tree.mutateFig(name, value); err != nil {
 				return fmt.Errorf("error setting key %s: %w", key, err)
 			}
 		}
@@ -269,7 +273,7 @@ func (tree *figTree) checkAndSetFromEnv(name string) {
 
 // mutateFig replaces the value interface{} and sends a Mutation into Mutations
 func (tree *figTree) mutateFig(name string, value interface{}) error {
-	name = strings.ToLower(name)
+	name = tree.resolveName(name)
 	def, ok := tree.figs[name]
 	if !ok || def == nil {
 		return fmt.Errorf("no such fig: %s", name)

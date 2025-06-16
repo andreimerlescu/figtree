@@ -3,7 +3,6 @@ package figtree
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 )
 
@@ -19,7 +18,7 @@ import (
 func (tree *figTree) WithValidator(name string, validator func(interface{}) error) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	name = strings.ToLower(name)
+	name = tree.resolveName(name)
 	if fig, ok := tree.figs[name]; ok {
 		if fig.HasRule(RuleNoValidations) {
 			return tree

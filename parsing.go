@@ -21,13 +21,9 @@ func (tree *figTree) useValue(value *Value, err error) *Value {
 	return value
 }
 
+// from will break everything if you lock the tree here
 func (tree *figTree) from(name string) (*Value, error) {
-	flagName := strings.ToLower(name)
-	for alias, realname := range tree.aliases {
-		if strings.EqualFold(alias, name) {
-			flagName = realname
-		}
-	}
+	flagName := tree.resolveName(name)
 	valueAny, ok := tree.values.Load(flagName)
 	if !ok {
 		return nil, errors.New("no value for " + flagName)

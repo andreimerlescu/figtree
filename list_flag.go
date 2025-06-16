@@ -12,6 +12,7 @@ type ListFlag struct {
 func (tree *figTree) ListValues(name string) []string {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = tree.resolveName(name)
 	if _, exists := tree.figs[name]; !exists {
 		return []string{}
 	}
