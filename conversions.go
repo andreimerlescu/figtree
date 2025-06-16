@@ -95,6 +95,14 @@ func toFloat64(value interface{}) (float64, error) {
 // toString returns an interface{} as a string or returns an error
 func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
+	case *ListFlag:
+		return v.String(), nil
+	case ListFlag:
+		return v.String(), nil
+	case MapFlag:
+		return v.String(), nil
+	case *MapFlag:
+		return v.String(), nil
 	case *string:
 		return *v, nil
 	case string:

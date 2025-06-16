@@ -12,6 +12,23 @@ func NewFlesh(thing interface{}) Flesh {
 	return &f
 }
 
+func (flesh *figFlesh) String() string {
+	switch flesh.Flesh.(type) {
+	case string:
+		return flesh.Flesh.(string)
+	case *string:
+		return *flesh.Flesh.(*string)
+	default:
+		return flesh.ToString()
+	}
+}
+
+func (flesh *figFlesh) Set(value string) error {
+
+	flesh.Flesh = value
+	return nil
+}
+
 func (flesh *figFlesh) ToString() string {
 	f, e := toString(flesh.Flesh)
 	if e != nil {

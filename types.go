@@ -7,6 +7,47 @@ import (
 	"time"
 )
 
+// Plant defines the interface for configuration management.
+type Plant interface {
+	Core
+	CoreAbilities
+	CoreMutations
+}
+
+type Core interface {
+	// Fig returns a figFruit from the figTree by its name
+	Fig(name string) Flesh
+
+	// ErrorFor returns an error attached to a named figFruit
+	ErrorFor(name string) error
+
+	// Usage displays the helpful menu of figs registered using -h or -help
+	Usage()
+}
+
+// CoreAbilities define what the figtree can do to the Plant
+type CoreAbilities interface {
+	Withables
+	Savable
+	Readable
+	Parsable
+	Mutable
+	Loadable
+	Divine
+}
+
+// CoreMutations define what the figtree can do to the Flesh
+type CoreMutations interface {
+	Intable
+	Intable64
+	Floatable
+	String
+	Flaggable
+	Durable
+	Listable
+	Mappable
+}
+
 type Withables interface {
 	// WithCallback registers a new CallbackWhen with a CallbackFunc on a figFruit on the figTree by its name
 	WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant
@@ -144,45 +185,6 @@ type Mappable interface {
 	StoreMap(name string, value map[string]string) Plant
 }
 
-type CoreAbilities interface {
-	Withables
-	Savable
-	Readable
-	Parsable
-	Mutable
-	Loadable
-	Divine
-}
-
-type CoreMutations interface {
-	Intable
-	Intable64
-	Floatable
-	String
-	Flaggable
-	Durable
-	Listable
-	Mappable
-}
-
-type Core interface {
-	// Fig returns a figFruit from the figTree by its name
-	Fig(name string) Flesh
-
-	// ErrorFor returns an error attached to a named figFruit
-	ErrorFor(name string) error
-
-	// Usage displays the helpful menu of figs registered using -h or -help
-	Usage()
-}
-
-// Plant defines the interface for configuration management.
-type Plant interface {
-	Core
-	CoreAbilities
-	CoreMutations
-}
-
 // figTree stores figs that are defined by their name and figFruit as well as a mutations channel and tracking bool for Options.Tracking
 type figTree struct {
 	ConfigFilePath string
@@ -244,6 +246,7 @@ type figFruit struct {
 	Mutagenesis Mutagenesis
 	Flesh       figFlesh
 	name        string
+	description string
 }
 
 type figFlesh struct {

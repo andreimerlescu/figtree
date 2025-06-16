@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,15 @@ func TestWithAlias(t *testing.T) {
 		assert.Equal(t, valueLong, *figs.String(cmdLong))
 		assert.Equal(t, valueLong, *figs.String(cmdAliasLong))
 		figs = nil
+	})
+
+	t.Run("shorthand_notation", func(t *testing.T) {
+		os.Args = []string{os.Args[0], "-" + cmdAliasLong, valueLong}
+		figs := With(Options{Germinate: true, Tracking: false})
+		figs.NewString(cmdLong, valueLong, usage)
+		figs.WithAlias(cmdLong, cmdAliasLong)
+		assert.NoError(t, figs.Parse())
+		assert.Equal(t, valueLong, *figs.String(cmdLong))
 	})
 
 	t.Run("multiple_aliases", func(t *testing.T) {
@@ -41,7 +51,11 @@ func TestWithAlias(t *testing.T) {
 	})
 
 	t.Run("complex_usage", func(t *testing.T) {
-
+		os.Args = []string{
+			os.Args[0],
+			"-list", "three,four,five",
+			"-map", "four=4,five=5,six=6",
+		}
 		figs := With(Options{Germinate: true, Tracking: false})
 		// long
 		figs.NewString(cmdLong, valueLong, usage)
@@ -53,6 +67,16 @@ func TestWithAlias(t *testing.T) {
 		figs.WithAlias(cmdShort, cmdAliasShort)
 		figs.WithValidator(cmdShort, AssureStringNotEmpty)
 
+		// list
+		figs.NewList("myList", []string{"one", "two", "three"}, "usage")
+		figs.WithValidator("myList", AssureListNotEmpty)
+		figs.WithAlias("myList", "list")
+
+		// map
+		figs.NewMap("myMap", map[string]string{"one": "1", "two": "2", "three": "3"}, "usage")
+		figs.WithValidator("myMap", AssureMapNotEmpty)
+		figs.WithAlias("myMap", "map")
+
 		assert.NoError(t, figs.Parse())
 
 		// long
@@ -61,6 +85,18 @@ func TestWithAlias(t *testing.T) {
 		// short
 		assert.Equal(t, valueShort, *figs.String(cmdShort))
 		assert.Equal(t, valueShort, *figs.String(cmdAliasShort))
+		// list
+		assert.NotEqual(t, []string{"one", "two", "three"}, *figs.List("myList"))
+		assert.Equal(t, []string{"three", "four", "five"}, *figs.List("myList"))
+		// list alias
+		assert.NotEqual(t, []string{"one", "two", "three"}, *figs.List("list"))
+		assert.Equal(t, []string{"three", "four", "five"}, *figs.List("list"))
+		// map
+		assert.NotEqual(t, map[string]string{"one": "1", "two": "2", "three": "3"}, *figs.Map("myMap"))
+		assert.Equal(t, map[string]string{"four": "4", "five": "5", "six": "6"}, *figs.Map("myMap"))
+		// map alias
+		assert.NotEqual(t, map[string]string{"one": "1", "two": "2", "three": "3"}, *figs.Map("map"))
+		assert.Equal(t, map[string]string{"four": "4", "five": "5", "six": "6"}, *figs.Map("map"))
 
 		figs = nil
 

@@ -663,9 +663,12 @@ var AssureListLength = func(length int) FigValidatorFunc {
 // AssureMapNotEmpty ensures a map is not empty.
 // Returns an error if the map has no entries or is not a MapFlag.
 var AssureMapNotEmpty = func(value interface{}) error {
-	v := figFlesh{value}
+	var v figFlesh
+	if _, ok := value.(figFlesh); !ok {
+		v = figFlesh{value}
+	}
 	if !v.IsMap() {
-		return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
+		return fmt.Errorf("invalid type, expected *MapFlag or []string, got %T", v)
 	}
 	m := v.ToMap()
 	if len(m) == 0 {

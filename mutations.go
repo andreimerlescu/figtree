@@ -70,9 +70,11 @@ func (tree *figTree) String(name string) *string {
 func (tree *figTree) Bool(name string) *bool {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	// is name an alias?
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
+	// get the fruit by its name
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		tree.mu.RUnlock()
@@ -80,13 +82,16 @@ func (tree *figTree) Bool(name string) *bool {
 		tree.mu.RLock()
 		fruit = tree.figs[name]
 	}
+	// run the callbacks
 	err := fruit.runCallbacks(CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
+	// cast the flesh
 	s := fruit.Flesh.ToBool()
+	// handle environment
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -107,11 +112,14 @@ func (tree *figTree) Bool(name string) *bool {
 			}
 		}
 	}
+	// Moar callbacks
 	err = fruit.runCallbacks(CallbackAfterRead)
+	// check for errors
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 	}
+	// return the result
 	return &s
 }
 
@@ -410,6 +418,14 @@ func (tree *figTree) List(name string) *[]string {
 	case []string:
 		v = make([]string, len(f))
 		copy(v, f)
+	case string:
+		fv := strings.Split(f, ",")
+		v = make([]string, len(fv))
+		copy(v, fv)
+	case *string:
+		fv := strings.Split(*f, ",")
+		v = make([]string, len(fv))
+		copy(v, fv)
 	default:
 		return nil
 	}
@@ -483,6 +499,15 @@ func (tree *figTree) Map(name string) *map[string]string {
 		v = make(map[string]string, len(f))
 		for k, val := range f {
 			v[k] = val
+		}
+	case string:
+		vf := strings.Split(f, ",")
+		v = make(map[string]string, len(vf))
+		for _, iv := range vf {
+			parts := strings.Split(iv, "=")
+			if len(parts) == 2 {
+				v[parts[0]] = parts[1]
+			}
 		}
 	default:
 		return nil

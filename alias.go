@@ -7,4 +7,13 @@ func (tree *figTree) WithAlias(name, alias string) {
 		return
 	}
 	tree.aliases[alias] = name
+	fig := tree.figs[name]
+	if fig == nil {
+		return
+	}
+	switch fig.Flesh.Flesh.(type) {
+	case *ListFlag:
+
+	}
+	tree.flagSet.Var(&fig.Flesh, alias, fig.description)
 }
