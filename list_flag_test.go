@@ -21,7 +21,7 @@ func TestListFlag_Set(t *testing.T) {
 		figs := With(Options{Germinate: true})
 		figs.NewList("x", []string{"bum"}, "Name List")
 		assert.NoError(t, figs.Parse())
-		assert.Equal(t, "", figs.Fig("x").ToString())
+		assert.Equal(t, "", figs.FigFlesh("x").ToString())
 		assert.Contains(t, *figs.List("x"), "yahuah")
 		assert.Contains(t, *figs.List("x"), "bum") // Contains because of PolicyListAppend
 		os.Args = []string{os.Args[0]}
@@ -32,7 +32,7 @@ func TestListFlag_Set(t *testing.T) {
 		figs := With(Options{Germinate: true})
 		figs.NewList("x", []string{"bum"}, "Name List")
 		assert.NoError(t, figs.Parse())
-		assert.Equal(t, "", figs.Fig("x").ToString())
+		assert.Equal(t, "", figs.FigFlesh("x").ToString())
 		assert.Contains(t, *figs.List("x"), "yahuah")
 		assert.NotContains(t, *figs.List("x"), "bum") // NotContains because of PolicyListAppend
 		os.Args = []string{os.Args[0]}

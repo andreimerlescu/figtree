@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,8 +10,23 @@ import (
 
 func TestFigFlesh_ToString(t *testing.T) {
 	name := t.Name()
-	flesh := NewFlesh(name).AsIs()
-	assert.Equal(t, name, flesh)
+	flesh := NewFlesh(name)
+	flesh = NewFlesh(flesh)
+	assert.Equal(t, name, flesh.ToString())
+}
+
+const TheName = "YAHUAH"
+
+func TestFigTree_WithCallback(t *testing.T) {
+	os.Args = []string{os.Args[0], "-name", TheName}
+	figs := With(Options{Germinate: true, Tracking: false, IgnoreEnvironment: true})
+	figs.NewString("name", "", "Your Name")
+	figs.WithCallback("name", CallbackAfterVerify, func(value interface{}) error {
+		v := NewFlesh(value)
+		assert.Equal(t, TheName, v.AsIs())
+		return nil
+	})
+	assert.NoError(t, figs.Parse())
 }
 
 func Test_toBool(t *testing.T) {

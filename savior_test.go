@@ -28,7 +28,7 @@ func TestFigTree_SaveTo(t *testing.T) {
 
 	fig2 := With(Options{Germinate: true})
 	assert.NoError(t, fig2.ReadFrom(testFile))
-	nameFig := fig2.Fig("name")
+	nameFig := fig2.FigFlesh("name")
 	assert.NotNil(t, nameFig)
 	name := fig2.String("name")
 	assert.Equal(t, t.Name(), *name)

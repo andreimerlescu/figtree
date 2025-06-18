@@ -21,7 +21,7 @@ func TestMapFlag_Set(t *testing.T) {
 		figs := With(Options{Germinate: true})
 		figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")
 		assert.NoError(t, figs.Parse())
-		assert.Equal(t, "", figs.Fig("x").ToString())
+		assert.Equal(t, "", figs.FigFlesh("x").ToString())
 		assert.Contains(t, figs.MapKeys("x"), "name")
 		assert.Contains(t, figs.MapKeys("x"), "job") // Contains because of PolicyMapAppend
 		os.Args = []string{os.Args[0]}
@@ -32,7 +32,7 @@ func TestMapFlag_Set(t *testing.T) {
 		figs := With(Options{Germinate: true})
 		figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")
 		assert.NoError(t, figs.Parse())
-		assert.Equal(t, "", figs.Fig("x").ToString())
+		assert.Equal(t, "", figs.FigFlesh("x").ToString())
 		assert.Contains(t, figs.MapKeys("x"), "name")
 		assert.NotContains(t, figs.MapKeys("x"), "job") // NotContains because no PolicyMapAppend
 		os.Args = []string{os.Args[0]}

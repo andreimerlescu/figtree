@@ -13,7 +13,19 @@ func NewFlesh(thing interface{}) Flesh {
 }
 
 func (flesh *figFlesh) AsIs() interface{} {
-	return flesh.Flesh
+	switch v := flesh.Flesh.(type) {
+	case Value:
+		switch x := v.Value.(type) {
+		case *Value:
+			return x.Value
+		case Value:
+			return x.Value
+		default:
+			return v.Value
+		}
+	default:
+		return v
+	}
 }
 
 func (flesh *figFlesh) ToString() string {
@@ -323,7 +335,7 @@ func (flesh *figFlesh) IsList() bool {
 	}
 }
 
-// IsMap checks a Fig Flesh and returns a bool
+// IsMap checks a FigFlesh Flesh and returns a bool
 //
 // figFlesh can be a string NAME=YAHUAH,AGE=33,SEX=MALE can be expressed as
 // a map[string]string by parsing it as you can see with initial below
@@ -335,8 +347,8 @@ func (flesh *figFlesh) IsList() bool {
 //		  figs.NewMap("attributes", initial, "map of attributes")
 //	   err := figs.Parse()
 //		  if err != nil { panic(err) }
-//	   attributes := figs.Fig("attributes") // this is figtree Flesh
-//	   check := figs.Fig("attributes").IsMap() // this is a bool
+//	   attributes := figs.FigFlesh("attributes") // this is figtree Flesh
+//	   check := figs.FigFlesh("attributes").IsMap() // this is a bool
 //	   fmt.Printf("attributes is a %T with %d keys and equals %q\n",
 //			check, len(attributes.ToMap()) > 0, attributes)
 func (flesh *figFlesh) IsMap() bool {

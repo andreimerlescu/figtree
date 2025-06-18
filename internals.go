@@ -59,15 +59,19 @@ func (tree *figTree) loadYAML(data []byte) error {
 		var fruit *figFruit
 		var exists bool
 		if fruit, exists = tree.figs[n]; exists && fruit != nil {
-			tf := tree.MutagenesisOf(fruit.Flesh)
+			tf := tree.MutagenesisOf(fruit.Value.Value)
 			if strings.EqualFold(string(tf), string(t)) {
-				tree.figs[n].Flesh = figFlesh{d}
+				tree.figs[n].Value.Value = d
 				continue
 			}
 		}
+		v := Value{
+			Value:      d,
+			Mutagensis: tree.MutagenesisOf(d),
+		}
 		fruit = &figFruit{
 			name:       n,
-			Flesh:      figFlesh{d},
+			Value:      v,
 			Mutations:  make([]Mutation, 0),
 			Validators: make([]FigValidatorFunc, 0),
 			Callbacks:  make([]Callback, 0),
@@ -75,7 +79,7 @@ func (tree *figTree) loadYAML(data []byte) error {
 		}
 		withered := witheredFig{
 			name:  n,
-			Flesh: figFlesh{d},
+			Value: v,
 		}
 
 		switch d.(type) {
@@ -293,9 +297,9 @@ func (tree *figTree) mutateFig(name string, value interface{}) error {
 	var old interface{}
 	var dead interface{}
 	witheredFig, ok := tree.withered[name]
-	dead = witheredFig.Flesh
-	old = def.Flesh
-	def.Flesh = figFlesh{value}
+	dead = witheredFig.Value.Value
+	old = def.Value.Value
+	def.Value.Value = value
 	t1 := tree.MutagenesisOf(&old)
 	t2 := tree.MutagenesisOf(value)
 	if t1 == "" && t2 != "" {

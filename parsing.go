@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"flag"
 	"os"
 )
 
@@ -16,6 +17,14 @@ func (tree *figTree) Parse() (err error) {
 			err = tree.flagSet.Parse(args)
 		} else {
 			err = tree.flagSet.Parse(args)
+		}
+		for _, fig := range tree.figs {
+			fv := tree.flagSet.Lookup(fig.name)
+			v := fv.Value.String()
+			e := fig.Value.Set(v)
+			if e != nil {
+				err = e
+			}
 		}
 		if err != nil {
 			return err
@@ -40,6 +49,14 @@ func (tree *figTree) ParseFile(filename string) (err error) {
 			return err
 		}
 	}
+	tree.flagSet.VisitAll(func(f *flag.Flag) {
+		if fig, exists := tree.figs[f.Name]; exists {
+			fig.Value = Value{
+				Value:      f.Value,
+				Mutagensis: tree.MutagenesisOf(fig.Value),
+			}
+		}
+	})
 	if filename != "" {
 		return tree.loadFile(filename)
 	}

@@ -16,7 +16,7 @@ func (tree *figTree) ListValues(name string) []string {
 	if !exists {
 		return []string{}
 	}
-	return fruit.Flesh.ToList()
+	return fruit.Value.Flesh().ToList()
 }
 
 func (l *ListFlag) Values() []string {

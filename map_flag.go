@@ -17,7 +17,7 @@ func (tree *figTree) MapKeys(name string) []string {
 	if !exists {
 		return []string{}
 	}
-	switch v := fruit.Flesh.Flesh.(type) {
+	switch v := fruit.Value.Value.(type) {
 	case nil:
 		return []string{}
 	case map[string]string:
@@ -29,6 +29,12 @@ func (tree *figTree) MapKeys(name string) []string {
 	case *map[string]string:
 		keys := make([]string, 0, len(*v))
 		for k := range *v {
+			keys = append(keys, k)
+		}
+		return keys
+	case Value:
+		keys := make([]string, 0, len(*v.Value.(*map[string]string)))
+		for k := range *v.Value.(*map[string]string) {
 			keys = append(keys, k)
 		}
 		return keys

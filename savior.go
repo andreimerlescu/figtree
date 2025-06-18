@@ -24,7 +24,7 @@ func (tree *figTree) SaveTo(path string) error {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	for name, fig := range tree.figs {
-		properties[name] = fig.Flesh.Flesh
+		properties[name] = fig.Value.Value
 	}
 	formatValue := func(val interface{}) string {
 		return fmt.Sprintf("%v", val)

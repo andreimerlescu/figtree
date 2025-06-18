@@ -36,7 +36,7 @@ func (tree *figTree) Usage() {
 	})
 
 	var sb strings.Builder
-	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", filepath.Base(os.Args[0]), Version())
+	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figtree %s):\n", filepath.Base(os.Args[0]), Version())
 	flag.VisitAll(func(f *flag.Flag) {
 		flagStr := f.Name
 		defValue := f.DefValue

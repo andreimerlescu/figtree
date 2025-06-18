@@ -203,7 +203,7 @@ figs := figtree.With(Options{Tracking: true, Harvest: 1776, Pollinate: true})
 figs.NewString(kDomain, "", "Domain name")
 figs.WithValidator(kDomain, figtree.AssureStringLengthGreaterThan(3))
 figs.WithValidator(kDomain, figtree.AssureStringHasPrefix("https://"))
-figs.WithCallback(kDomain, figree.CallbackAfterVerify, func(value interface{}) error {
+figs.WithCallback(kDomain, figtree.CallbackAfterVerify, func(value interface{}) error {
     var s string
     switch v := value.(type) {
     case *string:
@@ -214,7 +214,7 @@ figs.WithCallback(kDomain, figree.CallbackAfterVerify, func(value interface{}) e
     // try connecting to the domain now
     return CheckAvailability(s)
 })
-figs.WithCallback(kDomain, figree.CallbackAfterRead, func(value interface{}) error {
+figs.WithCallback(kDomain, figtree.CallbackAfterRead, func(value interface{}) error {
     // every time *figs.String(kDomain) is called, run this
 	var s string
 	switch v := value.(type) {

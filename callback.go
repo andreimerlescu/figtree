@@ -77,7 +77,7 @@ func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
 	errs := make([]error, len(fig.Callbacks))
 	for _, callback := range fig.Callbacks {
 		if callback.CallbackWhen == callbackOn {
-			err := callback.CallbackFunc(fig.Flesh)
+			err := callback.CallbackFunc(fig.Value)
 			if err != nil {
 				errs = append(errs, err)
 			}

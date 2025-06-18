@@ -64,7 +64,7 @@ func (tree *figTree) validateAll() error {
 		for _, validator := range fruit.Validators {
 			if fruit != nil && validator != nil {
 				var val interface{}
-				switch v := fruit.Flesh.Flesh.(type) {
+				switch v := fruit.Value.Value.(type) {
 				case int:
 					val = v
 				case *int:
@@ -97,6 +97,8 @@ func (tree *figTree) validateAll() error {
 					val = v.values
 				case *MapFlag:
 					val = *v.values
+				case *Value:
+					val = v.Value
 				}
 				if err := validator(val); err != nil {
 					return fmt.Errorf("validation failed for %s: %v", name, err)

@@ -270,6 +270,7 @@ func TestIsTracking(t *testing.T) {
 }
 
 func TestTree_PollinateString(t *testing.T) {
+	os.Args = []string{os.Args[0]}
 	figs := With(Options{Pollinate: true, Tracking: true, Germinate: true})
 	figs.NewString("test", "initial", "usage")
 	figs.WithValidator("test", AssureStringContains("ini"))

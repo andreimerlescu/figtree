@@ -59,14 +59,18 @@ func (tree *figTree) MutagenesisOf(what interface{}) Mutagenesis {
 }
 
 // NewString with validator and withered support
-func (tree *figTree) NewString(name string, value string, usage string) *string {
+func (tree *figTree) NewString(name string, value string, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	ptr := flag.String(name, value, usage)
+	v := Value{
+		Value:      value,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tString,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -74,28 +78,31 @@ func (tree *figTree) NewString(name string, value string, usage string) *string 
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Flesh:       figFlesh{},
-		Mutagenesis: tString,
-	}
-	witheredFig, exists := tree.withered[name]
+	theWitheredFig, exists := tree.withered[name]
 	if !exists {
-		witheredFig.Flesh = figFlesh{value}
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       v,
+			Mutagenesis: tString,
+		}
 	}
-	tree.withered[name] = witheredFig
-	return ptr
+	tree.withered[name] = theWitheredFig
+	return tree
 }
 
 // NewBool with validator and withered support
-func (tree *figTree) NewBool(name string, value bool, usage string) *bool {
+func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	ptr := flag.Bool(name, value, usage)
+	v := Value{
+		Value:      value,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tBool,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -105,27 +112,25 @@ func (tree *figTree) NewBool(name string, value bool, usage string) *bool {
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{new(bool)},
+		Value:       v,
 		Mutagenesis: tBool,
 	}
-	*tree.withered[name].Flesh.Flesh.(*bool) = value
-	return ptr
+	return tree
 }
 
 // NewInt with validator and withered support
-func (tree *figTree) NewInt(name string, value int, usage string) *int {
+func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	if flesh, exists := tree.figs[name]; exists {
-		if flesh.Flesh.Is(flesh.Mutagenesis) {
-			return flesh.Flesh.Flesh.(*int)
-		}
-	}
 	tree.activateFlagSet()
-	ptr := flag.Int(name, value, usage)
+	v := Value{
+		Value:      value,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tInt,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -135,22 +140,25 @@ func (tree *figTree) NewInt(name string, value int, usage string) *int {
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{new(int)},
+		Value:       v,
 		Mutagenesis: tInt,
 	} // Initialize withered with a copy
-	*tree.withered[name].Flesh.Flesh.(*int) = value
-	return ptr
+	return tree
 }
 
 // NewInt64 with validator and withered support
-func (tree *figTree) NewInt64(name string, value int64, usage string) *int64 {
+func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	ptr := flag.Int64(name, value, usage)
+	v := Value{
+		Value:      value,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tInt64,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -160,22 +168,25 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) *int64 {
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{new(int64)},
+		Value:       v,
 		Mutagenesis: tInt64,
 	}
-	*tree.withered[name].Flesh.Flesh.(*int64) = value
-	return ptr
+	return tree
 }
 
 // NewFloat64 with validator and withered support
-func (tree *figTree) NewFloat64(name string, value float64, usage string) *float64 {
+func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	ptr := flag.Float64(name, value, usage)
+	v := Value{
+		Value:      value,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tFloat64,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -185,22 +196,25 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) *float
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{new(float64)},
+		Value:       v,
 		Mutagenesis: tFloat64,
 	}
-	*tree.withered[name].Flesh.Flesh.(*float64) = value
-	return ptr
+	return tree
 }
 
 // NewDuration with validator and withered support
-func (tree *figTree) NewDuration(name string, value time.Duration, usage string) *time.Duration {
+func (tree *figTree) NewDuration(name string, value time.Duration, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	ptr := flag.Duration(name, value, usage)
+	v := Value{
+		Value:      value,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tDuration,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -210,22 +224,25 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{new(time.Duration)},
+		Value:       v,
 		Mutagenesis: tDuration,
 	}
-	*tree.withered[name].Flesh.Flesh.(*time.Duration) = value
-	return ptr
+	return tree
 }
 
 // NewUnitDuration registers a new time.Duration with a unit time.Duration against a name
-func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, usage string) *time.Duration {
+func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	ptr := flag.Duration(name, value*units, usage)
+	v := Value{
+		Value:      value * units,
+		Mutagensis: tree.MutagenesisOf(value),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tUnitDuration,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -235,26 +252,29 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{new(time.Duration)},
+		Value:       v,
 		Mutagenesis: tUnitDuration,
 	}
-	*tree.withered[name].Flesh.Flesh.(*time.Duration) = value * units
-	return ptr
+	return tree
 }
 
 // NewList with validator and withered support
-func (tree *figTree) NewList(name string, value []string, usage string) *[]string {
+func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	if tree.HasRule(RuleNoLists) {
-		return nil
+		return tree
 	}
 	ptr := &ListFlag{values: &value}
 	tree.activateFlagSet()
-	flag.Var(ptr, name, usage)
+	v := Value{
+		Value:      ptr,
+		Mutagensis: tree.MutagenesisOf(ptr),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tList,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -266,25 +286,29 @@ func (tree *figTree) NewList(name string, value []string, usage string) *[]strin
 	copy(witheredVal, value)
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Flesh:       figFlesh{&ListFlag{values: &witheredVal}},
+		Value:       v,
 		Mutagenesis: tList,
 	}
-	return ptr.values
+	return tree
 }
 
 // NewMap with validator and withered support
-func (tree *figTree) NewMap(name string, value map[string]string, usage string) *map[string]string {
+func (tree *figTree) NewMap(name string, value map[string]string, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	if tree.HasRule(RuleNoMaps) {
-		return nil
+		return tree
 	}
 	ptr := &MapFlag{values: &value}
 	tree.activateFlagSet()
-	flag.Var(ptr, name, usage)
+	v := Value{
+		Value:      ptr,
+		Mutagensis: tree.MutagenesisOf(ptr),
+	}
+	flag.Var(&v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Flesh:       figFlesh{ptr},
+		Value:       v,
 		Mutagenesis: tMap,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -298,10 +322,11 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 	}
 	tree.withered[name] = witheredFig{
 		name: name,
-		Flesh: figFlesh{&MapFlag{
-			values: &witheredVal,
-		}},
+		Value: Value{
+			Value:      witheredVal,
+			Mutagensis: tree.MutagenesisOf(witheredVal),
+		},
 		Mutagenesis: tMap,
 	}
-	return ptr.values
+	return tree
 }

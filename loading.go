@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -26,6 +27,14 @@ func (tree *figTree) Load() (err error) {
 		} else {
 			err = tree.flagSet.Parse(args)
 		}
+		tree.flagSet.VisitAll(func(f *flag.Flag) {
+			if fig, exists := tree.figs[f.Name]; exists {
+				fig.Value = Value{
+					Value:      f.Value,
+					Mutagensis: tree.MutagenesisOf(fig.Value),
+				}
+			}
+		})
 		if err != nil {
 			return err
 		}
@@ -68,6 +77,14 @@ func (tree *figTree) LoadFile(path string) (err error) {
 		} else {
 			err = tree.flagSet.Parse(args)
 		}
+		tree.flagSet.VisitAll(func(f *flag.Flag) {
+			if fig, exists := tree.figs[f.Name]; exists {
+				fig.Value = Value{
+					Value:      f.Value,
+					Mutagensis: tree.MutagenesisOf(fig.Value),
+				}
+			}
+		})
 		if err != nil {
 			return err
 		}

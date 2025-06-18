@@ -29,7 +29,7 @@ func (tree *figTree) String(name string) *string {
 		tree.figs[name] = fruit
 		return nil
 	}
-	s, err := toString(fruit.Flesh.Flesh)
+	s, err := toString(fruit.Value.Value)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -86,7 +86,7 @@ func (tree *figTree) Bool(name string) *bool {
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Flesh.ToBool()
+	s := fruit.Value.Flesh().ToBool()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -135,7 +135,7 @@ func (tree *figTree) Int(name string) *int {
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Flesh.ToInt()
+	s := fruit.Value.Flesh().ToInt()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -185,7 +185,7 @@ func (tree *figTree) Int64(name string) *int64 {
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Flesh.ToInt64()
+	s := fruit.Value.Flesh().ToInt64()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -235,7 +235,7 @@ func (tree *figTree) Float64(name string) *float64 {
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Flesh.ToFloat64()
+	s := fruit.Value.Flesh().ToFloat64()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -286,7 +286,7 @@ func (tree *figTree) Duration(name string) *time.Duration {
 		return nil
 	}
 	var d time.Duration
-	switch f := fruit.Flesh.Flesh.(type) {
+	switch f := fruit.Value.Value.(type) {
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -343,7 +343,7 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 		return nil
 	}
 	var d time.Duration
-	switch f := fruit.Flesh.Flesh.(type) {
+	switch f := fruit.Value.Value.(type) {
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -400,7 +400,7 @@ func (tree *figTree) List(name string) *[]string {
 		return nil
 	}
 	var v []string
-	switch f := fruit.Flesh.Flesh.(type) {
+	switch f := fruit.Value.Value.(type) {
 	case *ListFlag:
 		v = make([]string, len(*f.values))
 		copy(v, *f.values)
@@ -424,7 +424,7 @@ func (tree *figTree) List(name string) *[]string {
 				tree.Store(fruit.Mutagenesis, name, i)
 				tree.mu.RLock()
 				fruit = tree.figs[name]
-				switch f := fruit.Flesh.Flesh.(type) {
+				switch f := fruit.Value.Value.(type) {
 				case *ListFlag:
 					v = make([]string, len(*f.values))
 					copy(v, *f.values)
@@ -467,7 +467,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 		return nil
 	}
 	var v map[string]string
-	switch f := fruit.Flesh.Flesh.(type) {
+	switch f := fruit.Value.Value.(type) {
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
 		v = make(map[string]string, len(*f.values))
@@ -517,7 +517,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 					tree.Store(fruit.Mutagenesis, name, newMap)
 					tree.mu.RLock()
 					fruit = tree.figs[name]
-					switch f := fruit.Flesh.Flesh.(type) {
+					switch f := fruit.Value.Value.(type) {
 					case *MapFlag:
 						v = make(map[string]string, len(*f.values))
 						for k, val := range *f.values {
