@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -17,7 +18,17 @@ func (tree *figTree) MapKeys(name string) []string {
 	if !exists {
 		return []string{}
 	}
-	switch v := fruit.Value.Value.(type) {
+	valueAny, ok := tree.values.Load(fruit.name)
+	if !ok {
+		fruit.Error = errors.Join(fruit.Error, fmt.Errorf("failed to load %s", fruit.name))
+		return []string{}
+	}
+	_value, ok := valueAny.(*Value)
+	if !ok {
+		fruit.Error = errors.Join(fruit.Error, fmt.Errorf("failed to cast %s as *Value ; got %T", fruit.name, valueAny))
+		return []string{}
+	}
+	switch v := _value.Value.(type) {
 	case nil:
 		return []string{}
 	case map[string]string:
@@ -67,7 +78,7 @@ func (m *MapFlag) String() string {
 	}
 	var entries []string
 	for k, v := range *m.values {
-		entries = append(entries, fmt.Sprintf("%s=%s", k, v))
+		entries = append(entries, fmt.Sprintf("%s%s%s", k, MapKeySeparator, v))
 	}
 	return strings.Join(entries, ",")
 }
@@ -76,15 +87,12 @@ var PolicyMapAppend = false
 
 // Set accepts a value like KEY=VALUE,KEY=VALUE,KEY=VALUE to override map values
 func (m *MapFlag) Set(value string) error {
-	if m.values == nil {
+	if m.values == nil || !PolicyMapAppend {
 		m.values = &map[string]string{}
 	}
-	if !PolicyMapAppend {
-		m.values = &map[string]string{}
-	}
-	pairs := strings.Split(value, ",")
+	pairs := strings.Split(value, MapSeparator)
 	for _, pair := range pairs {
-		kv := strings.SplitN(pair, "=", 2)
+		kv := strings.SplitN(pair, MapKeySeparator, 2)
 		if len(kv) != 2 {
 			return fmt.Errorf("invalid map item: %s", pair)
 		}

@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"errors"
+	"fmt"
 )
 
 // WithCallback allows you to assign a slice of CallbackFunc to a figFruit attached to a figTree.
@@ -28,12 +29,6 @@ func (tree *figTree) WithCallback(name string, whenCallback CallbackWhen, runThi
 	defer tree.mu.Unlock()
 	fruit, exists := tree.figs[name]
 	if !exists || fruit == nil {
-		tree.mu.Unlock()
-		tree.Resurrect(name)
-		tree.mu.Lock()
-		fruit = tree.figs[name]
-	}
-	if fruit == nil {
 		return tree
 	}
 	if fruit.HasRule(RuleNoCallbacks) {
@@ -58,7 +53,7 @@ func (tree *figTree) runCallbacks(callbackOn CallbackWhen) error {
 		if fig.HasRule(RuleNoCallbacks) {
 			continue
 		}
-		err := fig.runCallbacks(callbackOn)
+		err := fig.runCallbacks(tree, callbackOn)
 		if err != nil {
 			return err
 		}
@@ -67,7 +62,7 @@ func (tree *figTree) runCallbacks(callbackOn CallbackWhen) error {
 }
 
 // runCallbacks will take each registered callback and run it against the fig fruit
-func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
+func (fig *figFruit) runCallbacks(tree *figTree, callbackOn CallbackWhen) error {
 	if fig.Error != nil {
 		return fig.Error
 	}
@@ -77,7 +72,15 @@ func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
 	errs := make([]error, len(fig.Callbacks))
 	for _, callback := range fig.Callbacks {
 		if callback.CallbackWhen == callbackOn {
-			err := callback.CallbackFunc(fig.Value)
+			valueAny, ok := tree.values.Load(fig.name)
+			if !ok {
+				return fmt.Errorf("failed to load %s", fig.name)
+			}
+			value, ok := valueAny.(*Value)
+			if !ok {
+				return fmt.Errorf("failed to cast %s as *Value ; got %T", fig.name, valueAny)
+			}
+			err := callback.CallbackFunc(value.Value)
 			if err != nil {
 				errs = append(errs, err)
 			}

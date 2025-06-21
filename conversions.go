@@ -108,9 +108,7 @@ func toFloat64(value interface{}) (float64, error) {
 func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
 	case *Value:
-		return toString(v.Value)
-	case *figFlesh:
-		return toString(v.AsIs())
+		return v.String(), nil
 	case *string:
 		return *v, nil
 	case string:
@@ -124,21 +122,21 @@ func toString(value interface{}) (string, error) {
 	case bool:
 		return strconv.FormatBool(v), nil
 	case []string:
-		return strings.Join(v, ","), nil
+		return strings.Join(v, ListSeparator), nil
 	case *[]string:
-		return strings.Join(*v, ","), nil
+		return strings.Join(*v, ListSeparator), nil
 	case *map[string]string:
 		parts := make([]string, 0, len(*v))
 		for k, x := range *v {
-			parts = append(parts, fmt.Sprintf("%s=%s", k, x))
+			parts = append(parts, fmt.Sprintf("%s%s%s", k, MapKeySeparator, x))
 		}
-		return strings.Join(parts, ","), nil
+		return strings.Join(parts, MapSeparator), nil
 	case map[string]string:
 		parts := make([]string, 0, len(v))
 		for k, x := range v {
-			parts = append(parts, fmt.Sprintf("%s=%s", k, x))
+			parts = append(parts, fmt.Sprintf("%s%s%s", k, MapKeySeparator, x))
 		}
-		return strings.Join(parts, ","), nil
+		return strings.Join(parts, MapSeparator), nil
 	default:
 		return "", fmt.Errorf("cannot convert %v to string", value)
 	}
@@ -171,6 +169,10 @@ func toStringSlice(value interface{}) ([]string, error) {
 		return toStringSlice(v.Value)
 	case *figFlesh:
 		return toStringSlice(v.AsIs())
+	case *ListFlag:
+		return toStringSlice(v.values)
+	case ListFlag:
+		return toStringSlice(v.values)
 	case []string:
 		return v, nil
 	case *[]string:
@@ -189,12 +191,12 @@ func toStringSlice(value interface{}) ([]string, error) {
 		if *v == "" {
 			return []string{}, nil
 		}
-		return strings.Split(*v, ","), nil
+		return strings.Split(*v, ListSeparator), nil
 	case string:
 		if v == "" {
 			return []string{}, nil
 		}
-		return strings.Split(v, ","), nil
+		return strings.Split(v, ListSeparator), nil
 	default:
 		return nil, fmt.Errorf("cannot convert %v to []string", value)
 	}
@@ -207,6 +209,10 @@ func toStringMap(value interface{}) (map[string]string, error) {
 		return toStringMap(v.Value)
 	case *figFlesh:
 		return toStringMap(v.AsIs())
+	case *MapFlag:
+		return toStringMap(v.values)
+	case MapFlag:
+		return toStringMap(v.values)
 	case map[string]string:
 		return v, nil
 	case *map[string]string:
@@ -225,10 +231,10 @@ func toStringMap(value interface{}) (map[string]string, error) {
 		if *v == "" {
 			return map[string]string{}, nil
 		}
-		pairs := strings.Split(*v, ",")
+		pairs := strings.Split(*v, MapSeparator)
 		result := make(map[string]string)
 		for _, pair := range pairs {
-			kv := strings.SplitN(pair, "=", 2)
+			kv := strings.SplitN(pair, MapKeySeparator, 2)
 			if len(kv) != 2 {
 				return nil, fmt.Errorf("invalid map item: %s", pair)
 			}
@@ -239,10 +245,10 @@ func toStringMap(value interface{}) (map[string]string, error) {
 		if v == "" {
 			return map[string]string{}, nil
 		}
-		pairs := strings.Split(v, ",")
+		pairs := strings.Split(v, MapSeparator)
 		result := make(map[string]string)
 		for _, pair := range pairs {
-			kv := strings.SplitN(pair, "=", 2)
+			kv := strings.SplitN(pair, MapKeySeparator, 2)
 			if len(kv) != 2 {
 				return nil, fmt.Errorf("invalid map item: %s", pair)
 			}

@@ -60,8 +60,6 @@ type Divine interface {
 	Recall()
 	// Curse allows you to lock the figTree from changes and stop tracking
 	Curse()
-	// Resurrect takes a nil figFruit in the figTree.figs map and reloads it from ENV or the config file if available
-	Resurrect(name string)
 }
 
 type Intable interface {
@@ -190,6 +188,7 @@ type figTree struct {
 	harvest        int
 	pollinate      bool
 	figs           map[string]*figFruit
+	values         *sync.Map
 	withered       map[string]witheredFig
 	aliases        map[string]string
 	sourceLocker   sync.RWMutex
@@ -242,8 +241,8 @@ type figFruit struct {
 	Locker      *sync.RWMutex
 	Error       error
 	Mutagenesis Mutagenesis
-	Value       Value
 	name        string
+	usage       string
 }
 
 type figFlesh struct {
@@ -292,3 +291,7 @@ type Mutation struct {
 	When        time.Time
 	Error       error
 }
+
+var ListSeparator = ","
+var MapSeparator = ","
+var MapKeySeparator = "="

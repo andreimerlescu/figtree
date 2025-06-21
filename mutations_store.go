@@ -11,21 +11,8 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	fruit, ok := tree.figs[name]
-	if !ok || fruit == nil {
-		if !tree.angel.Load() {
-			tree.mu.Unlock()
-			tree.Resurrect(name)
-			tree.mu.Lock()
-			fruit = tree.figs[name]
-		}
-	}
-	if fruit == nil {
-		if !tree.angel.Load() {
-			tree.mu.Unlock()
-			tree.Resurrect(name)
-			tree.mu.Lock()
-			fruit = tree.figs[name]
-		}
+	if !ok {
+		return tree
 	}
 	if fruit == nil {
 		return tree
@@ -34,7 +21,7 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 		return tree
 	}
 	if tree.angel.Load() {
-		tree.figs[name].Error = errors.Join(tree.figs[name].Error, fmt.Errorf("tree fruit is an angel so we cannot store %s inside %s", tree.MutagenesisOf(value), tree.MutagenesisOf(fruit.Value.Value)))
+		tree.figs[name].Error = errors.Join(tree.figs[name].Error, fmt.Errorf("tree fruit is an angel so we cannot store %s inside %s", tree.MutagenesisOf(value), fruit.Mutagenesis))
 		return tree
 	}
 	mv := tree.MutagenesisOf(value)
@@ -42,17 +29,20 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 		mv = tUnitDuration
 	}
 	if !strings.EqualFold(string(mv), string(fruit.Mutagenesis)) {
-		tree.figs[name].Error = errors.Join(tree.figs[name].Error, fmt.Errorf("will not store %s inside %s", tree.MutagenesisOf(value), tree.MutagenesisOf(fruit.Value.Value)))
+		tree.figs[name].Error = errors.Join(tree.figs[name].Error, fmt.Errorf("will not store %s inside %s", tree.MutagenesisOf(value), fruit.Mutagenesis))
 		return tree
 	}
 	if _, exists := tree.withered[name]; !exists {
 		tree.withered[name] = witheredFig{
-			Value:       fruit.Value,
+			Value: Value{
+				Value:      value,
+				Mutagensis: tree.MutagenesisOf(value),
+			},
 			Mutagenesis: tString,
 			Error:       fmt.Errorf("missing withered value for %s", name),
 		}
 	}
-	err := fruit.runCallbacks(CallbackBeforeChange)
+	err := fruit.runCallbacks(tree, CallbackBeforeChange)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -61,7 +51,7 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 	if !changed {
 		return tree
 	}
-	err = fruit.runCallbacks(CallbackAfterChange)
+	err = fruit.runCallbacks(tree, CallbackAfterChange)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 	}
@@ -133,7 +123,15 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 	if fruit.HasRule(RulePanicOnChange) {
 		panic("RuleOnPanicChange triggered for " + fruit.name)
 	}
-	flesh := fruit.Value.Value
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return false, nil, value
+	}
+	_value, ok := valueAny.(*Value)
+	if !ok {
+		return false, nil, value
+	}
+	flesh := _value.Raw()
 	switch mut {
 	case tMap:
 		var old *map[string]string
@@ -149,8 +147,8 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			old = &f
 		case string:
 			m := map[string]string{}
-			for _, p := range strings.Split(f, ",") {
-				z := strings.SplitN(p, "=", 1)
+			for _, p := range strings.Split(f, MapSeparator) {
+				z := strings.SplitN(p, MapKeySeparator, 1)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -158,8 +156,8 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			old = &m
 		case *string:
 			m := map[string]string{}
-			for _, p := range strings.Split(*f, ",") {
-				z := strings.SplitN(p, "=", 1)
+			for _, p := range strings.Split(*f, MapSeparator) {
+				z := strings.SplitN(p, MapKeySeparator, 1)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -182,8 +180,8 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			current = &f
 		case string:
 			m := map[string]string{}
-			for _, p := range strings.Split(f, ",") {
-				z := strings.SplitN(p, "=", 1)
+			for _, p := range strings.Split(f, MapSeparator) {
+				z := strings.SplitN(p, MapKeySeparator, 1)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -191,8 +189,8 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			current = &m
 		case *string:
 			m := map[string]string{}
-			for _, p := range strings.Split(*f, ",") {
-				z := strings.SplitN(p, "=", 1)
+			for _, p := range strings.Split(*f, MapSeparator) {
+				z := strings.SplitN(p, MapKeySeparator, 1)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -205,7 +203,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tList:
@@ -215,16 +226,16 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case *Value:
 			old = v.Value.(*[]string)
 		case *ListFlag:
-			old = v.values
+			old = &v.values
 		case *[]string:
 			old = v
 		case []string:
 			old = &v
 		case string:
-			x := strings.Split(v, ",")
+			x := strings.Split(v, ListSeparator)
 			old = &x
 		case *string:
-			x := strings.Split(*v, ",")
+			x := strings.Split(*v, ListSeparator)
 			old = &x
 		default:
 			return false, v, value
@@ -236,16 +247,16 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		var current *[]string
 		switch v := value.(type) {
 		case *ListFlag:
-			current = v.values
+			current = &v.values
 		case []string:
 			current = &v
 		case *[]string:
 			current = v
 		case string:
-			x := strings.Split(v, ",")
+			x := strings.Split(v, ListSeparator)
 			current = &x
 		case *string:
-			x := strings.Split(*v, ",")
+			x := strings.Split(*v, ListSeparator)
 			current = &x
 		default:
 			return false, old, flesh
@@ -254,7 +265,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tUnitDuration:
@@ -296,7 +320,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tDuration:
@@ -337,7 +374,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tFloat64:
@@ -351,7 +401,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tInt64:
@@ -365,7 +428,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tInt:
@@ -379,7 +455,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	case tString:
@@ -393,7 +482,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return !strings.EqualFold(old, current), old, current
 	case tBool:
@@ -407,7 +509,20 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
 			return false, old, value
 		}
-		fruit.Value.Value = current
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return false, flesh, value
+		}
+		value, ok := valueAny.(*Value)
+		if !ok {
+			return false, flesh, value
+		}
+		err = value.Assign(current)
+		if err != nil {
+			tree.figs[name].Error = errors.Join(tree.figs[name].Error, err)
+			return false, old, value
+		}
+		tree.values.Store(name, value)
 		tree.figs[name] = fruit
 		return old != current, old, current
 	default:

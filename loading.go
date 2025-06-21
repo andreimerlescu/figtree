@@ -27,14 +27,7 @@ func (tree *figTree) Load() (err error) {
 		} else {
 			err = tree.flagSet.Parse(args)
 		}
-		tree.flagSet.VisitAll(func(f *flag.Flag) {
-			if fig, exists := tree.figs[f.Name]; exists {
-				fig.Value = Value{
-					Value:      f.Value,
-					Mutagensis: tree.MutagenesisOf(fig.Value),
-				}
-			}
-		})
+		err = tree.loadFlagSet()
 		if err != nil {
 			return err
 		}
@@ -77,14 +70,7 @@ func (tree *figTree) LoadFile(path string) (err error) {
 		} else {
 			err = tree.flagSet.Parse(args)
 		}
-		tree.flagSet.VisitAll(func(f *flag.Flag) {
-			if fig, exists := tree.figs[f.Name]; exists {
-				fig.Value = Value{
-					Value:      f.Value,
-					Mutagensis: tree.MutagenesisOf(fig.Value),
-				}
-			}
-		})
+
 		if err != nil {
 			return err
 		}
@@ -95,16 +81,102 @@ func (tree *figTree) LoadFile(path string) (err error) {
 			return fmt.Errorf("failed to loadFile %s: %w", path, err2)
 		}
 		tree.readEnv()
-		err3 := tree.validateAll()
+		err3 := tree.loadFlagSet()
 		if err3 != nil {
-			return fmt.Errorf("failed to validateAll: %w", err3)
+			return err3
+		}
+		err4 := tree.validateAll()
+		if err4 != nil {
+			return fmt.Errorf("failed to validateAll: %w", err4)
 		}
 		return nil
 	}
-	tree.readEnv()
-	err3 := tree.validateAll()
+	err3 := tree.loadFlagSet()
 	if err3 != nil {
-		return fmt.Errorf("failed to validateAll: %w", err3)
+		return err3
+	}
+	tree.readEnv()
+	err4 := tree.validateAll()
+	if err4 != nil {
+		return fmt.Errorf("failed to validateAll: %w", err4)
 	}
 	return fmt.Errorf("failed to LoadFile %s due to err %v", path, loadErr)
+}
+
+func (tree *figTree) loadFlagSet() (e error) {
+	defer func() {
+		if e != nil {
+			_, _ = fmt.Fprintln(os.Stderr, e)
+		}
+		if r := recover(); r != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%v", r)
+		}
+	}()
+	tree.flagSet.VisitAll(func(f *flag.Flag) {
+		value := tree.useValue(tree.from(f.Name))
+		if value.Mutagensis == tMap && tree.MutagenesisOf(f.Value) == tMap {
+			merged := value.Flesh().ToMap()
+			withered := tree.withered[f.Name]
+			witheredValue := withered.Value.Flesh().ToMap()
+			flagged, err := toStringMap(f.Value)
+			if err != nil {
+				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				return
+			}
+			result := make(map[string]string)
+			for k, v := range witheredValue {
+				result[k] = v
+			}
+			for k, v := range merged {
+				result[k] = v
+			}
+			for k, v := range flagged {
+				result[k] = v
+			}
+			err = value.Assign(result)
+			if err != nil {
+				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				return
+			}
+			tree.values.Store(f.Name, value)
+			return
+		}
+		if value.Mutagensis == tList && tree.MutagenesisOf(f.Value) == tList {
+			merged, err := toStringSlice(value.Value)
+			if err != nil {
+				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				return
+			}
+			flagged, err := toStringSlice(f.Value)
+			if err != nil {
+				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				return
+			}
+			unique := make(map[string]bool)
+			for _, v := range merged {
+				unique[v] = true
+			}
+			for _, v := range flagged {
+				unique[v] = true
+			}
+			var newValue []string
+			for k, _ := range unique {
+				newValue = append(newValue, k)
+			}
+			err = value.Assign(newValue)
+			if err != nil {
+				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+			}
+			tree.values.Store(f.Name, value)
+			return
+
+		}
+		err := value.Set(f.Value.String())
+		if err != nil {
+			e = fmt.Errorf("failed to value.Set(%s) due to err: %w", f.Value.String(), err)
+			return
+		}
+		tree.values.Store(f.Name, value)
+	})
+	return nil
 }

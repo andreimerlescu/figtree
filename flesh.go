@@ -14,6 +14,15 @@ func NewFlesh(thing interface{}) Flesh {
 
 func (flesh *figFlesh) AsIs() interface{} {
 	switch v := flesh.Flesh.(type) {
+	case *Value:
+		switch x := v.Value.(type) {
+		case *Value:
+			return x.Value
+		case Value:
+			return x.Value
+		default:
+			return v.Value
+		}
 	case Value:
 		switch x := v.Value.(type) {
 		case *Value:
@@ -150,9 +159,9 @@ func (flesh *figFlesh) ToList() []string {
 	case *[]string:
 		return *f
 	case string:
-		return strings.Split(f, ",")
+		return strings.Split(f, ListSeparator)
 	case *string:
-		return strings.Split(*f, ",")
+		return strings.Split(*f, ListSeparator)
 	default:
 		return []string{}
 	}
@@ -161,9 +170,9 @@ func (flesh *figFlesh) ToList() []string {
 func (flesh *figFlesh) ToMap() map[string]string {
 	checkString := func(ck string) map[string]string {
 		f := make(map[string]string)
-		u := strings.Split(ck, ",")
+		u := strings.Split(ck, MapSeparator)
 		for _, i := range u {
-			r := strings.SplitN(i, "=", 1)
+			r := strings.SplitN(i, MapKeySeparator, 1)
 			if len(r) == 2 {
 				f[r[0]] = r[1]
 			}
@@ -325,10 +334,10 @@ func (flesh *figFlesh) IsList() bool {
 	case *[]string:
 		return f != nil
 	case string:
-		p := strings.Split(f, ",")
+		p := strings.Split(f, ListSeparator)
 		return len(p) > 0
 	case *string:
-		p := strings.Split(*f, ",")
+		p := strings.Split(*f, ListSeparator)
 		return len(p) > 0
 	default:
 		return false
@@ -353,10 +362,10 @@ func (flesh *figFlesh) IsList() bool {
 //			check, len(attributes.ToMap()) > 0, attributes)
 func (flesh *figFlesh) IsMap() bool {
 	checkString := func(f string) bool {
-		p := strings.Split(f, ",")
+		p := strings.Split(f, MapSeparator)
 		ok := false
 		for _, e := range p {
-			n := strings.SplitN(e, "=", 1)
+			n := strings.SplitN(e, MapKeySeparator, 1)
 			ok = ok && len(n) == 2
 		}
 		return ok

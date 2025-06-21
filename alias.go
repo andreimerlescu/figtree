@@ -1,6 +1,9 @@
 package figtree
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+)
 
 func (tree *figTree) WithAlias(name, alias string) Plant {
 	tree.mu.Lock()
@@ -9,10 +12,16 @@ func (tree *figTree) WithAlias(name, alias string) Plant {
 		return tree
 	}
 	tree.aliases[alias] = name
-	fig, ok := tree.figs[name]
+	ptr, ok := tree.values.Load(name)
 	if !ok {
+		fmt.Println("failed to load -" + name + " value")
 		return tree
 	}
-	flag.Var(&fig.Value, alias, "Alias of -"+name)
+	value, ok := ptr.(*Value)
+	if !ok {
+		fmt.Println("failed to cast -" + name + " value")
+		return tree
+	}
+	flag.Var(value, alias, "Alias of -"+name)
 	return tree
 }

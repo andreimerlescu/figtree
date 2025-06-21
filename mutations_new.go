@@ -20,7 +20,40 @@ func (tree *figTree) MutagenesisOfFig(name string) Mutagenesis {
 //	tree.MutagenesisOf("hello") // Returns tString
 //	tree.MutagenesisOf(42)      // Returns tInt
 func (tree *figTree) MutagenesisOf(what interface{}) Mutagenesis {
-	switch what.(type) {
+	switch x := what.(type) {
+	case Value:
+		return x.Mutagensis
+	case flag.Value:
+		mv, e := toStringMap(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(mv)
+		}
+		lv, e := toStringSlice(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(lv)
+		}
+		fv, e := toFloat64(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(fv)
+		}
+		i64v, e := toInt64(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(i64v)
+		}
+		iv, e := toInt(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(iv)
+		}
+		bv, e := toBool(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(bv)
+		}
+		sv, e := toStringSlice(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(sv)
+		}
+		return ""
+
 	case int:
 		return tInt
 	case *int:
@@ -63,14 +96,14 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	vPtr := &Value{
 		Value:      value,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tString,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, vPtr)
+	flag.Var(vPtr, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tString,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -82,7 +115,7 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 	if !exists {
 		tree.withered[name] = witheredFig{
 			name:        name,
-			Value:       v,
+			Value:       *vPtr,
 			Mutagenesis: tString,
 		}
 	}
@@ -95,14 +128,14 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      value,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tBool,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tBool,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -112,7 +145,7 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Value:       v,
+		Value:       *v,
 		Mutagenesis: tBool,
 	}
 	return tree
@@ -123,14 +156,14 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      value,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tInt,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tInt,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -140,7 +173,7 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Value:       v,
+		Value:       *v,
 		Mutagenesis: tInt,
 	} // Initialize withered with a copy
 	return tree
@@ -151,14 +184,14 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      value,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tInt64,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tInt64,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -168,7 +201,7 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Value:       v,
+		Value:       *v,
 		Mutagenesis: tInt64,
 	}
 	return tree
@@ -179,14 +212,14 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      value,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tFloat64,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tFloat64,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -196,7 +229,7 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Value:       v,
+		Value:       *v,
 		Mutagenesis: tFloat64,
 	}
 	return tree
@@ -207,14 +240,14 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      value,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tDuration,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tDuration,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -224,7 +257,7 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Value:       v,
+		Value:       *v,
 		Mutagenesis: tDuration,
 	}
 	return tree
@@ -235,14 +268,14 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      value * units,
-		Mutagensis: tree.MutagenesisOf(value),
+		Mutagensis: tUnitDuration,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tUnitDuration,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -252,7 +285,7 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	tree.figs[name] = def
 	tree.withered[name] = witheredFig{
 		name:        name,
-		Value:       v,
+		Value:       *v,
 		Mutagenesis: tUnitDuration,
 	}
 	return tree
@@ -265,16 +298,16 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 	if tree.HasRule(RuleNoLists) {
 		return tree
 	}
-	ptr := &ListFlag{values: &value}
+	ptr := ListFlag{values: value}
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      ptr,
-		Mutagensis: tree.MutagenesisOf(ptr),
+		Mutagensis: tList,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tList,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -285,8 +318,11 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 	witheredVal := make([]string, len(value))
 	copy(witheredVal, value)
 	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       v,
+		name: name,
+		Value: Value{
+			Value:      witheredVal,
+			Mutagensis: tList,
+		},
 		Mutagenesis: tList,
 	}
 	return tree
@@ -299,16 +335,16 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 	if tree.HasRule(RuleNoMaps) {
 		return tree
 	}
-	ptr := &MapFlag{values: &value}
+	ptr := MapFlag{values: &value}
 	tree.activateFlagSet()
-	v := Value{
+	v := &Value{
 		Value:      ptr,
-		Mutagensis: tree.MutagenesisOf(ptr),
+		Mutagensis: tMap,
 	}
-	flag.Var(&v, name, usage)
+	tree.values.Store(name, v)
+	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
-		Value:       v,
 		Mutagenesis: tMap,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),

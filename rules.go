@@ -49,12 +49,6 @@ func (tree *figTree) WithRule(name string, rule RuleKind) Plant {
 	defer tree.mu.Unlock()
 	fruit, exists := tree.figs[name]
 	if !exists || fruit == nil {
-		tree.mu.Unlock()
-		tree.Resurrect(name)
-		tree.mu.Lock()
-		fruit = tree.figs[name]
-	}
-	if fruit == nil {
 		return tree
 	}
 	fruit.Rules = append(fruit.Rules, rule)

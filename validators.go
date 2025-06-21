@@ -64,7 +64,15 @@ func (tree *figTree) validateAll() error {
 		for _, validator := range fruit.Validators {
 			if fruit != nil && validator != nil {
 				var val interface{}
-				switch v := fruit.Value.Value.(type) {
+				valueAny, ok := tree.values.Load(name)
+				if !ok {
+					return nil
+				}
+				_value, ok := valueAny.(*Value)
+				if !ok {
+					return nil
+				}
+				switch v := _value.Value.(type) {
 				case int:
 					val = v
 				case *int:
@@ -92,7 +100,7 @@ func (tree *figTree) validateAll() error {
 				case ListFlag:
 					val = v.values
 				case *ListFlag:
-					val = *v.values
+					val = v.values
 				case MapFlag:
 					val = v.values
 				case *MapFlag:

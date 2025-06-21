@@ -59,27 +59,38 @@ func (tree *figTree) loadYAML(data []byte) error {
 		var fruit *figFruit
 		var exists bool
 		if fruit, exists = tree.figs[n]; exists && fruit != nil {
-			tf := tree.MutagenesisOf(fruit.Value.Value)
-			if strings.EqualFold(string(tf), string(t)) {
-				tree.figs[n].Value.Value = d
+			valueAny, ok := tree.values.Load(fruit.name)
+			if !ok {
+				return nil
+			}
+			value, ok := valueAny.(*Value)
+			if !ok {
+				return nil
+			}
+			s := value.Flesh().ToString()
+			t = tree.MutagenesisOf(s)
+			if strings.EqualFold(string(fruit.Mutagenesis), string(t)) {
+				err := value.Assign(d)
+				if err != nil {
+					return err
+				}
+				tree.values.Store(fruit.name, value)
 				continue
 			}
 		}
-		v := Value{
-			Value:      d,
-			Mutagensis: tree.MutagenesisOf(d),
-		}
 		fruit = &figFruit{
 			name:       n,
-			Value:      v,
 			Mutations:  make([]Mutation, 0),
 			Validators: make([]FigValidatorFunc, 0),
 			Callbacks:  make([]Callback, 0),
 			Rules:      make([]RuleKind, 0),
 		}
 		withered := witheredFig{
-			name:  n,
-			Value: v,
+			name: n,
+			Value: Value{
+				Mutagensis: tree.MutagenesisOf(d),
+				Value:      d,
+			},
 		}
 
 		switch d.(type) {
@@ -249,7 +260,7 @@ func (tree *figTree) setValue(flagVal interface{}, value interface{}) error {
 		if err != nil {
 			return err
 		}
-		*ptr.values = listVal
+		ptr.values = listVal
 	case *MapFlag:
 		mapVal, err := toStringMap(value)
 		if err != nil {
@@ -288,20 +299,28 @@ func (tree *figTree) checkAndSetFromEnv(name string) {
 func (tree *figTree) mutateFig(name string, value interface{}) error {
 	def, ok := tree.figs[name]
 	if !ok || def == nil {
-		tree.Resurrect(name)
-		def = tree.figs[name]
-	}
-	if def == nil {
-		return fmt.Errorf("no definition for key %s", name)
+		return fmt.Errorf("no such fig: %s", name)
 	}
 	var old interface{}
 	var dead interface{}
 	witheredFig, ok := tree.withered[name]
 	dead = witheredFig.Value.Value
-	old = def.Value.Value
-	def.Value.Value = value
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	_value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	old = _value.Flesh()
+	err := _value.Assign(value)
+	if err != nil {
+		return err
+	}
+	tree.values.Store(name, _value)
 	t1 := tree.MutagenesisOf(&old)
-	t2 := tree.MutagenesisOf(value)
+	t2 := tree.MutagenesisOf(_value.Value)
 	if t1 == "" && t2 != "" {
 		t1 = t2
 	}
@@ -349,4 +368,18 @@ func filterTestFlags(args []string) []string {
 		}
 	}
 	return filtered
+}
+
+func DeduplicateStrings(slice []string) []string {
+	seen := make(map[string]bool)
+	var result []string
+
+	for _, s := range slice {
+		if !seen[s] {
+			seen[s] = true
+			result = append(result, s)
+		}
+	}
+
+	return result
 }

@@ -24,7 +24,15 @@ func (tree *figTree) SaveTo(path string) error {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	for name, fig := range tree.figs {
-		properties[name] = fig.Value.Value
+		valueAny, ok := tree.values.Load(name)
+		if !ok {
+			return errors.Join(fig.Error, fmt.Errorf("failed to load %s", fig.name))
+		}
+		_value, ok := valueAny.(*Value)
+		if !ok {
+			return errors.Join(fig.Error, fmt.Errorf("failed to cast %s as *Value ; got %T", fig.name, valueAny))
+		}
+		properties[name] = _value.Value
 	}
 	formatValue := func(val interface{}) string {
 		return fmt.Sprintf("%v", val)

@@ -592,7 +592,7 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 // Returns a figValidatorFunc that checks for the presence of the value.
 var AssureListContains = func(inside string) FigValidatorFunc {
 	return func(value interface{}) error {
-		v := figFlesh{value}
+		v := NewFlesh(value)
 		if !v.IsList() {
 			return fmt.Errorf("invalid type, expected ListFlag or []string, got %T", value)
 		}

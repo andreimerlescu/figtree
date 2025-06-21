@@ -18,23 +18,16 @@ func (tree *figTree) String(name string) *string {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
-	s, err := toString(fruit.Value.Value)
-	if err != nil {
-		fruit.Error = errors.Join(fruit.Error, err)
-		tree.figs[name] = fruit
-		return nil
-	}
+	value := tree.useValue(tree.from(name))
+	s := value.Flesh().ToString()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		envs := os.Environ()
 		var e string
@@ -58,7 +51,7 @@ func (tree *figTree) String(name string) *string {
 			}
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -75,18 +68,23 @@ func (tree *figTree) Bool(name string) *bool {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Value.Flesh().ToBool()
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	s := value.Flesh().ToBool()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -107,7 +105,7 @@ func (tree *figTree) Bool(name string) *bool {
 			}
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -124,18 +122,23 @@ func (tree *figTree) Int(name string) *int {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Value.Flesh().ToInt()
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	s := value.Flesh().ToInt()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -157,7 +160,7 @@ func (tree *figTree) Int(name string) *int {
 
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -174,18 +177,23 @@ func (tree *figTree) Int64(name string) *int64 {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Value.Flesh().ToInt64()
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	s := value.Flesh().ToInt64()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -207,7 +215,7 @@ func (tree *figTree) Int64(name string) *int64 {
 
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -224,18 +232,23 @@ func (tree *figTree) Float64(name string) *float64 {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
-	s := fruit.Value.Flesh().ToFloat64()
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	s := value.Flesh().ToFloat64()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
@@ -257,7 +270,7 @@ func (tree *figTree) Float64(name string) *float64 {
 
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -274,19 +287,24 @@ func (tree *figTree) Duration(name string) *time.Duration {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
 	var d time.Duration
-	switch f := fruit.Value.Value.(type) {
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	switch f := value.Value.(type) {
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -314,7 +332,7 @@ func (tree *figTree) Duration(name string) *time.Duration {
 			}
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -331,19 +349,24 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
 	var d time.Duration
-	switch f := fruit.Value.Value.(type) {
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	switch f := value.Value.(type) {
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -371,7 +394,7 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 			}
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -388,22 +411,34 @@ func (tree *figTree) List(name string) *[]string {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
 	var v []string
-	switch f := fruit.Value.Value.(type) {
+	switch f := value.Value.(type) {
+	case string:
+		v = []string{f}
+	case *string:
+		v = []string{*f}
+	case ListFlag:
+		v = make([]string, len(f.values))
+		copy(v, f.values)
 	case *ListFlag:
-		v = make([]string, len(*f.values))
-		copy(v, *f.values)
+		v = make([]string, len(f.values))
+		copy(v, f.values)
 	case *[]string:
 		v = make([]string, len(*f))
 		copy(v, *f)
@@ -423,22 +458,38 @@ func (tree *figTree) List(name string) *[]string {
 				tree.mu.RUnlock()
 				tree.Store(fruit.Mutagenesis, name, i)
 				tree.mu.RLock()
-				fruit = tree.figs[name]
-				switch f := fruit.Value.Value.(type) {
+				valueAny, ok := tree.values.Load(name)
+				if !ok {
+					return nil
+				}
+				value, ok = valueAny.(*Value)
+				if !ok {
+					return nil
+				}
+				switch f := value.Value.(type) {
+				case string:
+					v = []string{f}
+				case *string:
+					v = []string{*f}
+				case ListFlag:
+					v = make([]string, len(f.values))
+					copy(v, f.values)
 				case *ListFlag:
-					v = make([]string, len(*f.values))
-					copy(v, *f.values)
+					v = make([]string, len(f.values))
+					copy(v, f.values)
 				case *[]string:
 					v = make([]string, len(*f))
 					copy(v, *f)
 				case []string:
 					v = make([]string, len(f))
 					copy(v, f)
+				default:
+					panic("unreachable")
 				}
 			}
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
@@ -455,19 +506,47 @@ func (tree *figTree) Map(name string) *map[string]string {
 	}
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
-		tree.mu.RUnlock()
-		tree.Resurrect(name)
-		tree.mu.RLock()
-		fruit = tree.figs[name]
+		return nil
 	}
-	err := fruit.runCallbacks(CallbackBeforeRead)
+	valueAny, ok := tree.values.Load(name)
+	if !ok {
+		return nil
+	}
+	value, ok := valueAny.(*Value)
+	if !ok {
+		return nil
+	}
+	err := fruit.runCallbacks(tree, CallbackBeforeRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
 		return nil
 	}
 	var v map[string]string
-	switch f := fruit.Value.Value.(type) {
+	switch f := value.Value.(type) {
+	case string:
+		v = map[string]string{}
+		for _, x := range strings.Split(f, MapSeparator) {
+			parts := strings.SplitN(x, MapKeySeparator, 2)
+			if len(parts) != 2 {
+				continue
+			}
+			v[parts[0]] = parts[1]
+		}
+	case *string:
+		v = map[string]string{}
+		for _, x := range strings.Split(*f, MapSeparator) {
+			parts := strings.SplitN(x, MapKeySeparator, 2)
+			if len(parts) != 2 {
+				continue
+			}
+			v[parts[0]] = parts[1]
+		}
+	case MapFlag:
+		v = make(map[string]string, len(*f.values))
+		for k, val := range *f.values {
+			v[k] = val
+		}
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
 		v = make(map[string]string, len(*f.values))
@@ -516,8 +595,38 @@ func (tree *figTree) Map(name string) *map[string]string {
 					tree.mu.RUnlock()
 					tree.Store(fruit.Mutagenesis, name, newMap)
 					tree.mu.RLock()
-					fruit = tree.figs[name]
-					switch f := fruit.Value.Value.(type) {
+					valueAny, ok := tree.values.Load(name)
+					if !ok {
+						return nil
+					}
+					value, ok = valueAny.(*Value)
+					if !ok {
+						return nil
+					}
+					switch f := value.Value.(type) {
+					case string:
+						v = map[string]string{}
+						for _, x := range strings.Split(f, ",") {
+							parts := strings.SplitN(x, "=", 2)
+							if len(parts) != 2 {
+								continue
+							}
+							v[parts[0]] = parts[1]
+						}
+					case *string:
+						v = map[string]string{}
+						for _, x := range strings.Split(*f, ",") {
+							parts := strings.SplitN(x, "=", 2)
+							if len(parts) != 2 {
+								continue
+							}
+							v[parts[0]] = parts[1]
+						}
+					case MapFlag:
+						v = make(map[string]string, len(*f.values))
+						for k, val := range *f.values {
+							v[k] = val
+						}
 					case *MapFlag:
 						v = make(map[string]string, len(*f.values))
 						for k, val := range *f.values {
@@ -538,7 +647,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 			}
 		}
 	}
-	err = fruit.runCallbacks(CallbackAfterRead)
+	err = fruit.runCallbacks(tree, CallbackAfterRead)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
