@@ -124,7 +124,7 @@ func TestFleshInterface(t *testing.T) {
 	t.Run("ToList", func(t *testing.T) {
 		os.Args = []string{os.Args[0]}
 		figs := With(Options{Germinate: true, IgnoreEnvironment: true})
-		figs.NewList(t.Name(), []string{"yahuah"}, t.Name())
+		figs = figs.NewList(t.Name(), []string{"yahuah"}, t.Name())
 		assert.NoError(t, figs.Parse())
 		var flesh Flesh
 		flesh = figs.FigFlesh(t.Name())

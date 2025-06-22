@@ -140,7 +140,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case *Value:
 			old = f.Value.(*map[string]string)
 		case *MapFlag:
-			old = f.values
+			old = &f.values
 		case *map[string]string:
 			old = f
 		case map[string]string:
@@ -173,7 +173,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		var current *map[string]string
 		switch f := value.(type) {
 		case *MapFlag:
-			current = f.values
+			current = &f.values
 		case *map[string]string:
 			current = f
 		case map[string]string:

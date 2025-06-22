@@ -164,7 +164,7 @@ type CoreMutations interface {
 }
 
 type Core interface {
-	// Fig returns a figFruit from the figTree by its name
+	// FigFlesh returns a figFruit from the figTree by its name
 	FigFlesh(name string) Flesh
 
 	// ErrorFor returns an error attached to a named figFruit

@@ -19,21 +19,20 @@ func TestMapFlag_Set(t *testing.T) {
 		PolicyMapAppend = true
 		os.Args = []string{os.Args[0], "-x", "name=yahuah"}
 		figs := With(Options{Germinate: true})
-		figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")
+		figs = figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")
 		assert.NoError(t, figs.Parse())
-		assert.Equal(t, "", figs.FigFlesh("x").ToString())
 		assert.Contains(t, figs.MapKeys("x"), "name")
 		assert.Contains(t, figs.MapKeys("x"), "job") // Contains because of PolicyMapAppend
 		os.Args = []string{os.Args[0]}
 	})
 	t.Run("PolicyMapAppend_DEFAULT", func(t *testing.T) {
 		PolicyMapAppend = false
-		os.Args = []string{os.Args[0], "-x", "name=yahuah"}
+		os.Args = []string{os.Args[0], "-x", "name=yeshua,age=33"}
 		figs := With(Options{Germinate: true})
-		figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")
+		figs = figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")
 		assert.NoError(t, figs.Parse())
-		assert.Equal(t, "", figs.FigFlesh("x").ToString())
 		assert.Contains(t, figs.MapKeys("x"), "name")
+		assert.Contains(t, figs.MapKeys("x"), "age")
 		assert.NotContains(t, figs.MapKeys("x"), "job") // NotContains because no PolicyMapAppend
 		os.Args = []string{os.Args[0]}
 	})

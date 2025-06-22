@@ -184,8 +184,8 @@ func (flesh *figFlesh) ToMap() map[string]string {
 		return ft.ToMap()
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
-		fu := make(map[string]string, len(*ft.values))
-		for ck, you := range *ft.values {
+		fu := make(map[string]string, len(ft.values))
+		for ck, you := range ft.values {
 			fu[ck] = you // don't you just love programming so much =D truly I love you you see where evil comes from now
 		}
 		return fu

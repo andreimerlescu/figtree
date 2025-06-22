@@ -543,14 +543,14 @@ func (tree *figTree) Map(name string) *map[string]string {
 			v[parts[0]] = parts[1]
 		}
 	case MapFlag:
-		v = make(map[string]string, len(*f.values))
-		for k, val := range *f.values {
+		v = make(map[string]string, len(f.values))
+		for k, val := range f.values {
 			v[k] = val
 		}
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
-		v = make(map[string]string, len(*f.values))
-		for k, val := range *f.values {
+		v = make(map[string]string, len(f.values))
+		for k, val := range f.values {
 			v[k] = val
 		}
 	case *map[string]string:
@@ -575,7 +575,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 			} else {
 				newMap := make(map[string]string)
 				for _, iv := range i {
-					parts := strings.Split(iv, "=")
+					parts := strings.Split(iv, MapKeySeparator)
 					if len(parts) == 2 {
 						newMap[parts[0]] = parts[1]
 					}
@@ -606,8 +606,8 @@ func (tree *figTree) Map(name string) *map[string]string {
 					switch f := value.Value.(type) {
 					case string:
 						v = map[string]string{}
-						for _, x := range strings.Split(f, ",") {
-							parts := strings.SplitN(x, "=", 2)
+						for _, x := range strings.Split(f, MapSeparator) {
+							parts := strings.SplitN(x, MapKeySeparator, 2)
 							if len(parts) != 2 {
 								continue
 							}
@@ -615,21 +615,21 @@ func (tree *figTree) Map(name string) *map[string]string {
 						}
 					case *string:
 						v = map[string]string{}
-						for _, x := range strings.Split(*f, ",") {
-							parts := strings.SplitN(x, "=", 2)
+						for _, x := range strings.Split(*f, MapSeparator) {
+							parts := strings.SplitN(x, MapKeySeparator, 2)
 							if len(parts) != 2 {
 								continue
 							}
 							v[parts[0]] = parts[1]
 						}
 					case MapFlag:
-						v = make(map[string]string, len(*f.values))
-						for k, val := range *f.values {
+						v = make(map[string]string, len(f.values))
+						for k, val := range f.values {
 							v[k] = val
 						}
 					case *MapFlag:
-						v = make(map[string]string, len(*f.values))
-						for k, val := range *f.values {
+						v = make(map[string]string, len(f.values))
+						for k, val := range f.values {
 							v[k] = val
 						}
 					case *map[string]string:

@@ -152,7 +152,7 @@ func TestTree_StoreList(t *testing.T) {
 
 	// new fig tree with a list
 	figs := With(Options{Germinate: true})
-	figs.NewList(k, []string{"yah", "i am", "yahuah"}, u)
+	figs = figs.NewList(k, []string{"yah", "i am", "yahuah"}, u)
 	assert.Nil(t, figs.Parse())
 
 	// get the list from k as s
@@ -161,7 +161,7 @@ func TestTree_StoreList(t *testing.T) {
 	assert.Equal(t, []string{"yah", "i am", "yahuah"}, s)
 
 	// store a new list in k
-	figs.StoreList(k, []string{"yah", "its", "true", "he", "is"})
+	figs = figs.StoreList(k, []string{"yah", "its", "true", "he", "is"})
 
 	// verify the new list
 	s = *figs.List(k)

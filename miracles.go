@@ -21,13 +21,6 @@ func (tree *figTree) Curse() {
 
 // FigFlesh returns a Flesh interface to the Value on the figTree
 func (tree *figTree) FigFlesh(name string) Flesh {
-	valueAny, exists := tree.values.Load(name)
-	if !exists {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
-	}
+	value := tree.useValue(tree.from(name))
 	return value.Flesh()
 }

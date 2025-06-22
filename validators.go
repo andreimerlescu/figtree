@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -64,14 +65,7 @@ func (tree *figTree) validateAll() error {
 		for _, validator := range fruit.Validators {
 			if fruit != nil && validator != nil {
 				var val interface{}
-				valueAny, ok := tree.values.Load(name)
-				if !ok {
-					return nil
-				}
-				_value, ok := valueAny.(*Value)
-				if !ok {
-					return nil
-				}
+				_value := tree.useValue(tree.from(name))
 				switch v := _value.Value.(type) {
 				case int:
 					val = v
@@ -97,6 +91,14 @@ func (tree *figTree) validateAll() error {
 					val = v
 				case *time.Duration:
 					val = *v
+				case []string:
+					val = v
+				case *[]string:
+					val = *v
+				case map[string]string:
+					val = v
+				case *map[string]string:
+					val = *v
 				case ListFlag:
 					val = v.values
 				case *ListFlag:
@@ -104,9 +106,14 @@ func (tree *figTree) validateAll() error {
 				case MapFlag:
 					val = v.values
 				case *MapFlag:
-					val = *v.values
+					val = v.values
+				case Value:
+					val = v.Value
 				case *Value:
 					val = v.Value
+				}
+				if val == nil {
+					log.Printf("val is nil for %s", name)
 				}
 				if err := validator(val); err != nil {
 					return fmt.Errorf("validation failed for %s: %v", name, err)

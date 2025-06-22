@@ -69,11 +69,12 @@ func (v *Value) Set(in string) error {
 		if err != nil {
 			return fmt.Errorf("failed to set map value from string %q: %w", in, err)
 		}
-		if mapPtr, ok := v.Value.(MapFlag); ok {
-			err = mapPtr.Set(in) // Let MapFlag's Set handle the parsing and assignment
-			if err != nil {
-				return fmt.Errorf("failed to set map value from string %q: %w", in, err)
+		if PolicyMapAppend {
+			vm := v.Flesh().ToMap()
+			for k, v := range val {
+				vm[k] = v
 			}
+			v.Value = vm
 		} else {
 			v.Value = val
 		}

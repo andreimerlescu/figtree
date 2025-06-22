@@ -104,6 +104,7 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 	flag.Var(vPtr, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tString,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -136,6 +137,7 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tBool,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -164,6 +166,7 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tInt,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -192,6 +195,7 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tInt64,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -220,6 +224,7 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tFloat64,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -248,6 +253,7 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tDuration,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -276,6 +282,7 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tUnitDuration,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -298,16 +305,16 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 	if tree.HasRule(RuleNoLists) {
 		return tree
 	}
-	ptr := ListFlag{values: value}
 	tree.activateFlagSet()
 	v := &Value{
-		Value:      ptr,
+		Value:      ListFlag{values: value},
 		Mutagensis: tList,
 	}
 	tree.values.Store(name, v)
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tList,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),
@@ -335,16 +342,16 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 	if tree.HasRule(RuleNoMaps) {
 		return tree
 	}
-	ptr := MapFlag{values: &value}
 	tree.activateFlagSet()
 	v := &Value{
-		Value:      ptr,
+		Value:      MapFlag{values: value},
 		Mutagensis: tMap,
 	}
 	tree.values.Store(name, v)
 	flag.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
+		usage:       usage,
 		Mutagenesis: tMap,
 		Mutations:   make([]Mutation, 0),
 		Validators:  make([]FigValidatorFunc, 0),

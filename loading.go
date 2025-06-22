@@ -3,11 +3,10 @@ package figtree
 import (
 	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
-
 	check "github.com/andreimerlescu/checkfs"
 	"github.com/andreimerlescu/checkfs/file"
+	"os"
+	"path/filepath"
 )
 
 // Reload will readEnv on each flag in the configurable package
@@ -114,7 +113,8 @@ func (tree *figTree) loadFlagSet() (e error) {
 	}()
 	tree.flagSet.VisitAll(func(f *flag.Flag) {
 		value := tree.useValue(tree.from(f.Name))
-		if value.Mutagensis == tMap && tree.MutagenesisOf(f.Value) == tMap {
+		switch value.Mutagensis {
+		case tMap:
 			merged := value.Flesh().ToMap()
 			withered := tree.withered[f.Name]
 			witheredValue := withered.Value.Flesh().ToMap()
@@ -124,8 +124,10 @@ func (tree *figTree) loadFlagSet() (e error) {
 				return
 			}
 			result := make(map[string]string)
-			for k, v := range witheredValue {
-				result[k] = v
+			if PolicyMapAppend {
+				for k, v := range witheredValue {
+					result[k] = v
+				}
 			}
 			for k, v := range merged {
 				result[k] = v
@@ -138,10 +140,7 @@ func (tree *figTree) loadFlagSet() (e error) {
 				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
 				return
 			}
-			tree.values.Store(f.Name, value)
-			return
-		}
-		if value.Mutagensis == tList && tree.MutagenesisOf(f.Value) == tList {
+		case tList:
 			merged, err := toStringSlice(value.Value)
 			if err != nil {
 				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
@@ -167,14 +166,12 @@ func (tree *figTree) loadFlagSet() (e error) {
 			if err != nil {
 				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
 			}
-			tree.values.Store(f.Name, value)
-			return
-
-		}
-		err := value.Set(f.Value.String())
-		if err != nil {
-			e = fmt.Errorf("failed to value.Set(%s) due to err: %w", f.Value.String(), err)
-			return
+		default:
+			err := value.Set(f.Value.String())
+			if err != nil {
+				e = fmt.Errorf("failed to value.Set(%s) due to err: %w", f.Value.String(), err)
+				return
+			}
 		}
 		tree.values.Store(f.Name, value)
 	})

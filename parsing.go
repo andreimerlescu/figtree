@@ -44,65 +44,28 @@ func (tree *figTree) Parse() (err error) {
 		if err != nil {
 			return err
 		}
-		tree.mu.Lock()
-		for name, fig := range tree.figs {
-			if fig == nil {
-				continue
-			}
-			value := tree.useValue(tree.from(name))
-			if value.Mutagensis == tMap && PolicyMapAppend {
-				vm := value.Flesh().ToMap()
-				unique := make(map[string]string)
-				withered := tree.withered[name]
-				for k, v := range vm {
-					unique[k] = v
-				}
-				for k, v := range withered.Value.Flesh().ToMap() {
-					unique[k] = v
-				}
-				err = value.Assign(unique)
-				if err != nil {
-					return fmt.Errorf("failed to assign %s due to %w", name, err)
-				}
-				tree.values.Store(name, value)
-			}
-			if value.Mutagensis == tList && PolicyListAppend {
-				vl := value.Flesh().ToList()
-				w := tree.withered[name]
-				wl := w.Value.Flesh().ToList()
-				unique := make(map[string]struct{})
-				for _, v := range wl {
-					unique[v] = struct{}{}
-				}
-				for _, v := range vl {
-					unique[v] = struct{}{}
-				}
-				withered := tree.withered[name]
-				for _, w := range withered.Value.Flesh().ToList() {
-					unique[w] = struct{}{}
-				}
-				var result []string
-				for k, _ := range unique {
-					result = append(result, k)
-				}
-				sort.Strings(result)
-				err = value.Assign(result)
-				if err != nil {
-					return fmt.Errorf("failed assign to %s: %w", name, err)
-				}
-				tree.values.Store(name, value)
-			}
-		}
-		tree.mu.Unlock()
 		err = tree.loadFlagSet()
 		if err != nil {
 			return err
 		}
 		tree.readEnv()
+		err = tree.applyWithered()
+		if err != nil {
+			return err
+		}
 		return tree.validateAll()
 	}
 	tree.readEnv()
+	err = tree.applyWithered()
+	if err != nil {
+		return err
+	}
+	return tree.validateAll()
+}
+
+func (tree *figTree) applyWithered() error {
 	tree.mu.Lock()
+	defer tree.mu.Unlock()
 	for name, fig := range tree.figs {
 		if fig == nil {
 			continue
@@ -118,7 +81,7 @@ func (tree *figTree) Parse() (err error) {
 			for k, v := range withered.Value.Flesh().ToMap() {
 				unique[k] = v
 			}
-			err = value.Assign(unique)
+			err := value.Assign(unique)
 			if err != nil {
 				return fmt.Errorf("failed to assign %s due to %w", name, err)
 			}
@@ -142,15 +105,14 @@ func (tree *figTree) Parse() (err error) {
 				result = append(result, k)
 			}
 			sort.Strings(result)
-			err = value.Assign(result)
+			err := value.Assign(result)
 			if err != nil {
 				return fmt.Errorf("failed assign to %s: %w", name, err)
 			}
 			tree.values.Store(name, value)
 		}
 	}
-	tree.mu.Unlock()
-	return tree.validateAll()
+	return nil
 }
 
 // ParseFile will check if filename is set and run loadFile on it.
