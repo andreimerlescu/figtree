@@ -109,10 +109,24 @@ func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
 	case *Value:
 		return v.String(), nil
+	case Value:
+		return v.String(), nil
+	case *figFlesh:
+		return toString(v.AsIs())
+	case figFlesh:
+		return toString(v.AsIs())
 	case *string:
 		return *v, nil
 	case string:
 		return v, nil
+	case int:
+		return strconv.Itoa(v), nil
+	case *int:
+		return strconv.Itoa(*v), nil
+	case int64:
+		return strconv.FormatInt(v, 10), nil
+	case *int64:
+		return strconv.FormatInt(*v, 10), nil
 	case *float64:
 		return strconv.FormatFloat(*v, 'f', -1, 64), nil
 	case float64:
@@ -138,7 +152,7 @@ func toString(value interface{}) (string, error) {
 		}
 		return strings.Join(parts, MapSeparator), nil
 	default:
-		return "", fmt.Errorf("cannot convert %v to string", value)
+		return "", fmt.Errorf("cannot convert %v %T to string", value, value)
 	}
 }
 
@@ -198,7 +212,7 @@ func toStringSlice(value interface{}) ([]string, error) {
 		}
 		return strings.Split(v, ListSeparator), nil
 	default:
-		return nil, fmt.Errorf("cannot convert %v to []string", value)
+		return nil, fmt.Errorf("cannot convert %v %T to []string", value, value)
 	}
 }
 

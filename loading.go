@@ -105,14 +105,20 @@ func (tree *figTree) LoadFile(path string) (err error) {
 func (tree *figTree) loadFlagSet() (e error) {
 	defer func() {
 		if e != nil {
-			_, _ = fmt.Fprintln(os.Stderr, e)
+			_, _ = fmt.Fprintf(os.Stderr, "loadFlagSet() err: %s", e.Error())
 		}
-		if r := recover(); r != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "%v", r)
-		}
+		/*
+			if r := recover(); r != nil {
+				_, _ = fmt.Fprintf(os.Stderr, "RECOVERY %v", r)
+			}
+		*/
 	}()
 	tree.flagSet.VisitAll(func(f *flag.Flag) {
-		value := tree.useValue(tree.from(f.Name))
+		value, err := tree.from(f.Name)
+		if err != nil || value == nil {
+			e = fmt.Errorf("loadFlagSet(): failed to load %s: %w", f.Name, err)
+			return
+		}
 		switch value.Mutagensis {
 		case tMap:
 			merged := value.Flesh().ToMap()

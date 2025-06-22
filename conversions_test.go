@@ -302,10 +302,10 @@ func Test_toString(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
-			name:    "Int should fail",
+			name:    "Int should succeed",
 			args:    args{value: 42},
-			want:    "",
-			wantErr: assert.Error,
+			want:    "42",
+			wantErr: assert.NoError,
 		},
 		{
 			name:    "Nil should fail",
@@ -374,8 +374,8 @@ func Test_toStringMap(t *testing.T) {
 		{
 			name:    "Map with non-string value",
 			args:    args{value: map[string]interface{}{"key": 42}},
-			want:    nil,
-			wantErr: assert.Error,
+			want:    map[string]string{"key": "42"},
+			wantErr: assert.NoError,
 		},
 		{
 			name:    "Int should fail",
@@ -432,8 +432,8 @@ func Test_toStringSlice(t *testing.T) {
 		{
 			name:    "Slice with non-string",
 			args:    args{value: []interface{}{"a", 42, "c"}},
-			want:    nil,
-			wantErr: assert.Error,
+			want:    []string{"a", "42", "c"},
+			wantErr: assert.NoError,
 		},
 		{
 			name:    "Int should fail",
