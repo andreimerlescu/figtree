@@ -89,5 +89,7 @@ func TestWithAlias(t *testing.T) {
 		figs = figs.WithAlias("two", "x") // Should this overwrite or be ignored?
 		assert.NoError(t, figs.Parse())
 		assert.Equal(t, "value1", *figs.String("x")) // Clarify expected behavior
+		us := figs.UsageString()
+		assert.NotEmpty(t, us)
 	})
 }
