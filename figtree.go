@@ -74,6 +74,7 @@ func With(opts Options) Plant {
 		problems:       make([]error, 0),
 		aliases:        make(map[string]string),
 		figs:           make(map[string]*figFruit),
+		values:         &sync.Map{},
 		withered:       make(map[string]witheredFig),
 		mu:             sync.RWMutex{},
 		mutationsCh:    make(chan Mutation),

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // INTERFACE TYPE CONVERSIONS
@@ -11,6 +12,10 @@ import (
 // toInt returns an interface{} as an int or returns an error
 func toInt(value interface{}) (int, error) {
 	switch v := value.(type) {
+	case *Value:
+		return toInt(v.Value)
+	case *figFlesh:
+		return toInt(v.AsIs())
 	case int:
 		return v, nil
 	case *int:
@@ -41,6 +46,10 @@ func toInt(value interface{}) (int, error) {
 // toInt64 returns an interface{} as an int64 or returns an error
 func toInt64(value interface{}) (int64, error) {
 	switch v := value.(type) {
+	case *Value:
+		return toInt64(v.Value)
+	case *figFlesh:
+		return toInt64(v.AsIs())
 	case int:
 		return int64(v), nil
 	case *int:
@@ -71,6 +80,10 @@ func toInt64(value interface{}) (int64, error) {
 // toFloat64 returns an interface{} as an float64 or returns an error
 func toFloat64(value interface{}) (float64, error) {
 	switch v := value.(type) {
+	case *Value:
+		return toFloat64(v.Value)
+	case *figFlesh:
+		return toFloat64(v.AsIs())
 	case *float64:
 		return *v, nil
 	case float64:
@@ -95,10 +108,38 @@ func toFloat64(value interface{}) (float64, error) {
 // toString returns an interface{} as a string or returns an error
 func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
+	case MapFlag:
+		return toString(v.values)
+	case *MapFlag:
+		return toString(v.values)
+	case ListFlag:
+		return toString(v.values)
+	case *ListFlag:
+		return toString(v.values)
+	case *Value:
+		return v.String(), nil
+	case Value:
+		return v.String(), nil
+	case *figFlesh:
+		return toString(v.AsIs())
+	case figFlesh:
+		return toString(v.AsIs())
 	case *string:
 		return *v, nil
 	case string:
 		return v, nil
+	case int:
+		return strconv.Itoa(v), nil
+	case *int:
+		return strconv.Itoa(*v), nil
+	case time.Duration:
+		return v.String(), nil
+	case *time.Duration:
+		return v.String(), nil
+	case int64:
+		return strconv.FormatInt(v, 10), nil
+	case *int64:
+		return strconv.FormatInt(*v, 10), nil
 	case *float64:
 		return strconv.FormatFloat(*v, 'f', -1, 64), nil
 	case float64:
@@ -108,29 +149,33 @@ func toString(value interface{}) (string, error) {
 	case bool:
 		return strconv.FormatBool(v), nil
 	case []string:
-		return strings.Join(v, ","), nil
+		return strings.Join(v, ListSeparator), nil
 	case *[]string:
-		return strings.Join(*v, ","), nil
+		return strings.Join(*v, ListSeparator), nil
 	case *map[string]string:
 		parts := make([]string, 0, len(*v))
 		for k, x := range *v {
-			parts = append(parts, fmt.Sprintf("%s=%s", k, x))
+			parts = append(parts, fmt.Sprintf("%s%s%s", k, MapKeySeparator, x))
 		}
-		return strings.Join(parts, ","), nil
+		return strings.Join(parts, MapSeparator), nil
 	case map[string]string:
 		parts := make([]string, 0, len(v))
 		for k, x := range v {
-			parts = append(parts, fmt.Sprintf("%s=%s", k, x))
+			parts = append(parts, fmt.Sprintf("%s%s%s", k, MapKeySeparator, x))
 		}
-		return strings.Join(parts, ","), nil
+		return strings.Join(parts, MapSeparator), nil
 	default:
-		return "", fmt.Errorf("cannot convert %v to string", value)
+		return "", fmt.Errorf("cannot convert %v %T to string", value, value)
 	}
 }
 
 // toBool returns an interface{} as a bool or returns an error
 func toBool(value interface{}) (bool, error) {
 	switch v := value.(type) {
+	case *Value:
+		return toBool(v.Value)
+	case *figFlesh:
+		return toBool(v.AsIs())
 	case *string:
 		return strconv.ParseBool(*v)
 	case string:
@@ -147,6 +192,14 @@ func toBool(value interface{}) (bool, error) {
 // toStringSlice returns an interface{} as a []string{} or returns an error
 func toStringSlice(value interface{}) ([]string, error) {
 	switch v := value.(type) {
+	case *Value:
+		return toStringSlice(v.Value)
+	case *figFlesh:
+		return toStringSlice(v.AsIs())
+	case *ListFlag:
+		return toStringSlice(v.values)
+	case ListFlag:
+		return toStringSlice(v.values)
 	case []string:
 		return v, nil
 	case *[]string:
@@ -165,20 +218,34 @@ func toStringSlice(value interface{}) ([]string, error) {
 		if *v == "" {
 			return []string{}, nil
 		}
-		return strings.Split(*v, ","), nil
+		if strings.Contains(*v, MapKeySeparator) {
+			return nil, fmt.Errorf("cannot convert %v to []string", value)
+		}
+		return strings.Split(*v, ListSeparator), nil
 	case string:
 		if v == "" {
 			return []string{}, nil
 		}
-		return strings.Split(v, ","), nil
+		if strings.Contains(v, MapSeparator) && strings.Contains(v, MapKeySeparator) {
+			return nil, fmt.Errorf("cannot convert map %v to []string", value)
+		}
+		return strings.Split(v, ListSeparator), nil
 	default:
-		return nil, fmt.Errorf("cannot convert %v to []string", value)
+		return nil, fmt.Errorf("cannot convert %v %T to []string", value, value)
 	}
 }
 
 // toStringMap returns an interface{} as a map[string]string or returns an error
 func toStringMap(value interface{}) (map[string]string, error) {
 	switch v := value.(type) {
+	case *Value:
+		return toStringMap(v.Value)
+	case *figFlesh:
+		return toStringMap(v.AsIs())
+	case *MapFlag:
+		return toStringMap(v.values)
+	case MapFlag:
+		return toStringMap(v.values)
 	case map[string]string:
 		return v, nil
 	case *map[string]string:
@@ -197,10 +264,10 @@ func toStringMap(value interface{}) (map[string]string, error) {
 		if *v == "" {
 			return map[string]string{}, nil
 		}
-		pairs := strings.Split(*v, ",")
+		pairs := strings.Split(*v, MapSeparator)
 		result := make(map[string]string)
 		for _, pair := range pairs {
-			kv := strings.SplitN(pair, "=", 2)
+			kv := strings.SplitN(pair, MapKeySeparator, 2)
 			if len(kv) != 2 {
 				return nil, fmt.Errorf("invalid map item: %s", pair)
 			}
@@ -211,10 +278,10 @@ func toStringMap(value interface{}) (map[string]string, error) {
 		if v == "" {
 			return map[string]string{}, nil
 		}
-		pairs := strings.Split(v, ",")
+		pairs := strings.Split(v, MapSeparator)
 		result := make(map[string]string)
 		for _, pair := range pairs {
-			kv := strings.SplitN(pair, "=", 2)
+			kv := strings.SplitN(pair, MapKeySeparator, 2)
 			if len(kv) != 2 {
 				return nil, fmt.Errorf("invalid map item: %s", pair)
 			}

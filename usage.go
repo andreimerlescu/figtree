@@ -12,6 +12,10 @@ import (
 
 // Usage prints a helpful table of figs in a human-readable format
 func (tree *figTree) Usage() {
+	fmt.Println(tree.UsageString())
+}
+
+func (tree *figTree) UsageString() string {
 	termWidth := 80
 	if term.IsTerminal(int(os.Stdout.Fd())) {
 		if width, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
@@ -36,7 +40,7 @@ func (tree *figTree) Usage() {
 	})
 
 	var sb strings.Builder
-	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figree %s):\n", filepath.Base(os.Args[0]), Version())
+	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figtree %s):\n", filepath.Base(os.Args[0]), Version())
 	flag.VisitAll(func(f *flag.Flag) {
 		flagStr := f.Name
 		defValue := f.DefValue
@@ -79,7 +83,7 @@ func (tree *figTree) Usage() {
 		}
 	})
 
-	fmt.Println(sb.String())
+	return sb.String()
 }
 
 // wrapText wraps a line of text to fit within the terminal width, indenting wrapped lines

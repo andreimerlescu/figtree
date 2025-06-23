@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -10,6 +11,31 @@ import (
 func NewFlesh(thing interface{}) Flesh {
 	f := figFlesh{Flesh: thing}
 	return &f
+}
+
+func (flesh *figFlesh) AsIs() interface{} {
+	switch v := flesh.Flesh.(type) {
+	case *Value:
+		switch x := v.Value.(type) {
+		case *Value:
+			return x.Value
+		case Value:
+			return x.Value
+		default:
+			return v.Value
+		}
+	case Value:
+		switch x := v.Value.(type) {
+		case *Value:
+			return x.Value
+		case Value:
+			return x.Value
+		default:
+			return v.Value
+		}
+	default:
+		return v
+	}
 }
 
 func (flesh *figFlesh) ToString() string {
@@ -134,9 +160,9 @@ func (flesh *figFlesh) ToList() []string {
 	case *[]string:
 		return *f
 	case string:
-		return strings.Split(f, ",")
+		return strings.Split(f, ListSeparator)
 	case *string:
-		return strings.Split(*f, ",")
+		return strings.Split(*f, ListSeparator)
 	default:
 		return []string{}
 	}
@@ -145,11 +171,13 @@ func (flesh *figFlesh) ToList() []string {
 func (flesh *figFlesh) ToMap() map[string]string {
 	checkString := func(ck string) map[string]string {
 		f := make(map[string]string)
-		u := strings.Split(ck, ",")
+		u := strings.Split(ck, MapSeparator)
 		for _, i := range u {
-			r := strings.SplitN(i, "=", 1)
+			r := strings.SplitN(i, MapKeySeparator, 1)
 			if len(r) == 2 {
 				f[r[0]] = r[1]
+			} else {
+				flesh.Error = fmt.Errorf("invalid key: %s", i)
 			}
 		}
 		return f
@@ -159,8 +187,8 @@ func (flesh *figFlesh) ToMap() map[string]string {
 		return ft.ToMap()
 	case *MapFlag:
 		// Create a new map and copy the key-value pairs
-		fu := make(map[string]string, len(*ft.values))
-		for ck, you := range *ft.values {
+		fu := make(map[string]string, len(ft.values))
+		for ck, you := range ft.values {
 			fu[ck] = you // don't you just love programming so much =D truly I love you you see where evil comes from now
 		}
 		return fu
@@ -309,17 +337,17 @@ func (flesh *figFlesh) IsList() bool {
 	case *[]string:
 		return f != nil
 	case string:
-		p := strings.Split(f, ",")
+		p := strings.Split(f, ListSeparator)
 		return len(p) > 0
 	case *string:
-		p := strings.Split(*f, ",")
+		p := strings.Split(*f, ListSeparator)
 		return len(p) > 0
 	default:
 		return false
 	}
 }
 
-// IsMap checks a Fig Flesh and returns a bool
+// IsMap checks a FigFlesh Flesh and returns a bool
 //
 // figFlesh can be a string NAME=YAHUAH,AGE=33,SEX=MALE can be expressed as
 // a map[string]string by parsing it as you can see with initial below
@@ -331,16 +359,16 @@ func (flesh *figFlesh) IsList() bool {
 //		  figs.NewMap("attributes", initial, "map of attributes")
 //	   err := figs.Parse()
 //		  if err != nil { panic(err) }
-//	   attributes := figs.Fig("attributes") // this is figtree Flesh
-//	   check := figs.Fig("attributes").IsMap() // this is a bool
+//	   attributes := figs.FigFlesh("attributes") // this is figtree Flesh
+//	   check := figs.FigFlesh("attributes").IsMap() // this is a bool
 //	   fmt.Printf("attributes is a %T with %d keys and equals %q\n",
 //			check, len(attributes.ToMap()) > 0, attributes)
 func (flesh *figFlesh) IsMap() bool {
 	checkString := func(f string) bool {
-		p := strings.Split(f, ",")
+		p := strings.Split(f, MapSeparator)
 		ok := false
 		for _, e := range p {
-			n := strings.SplitN(e, "=", 1)
+			n := strings.SplitN(e, MapKeySeparator, 1)
 			ok = ok && len(n) == 2
 		}
 		return ok

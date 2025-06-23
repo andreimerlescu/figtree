@@ -2,10 +2,32 @@ package figtree
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestFigFlesh_ToString(t *testing.T) {
+	name := t.Name()
+	flesh := NewFlesh(name)
+	flesh = NewFlesh(flesh)
+	assert.Equal(t, name, flesh.ToString())
+}
+
+const TheName = "YAHUAH"
+
+func TestFigTree_WithCallback(t *testing.T) {
+	os.Args = []string{os.Args[0], "-name", TheName}
+	figs := With(Options{Germinate: true, Tracking: false, IgnoreEnvironment: true})
+	figs.NewString("name", "", "Your Name")
+	figs.WithCallback("name", CallbackAfterVerify, func(value interface{}) error {
+		v := NewFlesh(value)
+		assert.Equal(t, TheName, v.AsIs())
+		return nil
+	})
+	assert.NoError(t, figs.Parse())
+}
 
 func Test_toBool(t *testing.T) {
 	type args struct {
@@ -280,10 +302,10 @@ func Test_toString(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
-			name:    "Int should fail",
+			name:    "Int should succeed",
 			args:    args{value: 42},
-			want:    "",
-			wantErr: assert.Error,
+			want:    "42",
+			wantErr: assert.NoError,
 		},
 		{
 			name:    "Nil should fail",
@@ -352,8 +374,8 @@ func Test_toStringMap(t *testing.T) {
 		{
 			name:    "Map with non-string value",
 			args:    args{value: map[string]interface{}{"key": 42}},
-			want:    nil,
-			wantErr: assert.Error,
+			want:    map[string]string{"key": "42"},
+			wantErr: assert.NoError,
 		},
 		{
 			name:    "Int should fail",
@@ -410,8 +432,8 @@ func Test_toStringSlice(t *testing.T) {
 		{
 			name:    "Slice with non-string",
 			args:    args{value: []interface{}{"a", 42, "c"}},
-			want:    nil,
-			wantErr: assert.Error,
+			want:    []string{"a", "42", "c"},
+			wantErr: assert.NoError,
 		},
 		{
 			name:    "Int should fail",

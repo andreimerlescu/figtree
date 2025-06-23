@@ -55,71 +55,55 @@ func (tree *figTree) loadYAML(data []byte) error {
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
 	for n, d := range yamlData {
-		t := tree.MutagenesisOf(d)
 		var fruit *figFruit
 		var exists bool
 		if fruit, exists = tree.figs[n]; exists && fruit != nil {
-			tf := tree.MutagenesisOf(fruit.Flesh)
-			if strings.EqualFold(string(tf), string(t)) {
-				tree.figs[n].Flesh = figFlesh{d}
-				continue
+			value := tree.useValue(tree.from(fruit.name))
+			ds, err := toString(d)
+			if err != nil {
+				return fmt.Errorf("unable toString value for %s: %w", n, err)
 			}
+			err = value.Set(ds)
+			if err != nil {
+				return fmt.Errorf("unable to Set value for %s: %w", n, err)
+			}
+			tree.values.Store(fruit.name, value)
+			continue
+		}
+		mut := tree.MutagenesisOf(d)
+		vf, er := tree.from(n)
+		if er == nil && vf != nil && strings.EqualFold(string(vf.Mutagensis), string(tree.MutagenesisOf(d))) {
+			err := vf.Assign(d)
+			if err != nil {
+				return fmt.Errorf("unable to assign value for %s: %w", n, err)
+			}
+			tree.values.Store(n, vf)
+			mut = vf.Mutagensis
+		} else {
+			value := &Value{
+				Value:      d,
+				Mutagensis: mut,
+			}
+			tree.values.Store(n, value)
 		}
 		fruit = &figFruit{
-			name:       n,
-			Flesh:      figFlesh{d},
-			Mutations:  make([]Mutation, 0),
-			Validators: make([]FigValidatorFunc, 0),
-			Callbacks:  make([]Callback, 0),
-			Rules:      make([]RuleKind, 0),
+			name:        n,
+			Mutagenesis: mut,
+			usage:       "Unknown, loaded from config file",
+			Mutations:   make([]Mutation, 0),
+			Validators:  make([]FigValidatorFunc, 0),
+			Callbacks:   make([]Callback, 0),
+			Rules:       make([]RuleKind, 0),
 		}
 		withered := witheredFig{
-			name:  n,
-			Flesh: figFlesh{d},
+			name: n,
+			Value: Value{
+				Mutagensis: mut,
+				Value:      d,
+			},
 		}
-
-		switch d.(type) {
-		case *string, string:
-			fruit.Mutagenesis = tString
-			withered.Mutagenesis = tString
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *bool, bool:
-			fruit.Mutagenesis = tBool
-			withered.Mutagenesis = tBool
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *int, int:
-			fruit.Mutagenesis = tInt
-			withered.Mutagenesis = tInt
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *int64, int64:
-			fruit.Mutagenesis = tInt64
-			withered.Mutagenesis = tInt64
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *float64, float64:
-			fruit.Mutagenesis = tFloat64
-			withered.Mutagenesis = tFloat64
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *time.Duration, time.Duration:
-			fruit.Mutagenesis = tDuration
-			withered.Mutagenesis = tDuration
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *[]string, []string:
-			fruit.Mutagenesis = tList
-			withered.Mutagenesis = tList
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		case *map[string]string, map[string]string:
-			fruit.Mutagenesis = tMap
-			withered.Mutagenesis = tMap
-			tree.figs[n] = fruit
-			tree.withered[n] = withered
-		}
+		tree.figs[n] = fruit
+		tree.withered[n] = withered
 	}
 
 	return nil
@@ -245,13 +229,13 @@ func (tree *figTree) setValue(flagVal interface{}, value interface{}) error {
 		if err != nil {
 			return err
 		}
-		*ptr.values = listVal
+		ptr.values = listVal
 	case *MapFlag:
 		mapVal, err := toStringMap(value)
 		if err != nil {
 			return err
 		}
-		*ptr.values = mapVal
+		ptr.values = mapVal
 	default:
 		return fmt.Errorf("unsupported flag type %T", ptr)
 	}
@@ -266,6 +250,7 @@ func (tree *figTree) readEnv() {
 	for name := range tree.figs {
 		tree.checkAndSetFromEnv(name)
 	}
+	return
 }
 
 // checkAndSetFromEnv uses os.LookupEnv and assigns it to the figs name value
@@ -274,38 +259,44 @@ func (tree *figTree) checkAndSetFromEnv(name string) {
 		return
 	}
 	if !tree.ignoreEnv {
+		name = strings.ToUpper(name)
 		if val, exists := os.LookupEnv(name); exists {
 			_ = tree.mutateFig(name, val)
 		}
 	}
+	return
 }
 
 // mutateFig replaces the value interface{} and sends a Mutation into Mutations
 func (tree *figTree) mutateFig(name string, value interface{}) error {
+	name = strings.ToLower(name)
 	def, ok := tree.figs[name]
 	if !ok || def == nil {
-		tree.Resurrect(name)
-		def = tree.figs[name]
-	}
-	if def == nil {
-		return fmt.Errorf("no definition for key %s", name)
+		return fmt.Errorf("no such fig: %s", name)
 	}
 	var old interface{}
 	var dead interface{}
 	witheredFig, ok := tree.withered[name]
-	dead = witheredFig.Flesh
-	old = def.Flesh
-	def.Flesh = figFlesh{value}
-	t1 := tree.MutagenesisOf(&old)
-	t2 := tree.MutagenesisOf(value)
-	if t1 == "" && t2 != "" {
+	dead = witheredFig.Value.Value
+	_value := tree.useValue(tree.from(name))
+	old = _value.Flesh()
+	err := _value.Assign(value)
+	if err != nil {
+		return err
+	}
+	tree.values.Store(name, _value)
+	t1 := string(tree.MutagenesisOf(&old))
+	t2 := string(_value.Mutagensis)
+	if strings.EqualFold(t1, "") && t2 != "" {
 		t1 = t2
 	}
-	if !strings.EqualFold(string(t1), string(t2)) {
+	if !strings.EqualFold(t1, t2) {
 		return fmt.Errorf("type mismatch for key %s", name)
 	}
 	// if tree.tracking && old != dead && dead != value
-	if tree.tracking && !reflect.DeepEqual(old, dead) && !reflect.DeepEqual(dead, value) {
+	oldNotDead := !reflect.DeepEqual(old, dead)
+	notDeadWithValue := !reflect.DeepEqual(dead, value)
+	if tree.tracking && oldNotDead && notDeadWithValue {
 		tree.mutationsCh <- Mutation{
 			Property:    name,
 			Mutagenesis: fmt.Sprintf("%T", value),
@@ -345,4 +336,18 @@ func filterTestFlags(args []string) []string {
 		}
 	}
 	return filtered
+}
+
+func DeduplicateStrings(slice []string) []string {
+	seen := make(map[string]bool)
+	var result []string
+
+	for _, s := range slice {
+		if !seen[s] {
+			seen[s] = true
+			result = append(result, s)
+		}
+	}
+
+	return result
 }

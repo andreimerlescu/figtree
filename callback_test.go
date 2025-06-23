@@ -9,8 +9,8 @@ import (
 
 func TestTree_WithCallback(t *testing.T) {
 	figs := With(Options{Germinate: true, Pollinate: false, IgnoreEnvironment: true})
-	figs.NewString(t.Name(), t.Name(), "usage")
-	figs.WithCallback(t.Name(), CallbackAfterVerify, func(value interface{}) error {
+	figs = figs.NewString(t.Name(), t.Name(), "usage")
+	figs = figs.WithCallback(t.Name(), CallbackAfterVerify, func(value interface{}) error {
 		if value == nil {
 			return nil
 		}
@@ -22,7 +22,7 @@ func TestTree_WithCallback(t *testing.T) {
 		}
 		return nil
 	})
-	figs.WithCallback(t.Name(), CallbackAfterRead, func(value interface{}) error {
+	figs = figs.WithCallback(t.Name(), CallbackAfterRead, func(value interface{}) error {
 		if value == nil {
 			return nil
 		}
@@ -34,7 +34,7 @@ func TestTree_WithCallback(t *testing.T) {
 		}
 		return nil
 	})
-	figs.WithCallback(t.Name(), CallbackAfterChange, func(value interface{}) error {
+	figs = figs.WithCallback(t.Name(), CallbackAfterChange, func(value interface{}) error {
 		if value == nil {
 			return nil
 		}
@@ -52,7 +52,7 @@ func TestTree_WithCallback(t *testing.T) {
 	property := *figs.String(t.Name())
 	assert.NotNil(t, property)
 	time.Sleep(369 * time.Millisecond)
-	assert.NotNil(t, figs.Fig(t.Name()))
+	assert.NotNil(t, figs.FigFlesh(t.Name()))
 	figs.StoreString(t.Name(), "new value")
 	time.Sleep(369 * time.Millisecond)
 

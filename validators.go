@@ -2,6 +2,8 @@ package figtree
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"time"
 )
 
@@ -17,6 +19,7 @@ import (
 func (tree *figTree) WithValidator(name string, validator func(interface{}) error) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = strings.ToLower(name)
 	if fig, ok := tree.figs[name]; ok {
 		if fig.HasRule(RuleNoValidations) {
 			return tree
@@ -64,7 +67,12 @@ func (tree *figTree) validateAll() error {
 		for _, validator := range fruit.Validators {
 			if fruit != nil && validator != nil {
 				var val interface{}
-				switch v := fruit.Flesh.Flesh.(type) {
+				_value := tree.useValue(tree.from(name))
+				if _value == nil {
+					fmt.Printf("skipping invalid fig '%s'\n", name)
+					continue
+				}
+				switch v := _value.Value.(type) {
 				case int:
 					val = v
 				case *int:
@@ -89,14 +97,31 @@ func (tree *figTree) validateAll() error {
 					val = v
 				case *time.Duration:
 					val = *v
+				case []string:
+					val = v
+				case *[]string:
+					val = *v
+				case map[string]string:
+					val = v
+				case *map[string]string:
+					val = *v
 				case ListFlag:
 					val = v.values
 				case *ListFlag:
-					val = *v.values
+					val = v.values
 				case MapFlag:
 					val = v.values
 				case *MapFlag:
-					val = *v.values
+					val = v.values
+				case Value:
+					val = v.Value
+				case *Value:
+					val = v.Value
+				default:
+					log.Printf("unknown fig type: %T for %v\n", v, v)
+				}
+				if val == nil {
+					log.Printf("val is nil for %s", name)
 				}
 				if err := validator(val); err != nil {
 					return fmt.Errorf("validation failed for %s: %v", name, err)
@@ -104,13 +129,20 @@ func (tree *figTree) validateAll() error {
 			}
 		}
 	}
+
+	for _, fruit := range tree.figs {
+		if fruit.Error != nil {
+			return fruit.Error
+		}
+	}
+
 	return tree.runCallbacks(CallbackAfterVerify)
 }
 
 // makeStringValidator creates a validator for string-based checks.
 func makeStringValidator(check func(string) bool, errFormat string) FigValidatorFunc {
 	return func(value interface{}) error {
-		v := figFlesh{value}
+		v := figFlesh{value, nil}
 		if !v.IsString() {
 			return fmt.Errorf("expected string, got %T", value)
 		}

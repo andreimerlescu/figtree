@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"errors"
+	"strings"
 )
 
 // WithCallback allows you to assign a slice of CallbackFunc to a figFruit attached to a figTree.
@@ -26,14 +27,9 @@ import (
 func (tree *figTree) WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = strings.ToLower(name)
 	fruit, exists := tree.figs[name]
 	if !exists || fruit == nil {
-		tree.mu.Unlock()
-		tree.Resurrect(name)
-		tree.mu.Lock()
-		fruit = tree.figs[name]
-	}
-	if fruit == nil {
 		return tree
 	}
 	if fruit.HasRule(RuleNoCallbacks) {
@@ -58,16 +54,21 @@ func (tree *figTree) runCallbacks(callbackOn CallbackWhen) error {
 		if fig.HasRule(RuleNoCallbacks) {
 			continue
 		}
-		err := fig.runCallbacks(callbackOn)
+		err := fig.runCallbacks(tree, callbackOn)
 		if err != nil {
 			return err
+		}
+	}
+	for _, fruit := range tree.figs {
+		if fruit.Error != nil {
+			return fruit.Error
 		}
 	}
 	return nil
 }
 
 // runCallbacks will take each registered callback and run it against the fig fruit
-func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
+func (fig *figFruit) runCallbacks(tree *figTree, callbackOn CallbackWhen) error {
 	if fig.Error != nil {
 		return fig.Error
 	}
@@ -77,9 +78,15 @@ func (fig *figFruit) runCallbacks(callbackOn CallbackWhen) error {
 	errs := make([]error, len(fig.Callbacks))
 	for _, callback := range fig.Callbacks {
 		if callback.CallbackWhen == callbackOn {
-			err := callback.CallbackFunc(fig.Flesh)
+			value, err := tree.from(fig.name)
 			if err != nil {
 				errs = append(errs, err)
+				continue
+			}
+			err = callback.CallbackFunc(value.Value)
+			if err != nil {
+				errs = append(errs, err)
+				continue
 			}
 		}
 	}
