@@ -1,5 +1,7 @@
 package figtree
 
+import "strings"
+
 type RuleKind int
 
 const (
@@ -47,6 +49,7 @@ func (tree *figTree) WithTreeRule(rule RuleKind) Plant {
 func (tree *figTree) WithRule(name string, rule RuleKind) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = strings.ToLower(name)
 	fruit, exists := tree.figs[name]
 	if !exists || fruit == nil {
 		return tree

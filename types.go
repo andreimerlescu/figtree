@@ -172,6 +172,7 @@ type Core interface {
 
 	// Usage displays the helpful menu of figs registered using -h or -help
 	Usage()
+	UsageString() string
 }
 
 // Plant defines the interface for configuration management.
@@ -247,6 +248,7 @@ type figFruit struct {
 
 type figFlesh struct {
 	Flesh interface{}
+	Error error
 }
 
 type Flesh interface {

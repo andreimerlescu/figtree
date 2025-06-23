@@ -1,12 +1,14 @@
 package figtree
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	check "github.com/andreimerlescu/checkfs"
 	"github.com/andreimerlescu/checkfs/file"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Reload will readEnv on each flag in the configurable package
@@ -15,16 +17,43 @@ func (tree *figTree) Reload() error {
 	return tree.validateAll()
 }
 
+func (tree *figTree) preLoadOrParse() error {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	for name, fig := range tree.figs {
+		value, err := tree.from(name)
+		if err != nil {
+			return err
+		}
+		if value.Err != nil {
+			return value.Err
+		}
+		if fig.Error != nil {
+			return fig.Error
+		}
+	}
+	return tree.checkFigErrors()
+}
+
 // Load uses the EnvironmentKey and the DefaultJSONFile, DefaultYAMLFile, and DefaultINIFile to run ParseFile if it exists
 func (tree *figTree) Load() (err error) {
+	preloadErr := tree.preLoadOrParse()
+	if preloadErr != nil {
+		return preloadErr
+	}
 	if !tree.HasRule(RuleNoFlags) {
 		tree.activateFlagSet()
 		args := os.Args[1:]
 		if tree.filterTests {
 			args = filterTestFlags(args)
-			err = tree.flagSet.Parse(args)
-		} else {
-			err = tree.flagSet.Parse(args)
+		}
+		err = tree.flagSet.Parse(args)
+		if err != nil {
+			err2 := tree.checkFigErrors()
+			if err2 != nil {
+				err = errors.Join(err, err2)
+			}
+			return fmt.Errorf("failed to Load() due to err: %w", err)
 		}
 		err = tree.loadFlagSet()
 		if err != nil {
@@ -53,24 +82,32 @@ func (tree *figTree) Load() (err error) {
 			}
 		}
 	}
-
 	tree.readEnv()
+	err = tree.checkFigErrors()
+	if err != nil {
+		return fmt.Errorf("checkFigErrors() threw err: %w", err)
+	}
 	return tree.validateAll()
 }
 
 // LoadFile accepts a path and uses it to populate the figTree
 func (tree *figTree) LoadFile(path string) (err error) {
+	preloadErr := tree.preLoadOrParse()
+	if preloadErr != nil {
+		return preloadErr
+	}
 	if !tree.HasRule(RuleNoFlags) {
 		tree.activateFlagSet()
 		args := os.Args[1:]
 		if tree.filterTests {
 			args = filterTestFlags(args)
-			err = tree.flagSet.Parse(args)
-		} else {
-			err = tree.flagSet.Parse(args)
 		}
-
+		err = tree.flagSet.Parse(args)
 		if err != nil {
+			err2 := tree.checkFigErrors()
+			if err2 != nil {
+				err = errors.Join(err, err2)
+			}
 			return err
 		}
 	}
@@ -95,9 +132,13 @@ func (tree *figTree) LoadFile(path string) (err error) {
 		return err3
 	}
 	tree.readEnv()
-	err4 := tree.validateAll()
+	err4 := tree.checkFigErrors()
 	if err4 != nil {
-		return fmt.Errorf("failed to validateAll: %w", err4)
+		return fmt.Errorf("failed to checkFigErrors: %w", err4)
+	}
+	err5 := tree.validateAll()
+	if err5 != nil {
+		return fmt.Errorf("failed to validateAll: %w", err5)
 	}
 	return fmt.Errorf("failed to LoadFile %s due to err %v", path, loadErr)
 }
@@ -114,19 +155,25 @@ func (tree *figTree) loadFlagSet() (e error) {
 		*/
 	}()
 	tree.flagSet.VisitAll(func(f *flag.Flag) {
-		value, err := tree.from(f.Name)
+		flagName := f.Name
+		for alias, name := range tree.aliases {
+			if strings.EqualFold(alias, f.Name) {
+				flagName = name
+			}
+		}
+		value, err := tree.from(flagName)
 		if err != nil || value == nil {
-			e = fmt.Errorf("loadFlagSet(): failed to load %s: %w", f.Name, err)
+			e = fmt.Errorf("loadFlagSet(): failed to load %s: %w", flagName, err)
 			return
 		}
 		switch value.Mutagensis {
 		case tMap:
 			merged := value.Flesh().ToMap()
-			withered := tree.withered[f.Name]
+			withered := tree.withered[flagName]
 			witheredValue := withered.Value.Flesh().ToMap()
 			flagged, err := toStringMap(f.Value)
 			if err != nil {
-				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				e = fmt.Errorf("failed to load %s: %w", flagName, err)
 				return
 			}
 			result := make(map[string]string)
@@ -143,18 +190,18 @@ func (tree *figTree) loadFlagSet() (e error) {
 			}
 			err = value.Assign(result)
 			if err != nil {
-				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				e = fmt.Errorf("failed to load %s: %w", flagName, err)
 				return
 			}
 		case tList:
 			merged, err := toStringSlice(value.Value)
 			if err != nil {
-				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				e = fmt.Errorf("failed to load %s: %w", flagName, err)
 				return
 			}
 			flagged, err := toStringSlice(f.Value)
 			if err != nil {
-				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				e = fmt.Errorf("failed to load %s: %w", flagName, err)
 				return
 			}
 			unique := make(map[string]bool)
@@ -170,7 +217,8 @@ func (tree *figTree) loadFlagSet() (e error) {
 			}
 			err = value.Assign(newValue)
 			if err != nil {
-				e = fmt.Errorf("failed to load %s: %w", f.Name, err)
+				e = fmt.Errorf("failed to load %s: %w", flagName, err)
+				return
 			}
 		default:
 			err := value.Set(f.Value.String())
@@ -179,7 +227,7 @@ func (tree *figTree) loadFlagSet() (e error) {
 				return
 			}
 		}
-		tree.values.Store(f.Name, value)
+		tree.values.Store(flagName, value)
 	})
 	return nil
 }

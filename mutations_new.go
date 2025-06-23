@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"flag"
+	"strings"
 	"time"
 )
 
@@ -24,14 +25,6 @@ func (tree *figTree) MutagenesisOf(what interface{}) Mutagenesis {
 	case Value:
 		return x.Mutagensis
 	case flag.Value:
-		mv, e := toStringMap(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(mv)
-		}
-		lv, e := toStringSlice(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(lv)
-		}
 		fv, e := toFloat64(x.String())
 		if e == nil {
 			return tree.MutagenesisOf(fv)
@@ -51,6 +44,10 @@ func (tree *figTree) MutagenesisOf(what interface{}) Mutagenesis {
 		sv, e := toStringSlice(x.String())
 		if e == nil {
 			return tree.MutagenesisOf(sv)
+		}
+		mv, e := toStringMap(x.String())
+		if e == nil {
+			return tree.MutagenesisOf(mv)
 		}
 		return ""
 
@@ -96,6 +93,7 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	vPtr := &Value{
 		Value:      value,
 		Mutagensis: tString,
@@ -129,6 +127,7 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      value,
 		Mutagensis: tBool,
@@ -158,6 +157,7 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      value,
 		Mutagensis: tInt,
@@ -187,6 +187,7 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      value,
 		Mutagensis: tInt64,
@@ -216,6 +217,7 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      value,
 		Mutagensis: tFloat64,
@@ -245,6 +247,7 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      value,
 		Mutagensis: tDuration,
@@ -274,6 +277,7 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      value * units,
 		Mutagensis: tUnitDuration,
@@ -306,6 +310,7 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 		return tree
 	}
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      ListFlag{values: value},
 		Mutagensis: tList,
@@ -343,6 +348,7 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 		return tree
 	}
 	tree.activateFlagSet()
+	name = strings.ToLower(name)
 	v := &Value{
 		Value:      MapFlag{values: value},
 		Mutagensis: tMap,

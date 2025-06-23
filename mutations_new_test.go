@@ -72,7 +72,7 @@ func TestTree_Duration(t *testing.T) {
 	figs := With(Options{Germinate: true})
 	figs.NewDuration("test-duration", 42*time.Millisecond, "usage")
 	assert.Nil(t, figs.Parse())
-	assert.Equal(t, *figs.Duration("test-duration"), 42*time.Millisecond)
+	assert.Equal(t, 42*time.Millisecond, *figs.Duration("test-duration"))
 }
 
 func TestTree_UnitDuration(t *testing.T) {

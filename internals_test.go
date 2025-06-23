@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,24 +16,37 @@ import (
 func TestTree_checkAndSetFromEnv(t *testing.T) {
 	const k, u = "workers-check-and-set-from-env", "usage"
 
-	// create a new fig tree
-	var figs *figTree
-	figs = &figTree{
-		harvest:     1,
-		figs:        make(map[string]*figFruit),
-		tracking:    false,
-		withered:    make(map[string]witheredFig),
-		aliases:     make(map[string]string),
-		values:      &sync.Map{},
-		flagSet:     flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
-		mu:          sync.RWMutex{},
-		mutationsCh: make(chan Mutation, 1),
-		filterTests: true,
+	// create a new fig tree internally to test the func checkAndSetFromEnv
+	angel := atomic.Bool{}
+	angel.Store(true)
+	opts := Options{Germinate: true}
+	figs := &figTree{
+		ConfigFilePath: opts.ConfigFile,
+		ignoreEnv:      opts.IgnoreEnvironment,
+		filterTests:    opts.Germinate,
+		pollinate:      opts.Pollinate,
+		tracking:       opts.Tracking,
+		harvest:        opts.Harvest,
+		angel:          &angel,
+		problems:       make([]error, 0),
+		aliases:        make(map[string]string),
+		figs:           make(map[string]*figFruit),
+		values:         &sync.Map{},
+		withered:       make(map[string]witheredFig),
+		mu:             sync.RWMutex{},
+		mutationsCh:    make(chan Mutation),
+		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
+	}
+	figs.flagSet.Usage = figs.Usage
+	angel.Store(false)
+	if opts.IgnoreEnvironment {
+		os.Clearenv()
 	}
 
+	figs = figs.NewInt(k, 10, "Number").(*figTree)
+
 	// assign an int to k
-	figs.NewInt(k, 10, u)
-	assert.Nil(t, figs.Parse())
+	assert.NoError(t, figs.Parse())
 
 	// verify assignment
 	assert.Equal(t, 10, *figs.Int(k))
@@ -48,7 +63,7 @@ func TestTree_checkAndSetFromEnv(t *testing.T) {
 			case <-timer.C:
 				return
 			case <-checker.C:
-				assert.NoError(t, os.Setenv(k, "17"))
+				assert.NoError(t, os.Setenv(strings.ToUpper(k), "17"))
 			}
 		}
 	}()

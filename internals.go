@@ -250,6 +250,7 @@ func (tree *figTree) readEnv() {
 	for name := range tree.figs {
 		tree.checkAndSetFromEnv(name)
 	}
+	return
 }
 
 // checkAndSetFromEnv uses os.LookupEnv and assigns it to the figs name value
@@ -258,14 +259,17 @@ func (tree *figTree) checkAndSetFromEnv(name string) {
 		return
 	}
 	if !tree.ignoreEnv {
+		name = strings.ToUpper(name)
 		if val, exists := os.LookupEnv(name); exists {
 			_ = tree.mutateFig(name, val)
 		}
 	}
+	return
 }
 
 // mutateFig replaces the value interface{} and sends a Mutation into Mutations
 func (tree *figTree) mutateFig(name string, value interface{}) error {
+	name = strings.ToLower(name)
 	def, ok := tree.figs[name]
 	if !ok || def == nil {
 		return fmt.Errorf("no such fig: %s", name)
@@ -274,30 +278,25 @@ func (tree *figTree) mutateFig(name string, value interface{}) error {
 	var dead interface{}
 	witheredFig, ok := tree.withered[name]
 	dead = witheredFig.Value.Value
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	_value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
-	}
+	_value := tree.useValue(tree.from(name))
 	old = _value.Flesh()
 	err := _value.Assign(value)
 	if err != nil {
 		return err
 	}
 	tree.values.Store(name, _value)
-	t1 := tree.MutagenesisOf(&old)
-	t2 := tree.MutagenesisOf(_value.Value)
-	if t1 == "" && t2 != "" {
+	t1 := string(tree.MutagenesisOf(&old))
+	t2 := string(_value.Mutagensis)
+	if strings.EqualFold(t1, "") && t2 != "" {
 		t1 = t2
 	}
-	if !strings.EqualFold(string(t1), string(t2)) {
+	if !strings.EqualFold(t1, t2) {
 		return fmt.Errorf("type mismatch for key %s", name)
 	}
 	// if tree.tracking && old != dead && dead != value
-	if tree.tracking && !reflect.DeepEqual(old, dead) && !reflect.DeepEqual(dead, value) {
+	oldNotDead := !reflect.DeepEqual(old, dead)
+	notDeadWithValue := !reflect.DeepEqual(dead, value)
+	if tree.tracking && oldNotDead && notDeadWithValue {
 		tree.mutationsCh <- Mutation{
 			Property:    name,
 			Mutagenesis: fmt.Sprintf("%T", value),

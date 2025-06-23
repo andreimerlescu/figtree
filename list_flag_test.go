@@ -17,6 +17,7 @@ func TestTree_ListValues(t *testing.T) {
 func TestListFlag_Set(t *testing.T) {
 	t.Run("PolicyListAppend_TRUE", func(t *testing.T) {
 		PolicyListAppend = true
+		defer func() { PolicyListAppend = false }()
 		os.Args = []string{os.Args[0], "-x", "yeshua"}
 		figs := With(Options{Germinate: true})
 		figs.NewList("x", []string{"bum"}, "Name List")

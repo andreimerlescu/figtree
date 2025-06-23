@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"slices"
 	"strconv"
@@ -9,10 +10,31 @@ import (
 	"time"
 )
 
+var (
+	zeroString   string
+	zeroBool     bool
+	zeroFloat64  float64
+	zeroInt      int
+	zeroInt64    int64
+	zeroDuration time.Duration
+	zeroList     []string
+	zeroMap      map[string]string // Will be nil map by default, should be make(map[string]string) if always non-nil
+)
+
+func init() {
+	zeroList = make([]string, 0)
+	zeroMap = make(map[string]string)
+}
+
 // String with mutation tracking
 func (tree *figTree) String(name string) *string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -24,25 +46,30 @@ func (tree *figTree) String(name string) *string {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroString
 	}
-	value := tree.useValue(tree.from(name))
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroString
+	}
 	s := value.Flesh().ToString()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		envs := os.Environ()
 		var e string
 		var ok bool
 		for _, env := range envs {
-			if strings.EqualFold(env, name) {
+			if strings.EqualFold(env, strings.ToUpper(name)) {
 				v := strings.Split(env, "=")
 				e = v[1]
 			}
 		}
 		if len(e) == 0 {
-			e, ok = os.LookupEnv(name)
+			e, ok = os.LookupEnv(strings.ToUpper(name))
 		}
 		if ok && len(e) > 0 {
-			if !strings.EqualFold(e, s) {
+			if !strings.EqualFold(strings.ToLower(e), strings.ToLower(s)) {
 				s = strings.Clone(e)
 				tree.mu.RUnlock()
 				tree.Store(fruit.Mutagenesis, name, e)
@@ -55,6 +82,7 @@ func (tree *figTree) String(name string) *string {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroString
 	}
 	return &s
 }
@@ -63,6 +91,11 @@ func (tree *figTree) String(name string) *string {
 func (tree *figTree) Bool(name string) *bool {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -74,15 +107,13 @@ func (tree *figTree) Bool(name string) *bool {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroBool
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroBool
 	}
 	s := value.Flesh().ToBool()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
@@ -109,6 +140,7 @@ func (tree *figTree) Bool(name string) *bool {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroBool
 	}
 	return &s
 }
@@ -117,6 +149,11 @@ func (tree *figTree) Bool(name string) *bool {
 func (tree *figTree) Int(name string) *int {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -128,15 +165,17 @@ func (tree *figTree) Int(name string) *int {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroInt
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroInt
 	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
+	if value.Err != nil {
+		fmt.Printf("value(%s).Err = %v\n", name, value.Err.Error())
+		return &zeroInt
 	}
 	s := value.Flesh().ToInt()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
@@ -164,6 +203,7 @@ func (tree *figTree) Int(name string) *int {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroInt
 	}
 	return &s
 }
@@ -172,6 +212,11 @@ func (tree *figTree) Int(name string) *int {
 func (tree *figTree) Int64(name string) *int64 {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -183,15 +228,13 @@ func (tree *figTree) Int64(name string) *int64 {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroInt64
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroInt64
 	}
 	s := value.Flesh().ToInt64()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
@@ -219,6 +262,7 @@ func (tree *figTree) Int64(name string) *int64 {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroInt64
 	}
 	return &s
 }
@@ -227,6 +271,11 @@ func (tree *figTree) Int64(name string) *int64 {
 func (tree *figTree) Float64(name string) *float64 {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -238,15 +287,13 @@ func (tree *figTree) Float64(name string) *float64 {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroFloat64
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroFloat64
 	}
 	s := value.Flesh().ToFloat64()
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
@@ -274,6 +321,7 @@ func (tree *figTree) Float64(name string) *float64 {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroFloat64
 	}
 	return &s
 }
@@ -282,6 +330,11 @@ func (tree *figTree) Float64(name string) *float64 {
 func (tree *figTree) Duration(name string) *time.Duration {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -293,18 +346,20 @@ func (tree *figTree) Duration(name string) *time.Duration {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroDuration
 	}
 	var d time.Duration
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroDuration
 	}
 	switch f := value.Value.(type) {
+	case int64:
+		d = time.Duration(f)
+	case *int64:
+		d = time.Duration(*f)
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -336,6 +391,7 @@ func (tree *figTree) Duration(name string) *time.Duration {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroDuration
 	}
 	return &d
 }
@@ -344,6 +400,11 @@ func (tree *figTree) Duration(name string) *time.Duration {
 func (tree *figTree) UnitDuration(name string) *time.Duration {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -355,18 +416,20 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroDuration
 	}
 	var d time.Duration
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
+	value, err := tree.from(name)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroDuration
 	}
 	switch f := value.Value.(type) {
+	case int64:
+		d = time.Duration(f)
+	case *int64:
+		d = time.Duration(*f)
 	case time.Duration:
 		d = f
 	case *time.Duration:
@@ -398,14 +461,20 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroDuration
 	}
 	return &d
 }
 
-// List with mutation tracking
+// List returns a copy of the []string stored inside the Value of the figFruit
 func (tree *figTree) List(name string) *[]string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -413,19 +482,17 @@ func (tree *figTree) List(name string) *[]string {
 	if !ok || fruit == nil {
 		return nil
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
-	}
-	err := fruit.runCallbacks(tree, CallbackBeforeRead)
+	value, err := tree.from(name)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroList
+	}
+	err = fruit.runCallbacks(tree, CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroList
 	}
 	var v []string
 	switch f := value.Value.(type) {
@@ -451,20 +518,18 @@ func (tree *figTree) List(name string) *[]string {
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
-			i := strings.Split(e, ",")
+			i := strings.Split(e, ListSeparator)
 			if len(i) == 0 {
 				v = []string{}
 			} else if !slices.Equal(v, i) {
 				tree.mu.RUnlock()
 				tree.Store(fruit.Mutagenesis, name, i)
 				tree.mu.RLock()
-				valueAny, ok := tree.values.Load(name)
-				if !ok {
-					return nil
-				}
-				value, ok = valueAny.(*Value)
-				if !ok {
-					return nil
+				value, err := tree.from(name)
+				if err != nil {
+					fruit.Error = errors.Join(fruit.Error, err)
+					tree.figs[name] = fruit
+					return &zeroList
 				}
 				switch f := value.Value.(type) {
 				case string:
@@ -493,7 +558,9 @@ func (tree *figTree) List(name string) *[]string {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroList
 	}
+	slices.Sort(v)
 	return &v
 }
 
@@ -501,6 +568,11 @@ func (tree *figTree) List(name string) *[]string {
 func (tree *figTree) Map(name string) *map[string]string {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
+	originalName := strings.Clone(name) // in case we need it
+	defer func() {
+		name = originalName // restore after we're done
+	}()
+	name = strings.ToLower(name)
 	if _, exists := tree.aliases[name]; exists {
 		name = tree.aliases[name]
 	}
@@ -508,19 +580,17 @@ func (tree *figTree) Map(name string) *map[string]string {
 	if !ok || fruit == nil {
 		return nil
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return nil
-	}
-	value, ok := valueAny.(*Value)
-	if !ok {
-		return nil
-	}
-	err := fruit.runCallbacks(tree, CallbackBeforeRead)
+	value, err := tree.from(name)
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
-		return nil
+		return &zeroMap
+	}
+	err = fruit.runCallbacks(tree, CallbackBeforeRead)
+	if err != nil {
+		fruit.Error = errors.Join(fruit.Error, err)
+		tree.figs[name] = fruit
+		return &zeroMap
 	}
 	var v map[string]string
 	switch f := value.Value.(type) {
@@ -595,13 +665,11 @@ func (tree *figTree) Map(name string) *map[string]string {
 					tree.mu.RUnlock()
 					tree.Store(fruit.Mutagenesis, name, newMap)
 					tree.mu.RLock()
-					valueAny, ok := tree.values.Load(name)
-					if !ok {
-						return nil
-					}
-					value, ok = valueAny.(*Value)
-					if !ok {
-						return nil
+					value, err := tree.from(name)
+					if err != nil {
+						fruit.Error = errors.Join(fruit.Error, err)
+						tree.figs[name] = fruit
+						return &zeroMap
 					}
 					switch f := value.Value.(type) {
 					case string:
@@ -651,6 +719,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 	if err != nil {
 		fruit.Error = errors.Join(fruit.Error, err)
 		tree.figs[name] = fruit
+		return &zeroMap
 	}
 	return &v
 }

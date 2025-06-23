@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -11,25 +12,25 @@ import (
 
 func TestRules(t *testing.T) {
 	kName := "name"
-
+	os.Args = []string{os.Args[0]}
 	figs := With(Options{Germinate: true, Pollinate: true})
 	assert.NotNil(t, figs)
-	figs.NewString(kName, "", "usage of name")
-	figs.WithValidator(kName, AssureStringNotEmpty)
+	figs = figs.NewString(kName, "", "usage of name").WithValidator(kName, AssureStringNotEmpty)
 	assert.Error(t, figs.Parse())
 
-	figs.WithRule(kName, RuleNoValidations)
+	figs = figs.WithRule(kName, RuleNoValidations)
 	assert.NoError(t, figs.Parse())
 
-	figs.WithCallback(kName, CallbackBeforeVerify, func(_ interface{}) error {
+	figs = figs.WithCallback(kName, CallbackBeforeVerify, func(_ interface{}) error {
 		panic("this shouldn't be called")
 		return nil
 	})
 	assert.Panics(t, func() { _ = figs.Parse() })
-	figs.WithRule(kName, RuleNoCallbacks)
+	figs = figs.WithRule(kName, RuleNoCallbacks)
 	assert.NoError(t, figs.Parse())
 
 	changeEnv := func(n, m string) {
+		nu := strings.ToUpper(n)
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 		go func() {
@@ -41,11 +42,11 @@ func TestRules(t *testing.T) {
 				case <-timer.C:
 					return
 				case <-checker.C:
-					assert.NoError(t, os.Setenv(n, m))
+					assert.NoError(t, os.Setenv(nu, m))
 				}
 			}
 		}()
-		defer assert.NoError(t, os.Unsetenv(n))
+		defer assert.NoError(t, os.Unsetenv(nu))
 		wg.Wait()
 	}
 

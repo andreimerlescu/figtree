@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -175,6 +176,8 @@ func (flesh *figFlesh) ToMap() map[string]string {
 			r := strings.SplitN(i, MapKeySeparator, 1)
 			if len(r) == 2 {
 				f[r[0]] = r[1]
+			} else {
+				flesh.Error = fmt.Errorf("invalid key: %s", i)
 			}
 		}
 		return f

@@ -1,9 +1,9 @@
 package figtree
 
 import (
-	"errors"
 	"fmt"
 	"maps"
+	"os"
 	"strings"
 )
 
@@ -15,18 +15,21 @@ type MapFlag struct {
 func (tree *figTree) MapKeys(name string) []string {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	originalName := strings.Clone(name) // capture original
+	defer func() {
+		name = originalName // return value to original
+	}()
+	name = strings.ToLower(name)
 	fruit, exists := tree.figs[name]
 	if !exists {
 		return []string{}
 	}
-	valueAny, ok := tree.values.Load(fruit.name)
-	if !ok {
-		fruit.Error = errors.Join(fruit.Error, fmt.Errorf("failed to load %s", fruit.name))
+	if fruit == nil {
 		return []string{}
 	}
-	_value, ok := valueAny.(*Value)
-	if !ok {
-		fruit.Error = errors.Join(fruit.Error, fmt.Errorf("failed to cast %s as *Value ; got %T", fruit.name, valueAny))
+	_value, err := tree.from(name)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "tree.from(%s) return err: %v", name, err.Error())
 		return []string{}
 	}
 	switch v := _value.Value.(type) {

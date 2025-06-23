@@ -3,6 +3,7 @@ package figtree
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -18,6 +19,7 @@ import (
 func (tree *figTree) WithValidator(name string, validator func(interface{}) error) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = strings.ToLower(name)
 	if fig, ok := tree.figs[name]; ok {
 		if fig.HasRule(RuleNoValidations) {
 			return tree
@@ -66,6 +68,10 @@ func (tree *figTree) validateAll() error {
 			if fruit != nil && validator != nil {
 				var val interface{}
 				_value := tree.useValue(tree.from(name))
+				if _value == nil {
+					fmt.Printf("skipping invalid fig '%s'\n", name)
+					continue
+				}
 				switch v := _value.Value.(type) {
 				case int:
 					val = v
@@ -111,6 +117,8 @@ func (tree *figTree) validateAll() error {
 					val = v.Value
 				case *Value:
 					val = v.Value
+				default:
+					log.Printf("unknown fig type: %T for %v\n", v, v)
 				}
 				if val == nil {
 					log.Printf("val is nil for %s", name)
@@ -121,13 +129,20 @@ func (tree *figTree) validateAll() error {
 			}
 		}
 	}
+
+	for _, fruit := range tree.figs {
+		if fruit.Error != nil {
+			return fruit.Error
+		}
+	}
+
 	return tree.runCallbacks(CallbackAfterVerify)
 }
 
 // makeStringValidator creates a validator for string-based checks.
 func makeStringValidator(check func(string) bool, errFormat string) FigValidatorFunc {
 	return func(value interface{}) error {
-		v := figFlesh{value}
+		v := figFlesh{value, nil}
 		if !v.IsString() {
 			return fmt.Errorf("expected string, got %T", value)
 		}

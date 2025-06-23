@@ -8,15 +8,18 @@ import (
 )
 
 func TestTree_MapKeys(t *testing.T) {
+	os.Args = []string{os.Args[0]}
 	figs := With(Options{Germinate: true})
-	figs.NewMap(t.Name(), map[string]string{"name": "yahuah"}, "Name Map")
+	figs = figs.NewMap(t.Name(), map[string]string{"name": "yahuah"}, "Name Map")
 	assert.NoError(t, figs.Parse())
-	assert.Contains(t, figs.MapKeys(t.Name()), "name")
+	mk := figs.MapKeys(t.Name())
+	assert.Contains(t, mk, "name")
 }
 
 func TestMapFlag_Set(t *testing.T) {
 	t.Run("PolicyMapAppend_TRUE", func(t *testing.T) {
 		PolicyMapAppend = true
+		defer func() { PolicyMapAppend = false }()
 		os.Args = []string{os.Args[0], "-x", "name=yahuah"}
 		figs := With(Options{Germinate: true})
 		figs = figs.NewMap("x", map[string]string{"job": "bum"}, "Name Map")

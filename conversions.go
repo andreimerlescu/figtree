@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // INTERFACE TYPE CONVERSIONS
@@ -107,6 +108,14 @@ func toFloat64(value interface{}) (float64, error) {
 // toString returns an interface{} as a string or returns an error
 func toString(value interface{}) (string, error) {
 	switch v := value.(type) {
+	case MapFlag:
+		return toString(v.values)
+	case *MapFlag:
+		return toString(v.values)
+	case ListFlag:
+		return toString(v.values)
+	case *ListFlag:
+		return toString(v.values)
 	case *Value:
 		return v.String(), nil
 	case Value:
@@ -123,6 +132,10 @@ func toString(value interface{}) (string, error) {
 		return strconv.Itoa(v), nil
 	case *int:
 		return strconv.Itoa(*v), nil
+	case time.Duration:
+		return v.String(), nil
+	case *time.Duration:
+		return v.String(), nil
 	case int64:
 		return strconv.FormatInt(v, 10), nil
 	case *int64:
@@ -205,10 +218,16 @@ func toStringSlice(value interface{}) ([]string, error) {
 		if *v == "" {
 			return []string{}, nil
 		}
+		if strings.Contains(*v, MapKeySeparator) {
+			return nil, fmt.Errorf("cannot convert %v to []string", value)
+		}
 		return strings.Split(*v, ListSeparator), nil
 	case string:
 		if v == "" {
 			return []string{}, nil
+		}
+		if strings.Contains(v, MapSeparator) && strings.Contains(v, MapKeySeparator) {
+			return nil, fmt.Errorf("cannot convert map %v to []string", value)
 		}
 		return strings.Split(v, ListSeparator), nil
 	default:

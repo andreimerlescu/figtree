@@ -123,13 +123,10 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 	if fruit.HasRule(RulePanicOnChange) {
 		panic("RuleOnPanicChange triggered for " + fruit.name)
 	}
-	valueAny, ok := tree.values.Load(name)
-	if !ok {
-		return false, nil, value
-	}
-	_value, ok := valueAny.(*Value)
-	if !ok {
-		return false, nil, value
+	name = strings.ToLower(name)
+	_value := tree.useValue(tree.from(name))
+	if value == nil {
+		return false, nil, nil
 	}
 	flesh := _value.Raw()
 	switch mut {

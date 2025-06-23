@@ -3,11 +3,14 @@ package figtree
 import (
 	"flag"
 	"fmt"
+	"strings"
 )
 
 func (tree *figTree) WithAlias(name, alias string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = strings.ToLower(name)
+	alias = strings.ToLower(alias)
 	if _, exists := tree.aliases[alias]; exists {
 		return tree
 	}
