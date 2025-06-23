@@ -1,10 +1,10 @@
 package figtree
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"golang.org/x/term"
@@ -23,52 +23,110 @@ func (tree *figTree) UsageString() string {
 		}
 	}
 
+	// First pass: Collect all primary flag names and aliases correctly
+	// Also calculate maxFlagLen for formatting
+	type flagInfo struct {
+		name         string
+		aliases      []string
+		defValue     string
+		usage        string
+		mutagenesis  Mutagenesis
+		isAlias      bool   // Mark if this is an alias entry itself
+		originalName string // For aliases, store the original flag name
+	}
+	allFlagData := make(map[string]*flagInfo) // Use map to deduplicate and process by main flag name
+
+	tree.mu.RLock() // Lock for accessing tree.figs and tree.aliases
+
+	// Populate with main flags
+	for name, fruit := range tree.figs {
+		f := tree.flagSet.Lookup(name) // Get the flag.Flag object
+		if f == nil {
+			continue // Should not happen if figs map is consistent with flagSet
+		}
+
+		info := &flagInfo{
+			name:        f.Name,
+			defValue:    f.DefValue,
+			usage:       f.Usage,
+			mutagenesis: fruit.Mutagenesis, // Get mutagenesis from figFruit
+			isAlias:     false,
+		}
+		allFlagData[name] = info
+	}
+
+	// Add aliases to their primary flags
+	for alias, originalName := range tree.aliases {
+		if info, ok := allFlagData[originalName]; ok {
+			info.aliases = append(info.aliases, alias)
+		}
+	}
+
+	tree.mu.RUnlock() // Release lock
+
+	// Second pass: Re-evaluate maxFlagLen based on combined flag names
 	maxFlagLen := 0
-	flag.VisitAll(func(f *flag.Flag) {
-		flagStr := f.Name
-		// Handle special cases for default values
-		defValue := f.DefValue
-		if defValue == `""` || defValue == "[]" || defValue == "{}" {
-			defValue = ""
+	for name := range allFlagData { // Iterate over main flag names only
+		info := allFlagData[name]
+
+		flagStr := info.name
+		if len(info.aliases) > 0 {
+			// Sort aliases for consistent output
+			// Sort is important here because map iteration order is not guaranteed.
+			// This ensures "-a|-alpha" is always consistent.
+			sortedAliases := make([]string, len(info.aliases))
+			copy(sortedAliases, info.aliases)
+			// Apply tree.mu.RLock() and tree.mu.RUnlock() or sort.Strings outside loop
+			sort.Strings(sortedAliases) // Needs sort import
+
+			flagStr = fmt.Sprintf("%s|-%s", strings.Join(sortedAliases, "|-"), info.name)
 		}
-		if defValue != "" {
-			flagStr = fmt.Sprintf("%s[=%s]", f.Name, defValue)
+
+		displayValue := info.defValue
+		if displayValue == `""` || displayValue == "[]" || displayValue == "{}" {
+			displayValue = ""
 		}
+		if displayValue != "" {
+			flagStr = fmt.Sprintf("%s[=%s]", flagStr, displayValue)
+		}
+
 		if len(flagStr) > maxFlagLen {
 			maxFlagLen = len(flagStr)
 		}
-	})
+	}
 
 	var sb strings.Builder
 	_, _ = fmt.Fprintf(&sb, "Usage of %s (powered by figtree %s):\n", filepath.Base(os.Args[0]), Version())
-	flag.VisitAll(func(f *flag.Flag) {
-		flagStr := f.Name
-		defValue := f.DefValue
-		if defValue == `""` || defValue == "[]" || defValue == "{}" {
-			defValue = ""
-		}
-		if defValue != "" {
-			flagStr = fmt.Sprintf("%s[=%s]", f.Name, defValue)
+
+	sortedFlagNames := make([]string, 0, len(allFlagData))
+	for name := range allFlagData {
+		sortedFlagNames = append(sortedFlagNames, name)
+	}
+	sort.Strings(sortedFlagNames)
+
+	for _, name := range sortedFlagNames {
+		info := allFlagData[name]
+
+		flagStr := info.name
+		if len(info.aliases) > 0 {
+			sortedAliases := make([]string, len(info.aliases))
+			copy(sortedAliases, info.aliases)
+			sort.Strings(sortedAliases)
+			flagStr = fmt.Sprintf("%s|-%s", strings.Join(sortedAliases, "|-"), info.name)
 		}
 
-		typeStr := "Unknown"
-		tree.mu.RLock()
-		if fig, ok := tree.figs[f.Name]; ok && fig != nil {
-			typeStr = string(fig.Mutagenesis)
+		displayValue := info.defValue
+		if displayValue == `""` || displayValue == "[]" || displayValue == "{}" {
+			displayValue = ""
 		}
-		tree.mu.RUnlock()
-		typeField := fmt.Sprintf("[%s]", typeStr)
-		var aliasList []string
-		for alias, name := range tree.aliases {
-			if name == f.Name {
-				aliasList = append(aliasList, alias)
-			}
-		}
-		if len(aliasList) > 0 {
-			flagStr = fmt.Sprintf("%s|-%s", strings.Join(aliasList, "|-"), flagStr)
+		if displayValue != "" {
+			flagStr = fmt.Sprintf("%s[=%s]", flagStr, displayValue)
 		}
 
-		line := fmt.Sprintf("   -%-*s   %-8s   %s", maxFlagLen, flagStr, typeField, f.Usage)
+		typeField := fmt.Sprintf("[%s]", info.mutagenesis) // Use Mutagenesis from figFruit
+
+		// The f.Usage is the usage string of the main flag.
+		line := fmt.Sprintf("   -%-*s   %-8s   %s", maxFlagLen, flagStr, typeField, info.usage)
 
 		// Wrap the usage text if it exceeds terminal width
 		lines := wrapText(line, termWidth, maxFlagLen+8+3+3) // 8 for type field, 3 spaces each side
@@ -81,7 +139,7 @@ func (tree *figTree) UsageString() string {
 				_, _ = fmt.Fprintf(&sb, "%s%s\n", indent, l)
 			}
 		}
-	})
+	}
 
 	return sb.String()
 }
