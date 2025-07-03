@@ -42,3 +42,7 @@ type ErrInvalidValue struct {
 func (e ErrInvalidValue) Error() string {
 	return fmt.Sprintf("invalid value for flag -%s: %s", e.Name, e.Err.Error())
 }
+
+func (e ErrInvalidValue) Unwrap() error {
+	return e.Err
+}
