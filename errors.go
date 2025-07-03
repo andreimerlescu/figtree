@@ -31,7 +31,7 @@ type ErrConversion struct {
 }
 
 func (e ErrConversion) Error() string {
-	return fmt.Sprintf("failed to convert %T type %s into %s", e.Got, e.From.Kind(), e.To.Kind())
+	return fmt.Sprintf("failed to convert %v (type %T) type %s into %s", e.Got, e.Got, e.From.Kind(), e.To.Kind())
 }
 
 type ErrInvalidValue struct {
