@@ -39,7 +39,7 @@ func toInt(value interface{}) (int, error) {
 		}
 		return strconv.Atoi(v)
 	default:
-		return 0, fmt.Errorf("cannot convert %v to int", value)
+		return 0, ErrConversion{MutagenesisOf(value), tInt, value}
 	}
 }
 
@@ -73,7 +73,7 @@ func toInt64(value interface{}) (int64, error) {
 		}
 		return strconv.ParseInt(v, 10, 64)
 	default:
-		return 0, fmt.Errorf("cannot convert %v to int64", value)
+		return 0, ErrConversion{MutagenesisOf(value), tInt64, value}
 	}
 }
 
@@ -101,7 +101,7 @@ func toFloat64(value interface{}) (float64, error) {
 	case string:
 		return strconv.ParseFloat(v, 64)
 	default:
-		return 0, fmt.Errorf("cannot convert %v to float64", value)
+		return 0, ErrConversion{MutagenesisOf(value), tFloat64, value}
 	}
 }
 
@@ -165,7 +165,7 @@ func toString(value interface{}) (string, error) {
 		}
 		return strings.Join(parts, MapSeparator), nil
 	default:
-		return "", fmt.Errorf("cannot convert %v %T to string", value, value)
+		return "", ErrConversion{MutagenesisOf(value), tString, value}
 	}
 }
 
@@ -185,7 +185,7 @@ func toBool(value interface{}) (bool, error) {
 	case bool:
 		return v, nil
 	default:
-		return false, fmt.Errorf("cannot convert %v to bool", value)
+		return false, ErrConversion{MutagenesisOf(value), tBool, value}
 	}
 }
 
@@ -219,7 +219,7 @@ func toStringSlice(value interface{}) ([]string, error) {
 			return []string{}, nil
 		}
 		if strings.Contains(*v, MapKeySeparator) {
-			return nil, fmt.Errorf("cannot convert %v to []string", value)
+			return nil, ErrConversion{MutagenesisOf(value), tList, value}
 		}
 		return strings.Split(*v, ListSeparator), nil
 	case string:
@@ -227,11 +227,11 @@ func toStringSlice(value interface{}) ([]string, error) {
 			return []string{}, nil
 		}
 		if strings.Contains(v, MapSeparator) && strings.Contains(v, MapKeySeparator) {
-			return nil, fmt.Errorf("cannot convert map %v to []string", value)
+			return nil, ErrConversion{MutagenesisOf(value), tList, value}
 		}
 		return strings.Split(v, ListSeparator), nil
 	default:
-		return nil, fmt.Errorf("cannot convert %v %T to []string", value, value)
+		return nil, ErrConversion{MutagenesisOf(value), tList, value}
 	}
 }
 
@@ -289,6 +289,6 @@ func toStringMap(value interface{}) (map[string]string, error) {
 		}
 		return result, nil
 	default:
-		return nil, fmt.Errorf("cannot convert %v to map[string]string", value)
+		return nil, ErrConversion{MutagenesisOf(value), tMap, value}
 	}
 }

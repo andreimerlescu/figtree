@@ -14,3 +14,31 @@ func (tree *figTree) ErrorFor(name string) error {
 	}
 	return fruit.Error
 }
+
+type ErrInvalidType struct {
+	Wanted Mutagenesis
+	Got    any
+}
+
+func (e ErrInvalidType) Error() string {
+	return fmt.Sprintf("invalid type ; got %s ; wanted %s", e.Got, e.Wanted.Kind())
+}
+
+type ErrConversion struct {
+	From Mutagenesis
+	To   Mutagenesis
+	Got  any
+}
+
+func (e ErrConversion) Error() string {
+	return fmt.Sprintf("failed to convert %T type %s into %s", e.Got, e.From.Kind(), e.To.Kind())
+}
+
+type ErrInvalidValue struct {
+	Name string
+	Err  error
+}
+
+func (e ErrInvalidValue) Error() string {
+	return fmt.Sprintf("invalid value for flag -%s: %s", e.Name, e.Err.Error())
+}

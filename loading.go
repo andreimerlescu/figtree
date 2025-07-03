@@ -4,11 +4,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	check "github.com/andreimerlescu/checkfs"
-	"github.com/andreimerlescu/checkfs/file"
 	"os"
 	"path/filepath"
 	"strings"
+
+	check "github.com/andreimerlescu/checkfs"
+	"github.com/andreimerlescu/checkfs/file"
 )
 
 // Reload will readEnv on each flag in the configurable package
