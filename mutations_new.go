@@ -1,92 +1,9 @@
 package figtree
 
 import (
-	"flag"
 	"strings"
 	"time"
 )
-
-// MutagenesisOfFig returns the Mutagensis of the name
-func (tree *figTree) MutagenesisOfFig(name string) Mutagenesis {
-	fruit, ok := tree.figs[name]
-	if !ok {
-		return ""
-	}
-	return fruit.Mutagenesis
-}
-
-// MutagenesisOf accepts anything and allows you to determine the Mutagensis of the type of from what
-// Example:
-//
-//	tree.MutagenesisOf("hello") // Returns tString
-//	tree.MutagenesisOf(42)      // Returns tInt
-func (tree *figTree) MutagenesisOf(what interface{}) Mutagenesis {
-	switch x := what.(type) {
-	case Value:
-		return x.Mutagensis
-	case flag.Value:
-		fv, e := toFloat64(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(fv)
-		}
-		i64v, e := toInt64(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(i64v)
-		}
-		iv, e := toInt(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(iv)
-		}
-		bv, e := toBool(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(bv)
-		}
-		sv, e := toStringSlice(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(sv)
-		}
-		mv, e := toStringMap(x.String())
-		if e == nil {
-			return tree.MutagenesisOf(mv)
-		}
-		return ""
-
-	case int:
-		return tInt
-	case *int:
-		return tInt
-	case *int64:
-		return tInt64
-	case int64:
-		return tInt64
-	case string:
-		return tString
-	case *string:
-		return tString
-	case bool:
-		return tBool
-	case *bool:
-		return tBool
-	case *float64:
-		return tFloat64
-	case float64:
-		return tFloat64
-	case time.Duration:
-		return tDuration
-	case *time.Duration:
-		return tDuration
-	case []string:
-		return tList
-	case *[]string:
-		return tList
-	case map[string]string:
-		return tMap
-	case *map[string]string:
-		return tMap
-	default:
-		return ""
-	}
-}
 
 // NewString with validator and withered support
 func (tree *figTree) NewString(name string, value string, usage string) Plant {
@@ -99,7 +16,7 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 		Mutagensis: tString,
 	}
 	tree.values.Store(name, vPtr)
-	flag.Var(vPtr, name, usage)
+	tree.flagSet.Var(vPtr, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -133,7 +50,7 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 		Mutagensis: tBool,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -163,7 +80,7 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 		Mutagensis: tInt,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -193,7 +110,7 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 		Mutagensis: tInt64,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -223,7 +140,7 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 		Mutagensis: tFloat64,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -253,7 +170,7 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 		Mutagensis: tDuration,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -283,7 +200,7 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 		Mutagensis: tUnitDuration,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -316,7 +233,7 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 		Mutagensis: tList,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -354,7 +271,7 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 		Mutagensis: tMap,
 	}
 	tree.values.Store(name, v)
-	flag.Var(v, name, usage)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,

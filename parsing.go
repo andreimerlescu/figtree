@@ -113,7 +113,7 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 		case tInt:
 			_, e := toInt(value)
@@ -122,7 +122,7 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 		case tFloat64:
 			_, e := toFloat64(value)
@@ -131,7 +131,7 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 
 		case tBool:
@@ -141,7 +141,7 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 		case tInt64, tUnitDuration, tDuration:
 			if value.Mutagensis == tUnitDuration || value.Mutagensis == tDuration {
@@ -154,7 +154,7 @@ func (tree *figTree) checkFigErrors() error {
 						if err == nil {
 							err = value.Assign(val)
 							if err != nil {
-								return fmt.Errorf("invalid value for flag -%s: %w", name, err)
+								return ErrInvalidValue{name, err}
 							}
 							continue
 						}
@@ -170,7 +170,7 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 		case tMap:
 			_, e := toStringMap(value.Value)
@@ -179,7 +179,7 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 		case tList:
 			_, e := toStringSlice(value.Value)
@@ -188,10 +188,10 @@ func (tree *figTree) checkFigErrors() error {
 				if er != nil {
 					e = errors.Join(e, er)
 				}
-				return fmt.Errorf("invalid value for flag -%s: %w", name, e)
+				return ErrInvalidValue{name, e}
 			}
 		default:
-			return fmt.Errorf("invalid value for flag -%s: %w", name, fmt.Errorf("unknown flag type"))
+			return ErrInvalidValue{name, fmt.Errorf("unknown flag type")}
 		}
 	}
 	return nil
@@ -256,7 +256,7 @@ func (tree *figTree) applyWithered() error {
 			}
 			err := value.Assign(unique)
 			if err != nil {
-				return fmt.Errorf("failed to assign %s due to %w", name, err)
+				return ErrInvalidValue{name, err}
 			}
 			tree.values.Store(name, value)
 		}
@@ -280,7 +280,7 @@ func (tree *figTree) applyWithered() error {
 			sort.Strings(result)
 			err := value.Assign(result)
 			if err != nil {
-				return fmt.Errorf("failed assign to %s: %w", name, err)
+				return ErrInvalidValue{name, err}
 			}
 			tree.values.Store(name, value)
 		}

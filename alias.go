@@ -1,7 +1,6 @@
 package figtree
 
 import (
-	"flag"
 	"fmt"
 	"strings"
 )
@@ -25,6 +24,6 @@ func (tree *figTree) WithAlias(name, alias string) Plant {
 		fmt.Println("failed to cast -" + name + " value")
 		return tree
 	}
-	flag.Var(value, alias, "Alias of -"+name)
+	tree.flagSet.Var(value, alias, "Alias of -"+name)
 	return tree
 }
