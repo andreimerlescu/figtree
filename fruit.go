@@ -180,7 +180,11 @@ func (v *Value) Assign(as interface{}) error {
 		copy(vValue, as.values)
 		v.Value = vValue
 	case *MapFlag:
-		v.Value = as.values
+		vValue := make(map[string]string, len(as.values))
+		for k, v := range as.values {
+			vValue[k] = v
+		}
+		v.Value = vValue
 	case *Value:
 		v.Value = as.Value
 	default:
