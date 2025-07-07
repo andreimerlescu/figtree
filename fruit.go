@@ -1,8 +1,6 @@
 package figtree
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -17,6 +15,10 @@ func (v *Value) Raw() interface{} {
 	return v.Value
 }
 
+func (v *Value) IsBoolFlag() bool {
+	return v.Mutagensis == tBool
+}
+
 func (v *Value) Set(in string) error {
 	switch v.Mutagensis {
 	case tString:
@@ -27,7 +29,7 @@ func (v *Value) Set(in string) error {
 		}
 		val, err := toBool(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set bool value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 		v.Value = val
@@ -37,7 +39,7 @@ func (v *Value) Set(in string) error {
 		}
 		val, err := toInt(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set int value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 		v.Value = val
@@ -47,7 +49,7 @@ func (v *Value) Set(in string) error {
 		}
 		val, err := toInt64(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set int64 value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 		v.Value = val
@@ -57,7 +59,7 @@ func (v *Value) Set(in string) error {
 		}
 		val, err := toFloat64(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set float64 value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 		v.Value = val
@@ -65,11 +67,12 @@ func (v *Value) Set(in string) error {
 		if len(in) == 0 {
 			err := v.Assign(zeroDuration)
 			if err != nil {
-				v.Err = fmt.Errorf("failed to set duration value from string %q: %w", in, err)
+				v.Err = ErrInvalidValue{in, err}
 				return v.Err
 			}
 			return nil
 		}
+
 		va, er := time.ParseDuration(in)
 		if er == nil {
 			v.Value = va
@@ -79,18 +82,23 @@ func (v *Value) Set(in string) error {
 		_val, err := ParseCustomDuration(in)
 		if err != nil {
 			if !strings.Contains(err.Error(), "invalid duration format") {
-				v.Err = fmt.Errorf("failed to set duration value from string %q: %w", in, err)
+				v.Err = ErrInvalidValue{in, err}
 				val, err := toInt64(in)
 				if err != nil {
-					v.Err = errors.Join(v.Err, fmt.Errorf("failed to set duration value from string %q", in))
+					v.Err = ErrInvalidValue{in, err}
 					return v.Err
 				}
 				v.Value = time.Duration(val)
 				return nil
 			}
+			vi, err := toInt64(in)
+			if err == nil {
+				v.Value = time.Duration(vi)
+				return nil
+			}
 			_val, er := time.ParseDuration(in)
 			if er != nil {
-				v.Err = fmt.Errorf("failed to set duration value from string %q: %w", in, err)
+				v.Err = ErrInvalidValue{in, err}
 				return v.Err
 			}
 			v.Value = _val
@@ -103,20 +111,20 @@ func (v *Value) Set(in string) error {
 		if len(in) == 0 {
 			err := v.Assign(zeroList)
 			if err != nil {
-				v.Err = fmt.Errorf("failed to set list value from string %q: %w", in, err)
+				v.Err = ErrInvalidValue{in, err}
 				return v.Err
 			}
 			return nil
 		}
 		val, err := toStringSlice(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set list value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 		if PolicyListAppend {
 			vl, er := toStringSlice(v.Value)
 			if er != nil {
-				v.Err = fmt.Errorf("failed to set list value from string %q: %w", in, er)
+				v.Err = ErrInvalidValue{in, er}
 				return v.Err
 			}
 			for _, x := range val {
@@ -132,14 +140,14 @@ func (v *Value) Set(in string) error {
 		if len(in) == 0 {
 			err := v.Assign(zeroMap)
 			if err != nil {
-				v.Err = fmt.Errorf("failed to set map value from string %q: %w", in, err)
+				v.Err = ErrInvalidValue{in, err}
 				return v.Err
 			}
 			return nil
 		}
 		val, err := toStringMap(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set map value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 		if PolicyMapAppend {
@@ -154,7 +162,7 @@ func (v *Value) Set(in string) error {
 	default:
 		err := v.Assign(in)
 		if err != nil {
-			v.Err = fmt.Errorf("failed to set value from string %q: %w", in, err)
+			v.Err = ErrInvalidValue{in, err}
 			return v.Err
 		}
 	}
@@ -164,9 +172,19 @@ func (v *Value) Set(in string) error {
 func (v *Value) Assign(as interface{}) error {
 	switch as := as.(type) {
 	case *ListFlag:
-		v.Value = as.values
+		vValue := make([]string, len(as.values))
+		copy(vValue, as.values)
+		v.Value = vValue
+	case ListFlag:
+		vValue := make([]string, len(as.values))
+		copy(vValue, as.values)
+		v.Value = vValue
 	case *MapFlag:
-		v.Value = as.values
+		vValue := make(map[string]string, len(as.values))
+		for k, v := range as.values {
+			vValue[k] = v
+		}
+		v.Value = vValue
 	case *Value:
 		v.Value = as.Value
 	default:

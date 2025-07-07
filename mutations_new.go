@@ -46,11 +46,11 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	tree.activateFlagSet()
 	name = strings.ToLower(name)
 	v := &Value{
-		Value:      value,
+		Value:      &value, // Store a persistent pointer to the bool value
 		Mutagensis: tBool,
 	}
+	tree.flagSet.BoolVar(v.Value.(*bool), name, value, usage) // Use the persistent pointer directly
 	tree.values.Store(name, v)
-	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
