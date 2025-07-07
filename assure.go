@@ -274,7 +274,7 @@ var AssureIntPositive = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsInt() {
 		if v.ToInt() < 0 {
-			return fmt.Errorf("value must be positive, got %d", v.ToInt())
+			return ErrValue{ErrWayBePositive, v.ToInt(), 0}
 		}
 		return nil
 	}
@@ -287,7 +287,7 @@ var AssureIntNegative = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsInt() {
 		if v.ToInt() > 0 {
-			return fmt.Errorf("value must be negative, got %d", v.ToInt())
+			return ErrValue{ErrWayBeNegative, v.ToInt(), 0}
 		}
 		return nil
 	}
@@ -304,7 +304,7 @@ var AssureIntGreaterThan = func(above int) FigValidatorFunc {
 		}
 		i := v.ToInt()
 		if i < above {
-			return fmt.Errorf("value must be below %d", i)
+			return ErrValue{ErrWayBeBelow, i, above}
 		}
 		return nil
 	}
@@ -320,7 +320,7 @@ var AssureIntLessThan = func(below int) FigValidatorFunc {
 		}
 		i := v.ToInt()
 		if i > below {
-			return fmt.Errorf("value must be below %d", i)
+			return ErrValue{ErrWayBeBelow, i, below}
 		}
 		return nil
 	}
@@ -336,7 +336,7 @@ var AssureIntInRange = func(min, max int) FigValidatorFunc {
 		}
 		i := v.ToInt()
 		if i < min || i > max {
-			return fmt.Errorf("value must be between %d and %d, got %d", min, max, i)
+			return ErrValue{fmt.Sprintf(ErrWayBeBetweenFmt, min, max), i, nil}
 		}
 		return nil
 	}
@@ -352,7 +352,7 @@ var AssureInt64GreaterThan = func(above int64) FigValidatorFunc {
 		}
 		i := v.ToInt64()
 		if i < above {
-			return fmt.Errorf("value must be below %d", i)
+			return ErrValue{ErrWayBeAbove, i, above}
 		}
 		return nil
 	}
@@ -368,7 +368,7 @@ var AssureInt64LessThan = func(below int64) FigValidatorFunc {
 		}
 		i := v.ToInt64()
 		if i > below {
-			return fmt.Errorf("value must be below %d", i)
+			return ErrValue{ErrWayBeBelow, i, below}
 		}
 		return nil
 	}
@@ -383,7 +383,7 @@ var AssureInt64Positive = func(value interface{}) error {
 	}
 	i := v.ToInt64()
 	if i <= 0 {
-		return fmt.Errorf("value must be positive, got %d", i)
+		return ErrValue{ErrWayBePositive, i, 0}
 	}
 	return nil
 }
@@ -398,7 +398,7 @@ var AssureInt64InRange = func(min, max int64) FigValidatorFunc {
 		}
 		i := v.ToInt64()
 		if i < min || i > max {
-			return fmt.Errorf("value must be between %d and %d, got %d", min, max, i)
+			return ErrValue{fmt.Sprintf(ErrWayBeBetweenFmt, min, max), i, nil}
 		}
 		return nil
 	}
@@ -413,7 +413,7 @@ var AssureFloat64Positive = func(value interface{}) error {
 	}
 	f := v.ToFloat64()
 	if f <= 0 {
-		return fmt.Errorf("value must be positive, got %f", f)
+		return ErrValue{ErrWayBePositive, f, 0}
 	}
 	return nil
 }
@@ -428,7 +428,7 @@ var AssureFloat64InRange = func(min, max float64) FigValidatorFunc {
 		}
 		f := v.ToFloat64()
 		if f < min || f > max {
-			return fmt.Errorf("value must be between %f and %f, got %f", min, max, f)
+			return ErrValue{fmt.Sprintf(ErrWayBeBetweenFmt, min, max), f, nil}
 		}
 		return nil
 	}
@@ -444,7 +444,7 @@ var AssureFloat64GreaterThan = func(above float64) FigValidatorFunc {
 		}
 		f := v.ToFloat64()
 		if f < above {
-			return fmt.Errorf("value must be below %f", f)
+			return ErrValue{ErrWayBeBelow, f, above}
 		}
 		return nil
 	}
@@ -460,7 +460,7 @@ var AssureFloat64LessThan = func(below float64) FigValidatorFunc {
 		}
 		f := v.ToFloat64()
 		if f > below {
-			return fmt.Errorf("value must be below %f", f)
+			return ErrValue{ErrWayBeBelow, f, below}
 		}
 		return nil
 	}
@@ -475,7 +475,7 @@ var AssureFloat64NotNaN = func(value interface{}) error {
 	}
 	n := v.ToFloat64()
 	if math.IsNaN(n) {
-		return fmt.Errorf("value must not be NaN, got %f", n)
+		return ErrValue{ErrWayBeNotNaN, n, nil}
 	}
 	return nil
 }
@@ -490,7 +490,7 @@ var AssureDurationGreaterThan = func(above time.Duration) FigValidatorFunc {
 		}
 		t := v.ToDuration()
 		if t < above {
-			return fmt.Errorf("value must be above %v, got = %v", above, t)
+			return ErrValue{ErrWayBeAbove, t, above}
 		}
 		return nil
 	}
@@ -506,7 +506,7 @@ var AssureDurationLessThan = func(below time.Duration) FigValidatorFunc {
 		}
 		t := v.ToDuration()
 		if t > below {
-			return fmt.Errorf("value must be below %v, got = %v", below, t)
+			return ErrValue{ErrWayBeBelow, t, below}
 		}
 		return nil
 	}

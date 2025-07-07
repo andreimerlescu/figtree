@@ -2,6 +2,7 @@ package figtree
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,12 @@ func toInt(value interface{}) (int, error) {
 	case *int:
 		return *v, nil
 	case int64:
+		if v > math.MaxInt32 {
+			return 0, fmt.Errorf("max int32 %d exceeded by %d", math.MaxInt32, math.MaxInt32-v)
+		}
+		if v < math.MinInt32 {
+			return 0, fmt.Errorf("min int32 %d exceeded by %d", math.MinInt32, math.MinInt32-v)
+		}
 		return int(v), nil
 	case *int64:
 		return int(*v), nil
@@ -29,13 +36,13 @@ func toInt(value interface{}) (int, error) {
 	case float64:
 		return int(v), nil
 	case *string:
-		if f, err := strconv.ParseFloat(*v, 64); err == nil {
-			return int(f), nil
+		if f, err := strconv.ParseInt(*v, 10, 32); err == nil {
+			return toInt(f)
 		}
 		return strconv.Atoi(*v)
 	case string:
-		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			return int(f), nil
+		if f, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return toInt(f)
 		}
 		return strconv.Atoi(v)
 	default:

@@ -15,6 +15,10 @@ func (tree *figTree) ErrorFor(name string) error {
 	return fruit.Error
 }
 
+func (fig *figFruit) Unwrap() error {
+	return fig.Error
+}
+
 type ErrInvalidType struct {
 	Wanted Mutagenesis
 	Got    any
@@ -44,5 +48,52 @@ func (e ErrInvalidValue) Error() string {
 }
 
 func (e ErrInvalidValue) Unwrap() error {
+	return e.Err
+}
+
+const (
+	ErrWayBeBelow      string = "be below"
+	ErrWayBeAbove      string = "be above"
+	ErrWayBeBetweenFmt string = "be between %v and %v"
+	ErrWayBePositive   string = "be positive"
+	ErrWayBeNegative   string = "be negative"
+	ErrWayBeNotNaN     string = "not be NaN"
+)
+
+type ErrValue struct {
+	Way   string
+	Value any
+	Than  any
+}
+
+func (e ErrValue) Error() string {
+	if e.Than != nil {
+		return fmt.Sprintf("invalid value ; must be %s than %v ; got %v", e.Way, e.Value, e.Than)
+	}
+	return fmt.Sprintf("invalid value ; must be %s ; got %v", e.Way, e.Value)
+}
+
+type ErrLoadFailure struct {
+	What string
+	Err  error
+}
+
+func (e ErrLoadFailure) Error() string {
+	return fmt.Sprintf("failed to load %s: %s", e.What, e.Err.Error())
+}
+
+func (e ErrLoadFailure) Unwrap() error {
+	return e.Err
+}
+
+type ErrValidationFailure struct {
+	Err error
+}
+
+func (e ErrValidationFailure) Error() string {
+	return fmt.Sprintf("failed to validateAll with err: %v", e.Err)
+}
+
+func (e ErrValidationFailure) Unwrap() error {
 	return e.Err
 }

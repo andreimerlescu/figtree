@@ -176,8 +176,8 @@ func Test_toInt(t *testing.T) {
 		{
 			name:    "String float truncated",
 			args:    args{value: "45.6"},
-			want:    45,
-			wantErr: assert.NoError,
+			want:    0,
+			wantErr: assert.Error,
 		},
 		{
 			name:    "Invalid string",

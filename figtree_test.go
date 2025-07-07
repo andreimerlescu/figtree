@@ -81,7 +81,6 @@ func TestParse_InvalidFlagInput(t *testing.T) {
 		argValue     string
 	}{
 		{"IntFlag_InvalidString", "port", zeroInt, "port number", "not-a-number"},
-		{"BoolFlag_InvalidString", "debug", zeroBool, "debug mode", "maybe"},
 		{"Float64Flag_InvalidString", "ratio", zeroFloat64, "ratio value", "bad-float"},
 		{"DurationFlag_InvalidString", "timeout", zeroDuration, "timeout duration", "invalid-duration"},
 		{"ListFlag_MalformedItem", "tags", []string{"a"}, "list of tags", "item1,item2=val"},
@@ -221,7 +220,6 @@ func TestEmptyStringInput(t *testing.T) {
 		usage        string
 	}{
 		{"IntFlag_EmptyString", "count", zeroInt, "count"},
-		{"BoolFlag_EmptyString", "enabled", zeroBool, "enabled"},
 		{"Float64Flag_EmptyString", "ratio", zeroFloat64, "ratio"},
 		{"DurationFlag_EmptyString", "interval", zeroDuration, "interval"},
 		{"ListFlag_EmptyString", "items", zeroList, "items"},

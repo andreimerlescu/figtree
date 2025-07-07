@@ -49,8 +49,14 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 		Value:      value,
 		Mutagensis: tBool,
 	}
+	ptr, ok := v.Value.(*bool)
+	if ok {
+		tree.flagSet.BoolVar(ptr, name, value, usage)
+	} else {
+		var vb bool = v.Value.(bool)
+		tree.flagSet.BoolVar(&vb, name, value, usage)
+	}
 	tree.values.Store(name, v)
-	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
