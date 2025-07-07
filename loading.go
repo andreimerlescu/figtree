@@ -141,7 +141,7 @@ func (tree *figTree) LoadFile(path string) (err error) {
 	if err5 != nil {
 		return ErrValidationFailure{err5}
 	}
-	return fmt.Errorf("failed to LoadFile %s due to err %v", path, loadErr)
+	return ErrLoadFailure{path, loadErr}
 }
 
 func (tree *figTree) loadFlagSet() (e error) {
