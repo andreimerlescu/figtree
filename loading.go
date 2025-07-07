@@ -225,7 +225,7 @@ func (tree *figTree) loadFlagSet() (e error) {
 			v := f.Value.String()
 			err := value.Set(v)
 			if err != nil {
-				e = fmt.Errorf("failed to value.Set(%s) due to err: %w", f.Value.String(), err)
+				e = ErrLoadFailure{flagName, fmt.Errorf("failed to value.Set(%s): %w", f.Value.String(), err)}
 				return
 			}
 		}
