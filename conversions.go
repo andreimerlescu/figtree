@@ -23,7 +23,7 @@ func toInt(value interface{}) (int, error) {
 		return *v, nil
 	case int64:
 		if v > math.MaxInt32 {
-			return 0, fmt.Errorf("max int32 %d exceeded by %d", math.MaxInt32, math.MaxInt32-v)
+			return 0, fmt.Errorf("max int32 %d exceeded by %d", math.MaxInt32, v-math.MaxInt32)
 		}
 		if v < math.MinInt32 {
 			return 0, fmt.Errorf("min int32 %d exceeded by %d", math.MinInt32, math.MinInt32-v)
