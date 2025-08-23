@@ -1,6 +1,7 @@
 # Fig Tree
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandreimerlescu%2Ffigtree.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandreimerlescu%2Ffigtree?ref=badge_shield)
 
 Fig Tree is a command line utility configuration manager that you can refer to as `figs`, as you con<b>FIG</b>ure your
 application's runtime.
@@ -692,6 +693,9 @@ The generated usage string includes information about each configuration variabl
 
 This package is distributed under the MIT License. See the [LICENSE](LICENSE) file for more information.
 
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandreimerlescu%2Ffigtree.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandreimerlescu%2Ffigtree?ref=badge_large)
+
 ## Version History
 
 ### v2.0.0 (Latest)
@@ -732,4 +736,3 @@ act like natural selection, ensuring only fit values survive, and the versioning
 github.com/andreimerlescu/figtree/v2 echoes speciation—a new lineage emerging as the package 
 matures. This memetic design makes figtree not just a tool, but a living system, accessed 
 intuitively as it branches out into the developer ecosystem.
-
