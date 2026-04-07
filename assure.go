@@ -11,7 +11,7 @@ import (
 var AssureStringHasSuffix = func(suffix string) FigValidatorFunc {
 	return makeStringValidator(
 		func(s string) bool { return strings.HasSuffix(s, suffix) },
-		"string must have suffix %q, got %q",
+		fmt.Sprintf("string must have suffix %q, got %%q", suffix),
 	)
 }
 
@@ -19,7 +19,7 @@ var AssureStringHasSuffix = func(suffix string) FigValidatorFunc {
 var AssureStringHasPrefix = func(prefix string) FigValidatorFunc {
 	return makeStringValidator(
 		func(s string) bool { return strings.HasPrefix(s, prefix) },
-		"string must have prefix %q, got %q",
+		fmt.Sprintf("string must have prefix %q, got %%q", prefix),
 	)
 }
 
@@ -36,7 +36,7 @@ var AssureStringNoSuffixes = func(suffixes []string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -53,11 +53,11 @@ var AssureStringNoPrefixes = func(prefixes []string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
-// AssureStringHasSuffixes ensures a string ends with a suffix
+// AssureStringHasSuffixes ensures a string ends with all suffixes in the list provided
 // Returns a figValidatorFunc that checks for the substring (case-sensitive).
 var AssureStringHasSuffixes = func(suffixes []string) FigValidatorFunc {
 	return func(value interface{}) error {
@@ -70,7 +70,7 @@ var AssureStringHasSuffixes = func(suffixes []string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -87,7 +87,7 @@ var AssureStringHasPrefixes = func(prefixes []string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -103,7 +103,7 @@ var AssureStringNoSuffix = func(suffix string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -119,7 +119,7 @@ var AssureStringNoPrefix = func(prefix string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -135,7 +135,7 @@ var AssureStringLengthLessThan = func(length int) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -151,7 +151,7 @@ var AssureStringLengthGreaterThan = func(length int) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -167,7 +167,7 @@ var AssureStringSubstring = func(sub string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -184,7 +184,7 @@ var AssureStringLength = func(length int) FigValidatorFunc {
 			return nil
 
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -200,7 +200,7 @@ var AssureStringNotLength = func(length int) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, expected string, got %T", value)
 	}
 }
 
@@ -214,7 +214,7 @@ var AssureStringNotEmpty = func(value interface{}) error {
 		}
 		return nil
 	}
-	return ErrInvalidType{tString, value}
+	return fmt.Errorf("invalid type, got %T", value)
 }
 
 // AssureStringContains ensures a string contains a specific substring.
@@ -222,7 +222,7 @@ var AssureStringNotEmpty = func(value interface{}) error {
 var AssureStringContains = func(substring string) FigValidatorFunc {
 	return makeStringValidator(
 		func(s string) bool { return strings.Contains(s, substring) },
-		"string must contain %q, got %q",
+		fmt.Sprintf("string must contain %q, got %%q", substring),
 	)
 }
 
@@ -238,7 +238,7 @@ var AssureStringNotContains = func(substring string) FigValidatorFunc {
 			}
 			return nil
 		}
-		return ErrInvalidType{tString, value}
+		return fmt.Errorf("invalid type, got %T", value)
 	}
 }
 
@@ -252,7 +252,7 @@ var AssureBoolTrue = func(value interface{}) error {
 		}
 		return nil
 	}
-	return ErrInvalidType{tBool, value}
+	return fmt.Errorf("invalid type, expected bool, got %T", value)
 }
 
 // AssureBoolFalse ensures a boolean value is false.
@@ -265,7 +265,7 @@ var AssureBoolFalse = func(value interface{}) error {
 		}
 		return nil
 	}
-	return ErrInvalidType{tBool, value}
+	return fmt.Errorf("invalid type, expected bool, got %T", value)
 }
 
 // AssureIntPositive ensures an integer is positive.
@@ -274,11 +274,11 @@ var AssureIntPositive = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsInt() {
 		if v.ToInt() < 0 {
-			return ErrValue{ErrWayBePositive, v.ToInt(), 0}
+			return fmt.Errorf("value must be positive, got %d", v.ToInt())
 		}
 		return nil
 	}
-	return ErrInvalidType{tInt, value}
+	return fmt.Errorf("invalid type, expected int, got %T", value)
 }
 
 // AssureIntNegative ensures an integer is negative.
@@ -287,11 +287,11 @@ var AssureIntNegative = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsInt() {
 		if v.ToInt() > 0 {
-			return ErrValue{ErrWayBeNegative, v.ToInt(), 0}
+			return fmt.Errorf("value must be negative, got %d", v.ToInt())
 		}
 		return nil
 	}
-	return ErrInvalidType{tInt, value}
+	return fmt.Errorf("invalid type, expected int, got %T", value)
 }
 
 // AssureIntGreaterThan ensures an integer is greater than (but not including) an int.
@@ -300,11 +300,11 @@ var AssureIntGreaterThan = func(above int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsInt() {
-			return ErrInvalidType{tInt, value}
+			return fmt.Errorf("invalid type, expected int, got %T", value)
 		}
 		i := v.ToInt()
 		if i < above {
-			return ErrValue{ErrWayBeBelow, i, above}
+			return fmt.Errorf("value must be below %d", i)
 		}
 		return nil
 	}
@@ -316,11 +316,11 @@ var AssureIntLessThan = func(below int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsInt() {
-			return ErrInvalidType{tInt, value}
+			return fmt.Errorf("invalid type, expected int, got %T", value)
 		}
 		i := v.ToInt()
 		if i > below {
-			return ErrValue{ErrWayBeBelow, i, below}
+			return fmt.Errorf("value must be below %d", i)
 		}
 		return nil
 	}
@@ -332,11 +332,11 @@ var AssureIntInRange = func(min, max int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsInt() {
-			return ErrInvalidType{tInt, value}
+			return fmt.Errorf("invalid type, expected int, got %T", value)
 		}
 		i := v.ToInt()
 		if i < min || i > max {
-			return ErrValue{fmt.Sprintf(ErrWayBeBetweenFmt, min, max), i, nil}
+			return fmt.Errorf("value must be between %d and %d, got %d", min, max, i)
 		}
 		return nil
 	}
@@ -348,11 +348,11 @@ var AssureInt64GreaterThan = func(above int64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsInt64() {
-			return ErrInvalidType{tInt64, value}
+			return fmt.Errorf("invalid type, expected int64, got %T", value)
 		}
 		i := v.ToInt64()
 		if i < above {
-			return ErrValue{ErrWayBeAbove, i, above}
+			return fmt.Errorf("value must be below %d", i)
 		}
 		return nil
 	}
@@ -368,7 +368,7 @@ var AssureInt64LessThan = func(below int64) FigValidatorFunc {
 		}
 		i := v.ToInt64()
 		if i > below {
-			return ErrValue{ErrWayBeBelow, i, below}
+			return fmt.Errorf("value must be below %d", i)
 		}
 		return nil
 	}
@@ -379,11 +379,11 @@ var AssureInt64LessThan = func(below int64) FigValidatorFunc {
 var AssureInt64Positive = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsInt64() {
-		return ErrInvalidType{tInt64, value}
+		return fmt.Errorf("invalid type, expected int64, got %T", value)
 	}
 	i := v.ToInt64()
 	if i <= 0 {
-		return ErrValue{ErrWayBePositive, i, 0}
+		return fmt.Errorf("value must be positive, got %d", i)
 	}
 	return nil
 }
@@ -394,11 +394,11 @@ var AssureInt64InRange = func(min, max int64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsInt64() {
-			return ErrInvalidType{tInt64, value}
+			return fmt.Errorf("invalid type, expected int64, got %T", value)
 		}
 		i := v.ToInt64()
 		if i < min || i > max {
-			return ErrValue{fmt.Sprintf(ErrWayBeBetweenFmt, min, max), i, nil}
+			return fmt.Errorf("value must be between %d and %d, got %d", min, max, i)
 		}
 		return nil
 	}
@@ -409,11 +409,11 @@ var AssureInt64InRange = func(min, max int64) FigValidatorFunc {
 var AssureFloat64Positive = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsFloat64() {
-		return ErrInvalidType{tFloat64, value}
+		return fmt.Errorf("invalid type, expected float64, got %T", value)
 	}
 	f := v.ToFloat64()
 	if f <= 0 {
-		return ErrValue{ErrWayBePositive, f, 0}
+		return fmt.Errorf("value must be positive, got %f", f)
 	}
 	return nil
 }
@@ -424,11 +424,11 @@ var AssureFloat64InRange = func(min, max float64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsFloat64() {
-			return ErrInvalidType{tFloat64, value}
+			return fmt.Errorf("invalid type, expected float64, got %T", value)
 		}
 		f := v.ToFloat64()
 		if f < min || f > max {
-			return ErrValue{fmt.Sprintf(ErrWayBeBetweenFmt, min, max), f, nil}
+			return fmt.Errorf("value must be between %f and %f, got %f", min, max, f)
 		}
 		return nil
 	}
@@ -440,11 +440,11 @@ var AssureFloat64GreaterThan = func(above float64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsFloat64() {
-			return ErrInvalidType{tFloat64, value}
+			return fmt.Errorf("invalid type, expected float64, got %T", value)
 		}
 		f := v.ToFloat64()
 		if f < above {
-			return ErrValue{ErrWayBeBelow, f, above}
+			return fmt.Errorf("value must be below %f", f)
 		}
 		return nil
 	}
@@ -456,11 +456,11 @@ var AssureFloat64LessThan = func(below float64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsFloat64() {
-			return ErrInvalidType{tFloat64, value}
+			return fmt.Errorf("invalid type, expected float64, got %T", value)
 		}
 		f := v.ToFloat64()
 		if f > below {
-			return ErrValue{ErrWayBeBelow, f, below}
+			return fmt.Errorf("value must be below %f", f)
 		}
 		return nil
 	}
@@ -471,11 +471,11 @@ var AssureFloat64LessThan = func(below float64) FigValidatorFunc {
 var AssureFloat64NotNaN = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsFloat64() {
-		return ErrInvalidType{tFloat64, value}
+		return fmt.Errorf("invalid type, expected float64, got %T", value)
 	}
 	n := v.ToFloat64()
 	if math.IsNaN(n) {
-		return ErrValue{ErrWayBeNotNaN, n, nil}
+		return fmt.Errorf("value must not be NaN, got %f", n)
 	}
 	return nil
 }
@@ -490,7 +490,7 @@ var AssureDurationGreaterThan = func(above time.Duration) FigValidatorFunc {
 		}
 		t := v.ToDuration()
 		if t < above {
-			return ErrValue{ErrWayBeAbove, t, above}
+			return fmt.Errorf("value must be above %v, got = %v", above, t)
 		}
 		return nil
 	}
@@ -506,7 +506,7 @@ var AssureDurationLessThan = func(below time.Duration) FigValidatorFunc {
 		}
 		t := v.ToDuration()
 		if t > below {
-			return ErrValue{ErrWayBeBelow, t, below}
+			return fmt.Errorf("value must be below %v, got = %v", below, t)
 		}
 		return nil
 	}
@@ -517,7 +517,7 @@ var AssureDurationLessThan = func(below time.Duration) FigValidatorFunc {
 var AssureDurationPositive = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsDuration() {
-		return ErrInvalidType{tDuration, value}
+		return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
 	}
 	d := v.ToDuration()
 	if d <= 0 {
@@ -532,7 +532,7 @@ var AssureDurationMin = func(min time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsDuration() {
-			return ErrInvalidType{tDuration, value}
+			return fmt.Errorf("value must be a duration, got %s", v)
 		}
 		d := v.ToDuration()
 		if d < min {
@@ -548,7 +548,7 @@ var AssureDurationMax = func(max time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsDuration() {
-			return ErrInvalidType{tDuration, value}
+			return fmt.Errorf("invalid type, expected time.Duration, got %T", value)
 		}
 		d := v.ToDuration()
 		if d > max {
@@ -563,7 +563,7 @@ var AssureDurationMax = func(max time.Duration) FigValidatorFunc {
 var AssureListNotEmpty = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsList() {
-		return ErrInvalidType{tList, value}
+		return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
 	}
 	l := v.ToList()
 	if len(l) == 0 {
@@ -578,7 +578,7 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsList() {
-			return ErrInvalidType{tList, value}
+			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
 		}
 		l := v.ToList()
 		if len(l) < min {
@@ -592,9 +592,9 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 // Returns a figValidatorFunc that checks for the presence of the value.
 var AssureListContains = func(inside string) FigValidatorFunc {
 	return func(value interface{}) error {
-		v := NewFlesh(value)
+		v := figFlesh{value, nil}
 		if !v.IsList() {
-			return ErrInvalidType{tList, value}
+			return fmt.Errorf("invalid type, expected ListFlag or []string, got %T", value)
 		}
 		l := v.ToList()
 		for _, item := range l {
@@ -612,7 +612,7 @@ var AssureListNotContains = func(not string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsList() {
-			return ErrInvalidType{tList, value}
+			return fmt.Errorf("invalid type, expected *ListFlag, []string, or *[]string, got %T", v)
 		}
 		l := v.ToList()
 		for _, item := range l {
@@ -631,7 +631,7 @@ var AssureListContainsKey = func(key string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsList() {
-			return ErrInvalidType{tList, value}
+			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
 		}
 		l := v.ToList()
 		for _, item := range l {
@@ -650,7 +650,7 @@ var AssureListLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsList() {
-			return ErrInvalidType{tList, value}
+			return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", value)
 		}
 		l := v.ToList()
 		if len(l) != length {
@@ -665,11 +665,11 @@ var AssureListLength = func(length int) FigValidatorFunc {
 var AssureMapNotEmpty = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsMap() {
-		return ErrInvalidType{tMap, value}
+		return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
 	}
 	m := v.ToMap()
 	if len(m) == 0 {
-		return fmt.Errorf("map is empty")
+		return fmt.Errorf("list is empty")
 	}
 	return nil
 }
@@ -680,7 +680,7 @@ var AssureMapHasKey = func(key string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsMap() {
-			return ErrInvalidType{tMap, value}
+			return fmt.Errorf("invalid type, got %T", value)
 		}
 		m := v.ToMap()
 		if _, exists := m[key]; !exists {
@@ -696,7 +696,7 @@ var AssureMapHasNoKey = func(key string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsMap() {
-			return ErrInvalidType{tMap, value}
+			return fmt.Errorf("invalid type, got %T", value)
 		}
 		m := v.ToMap()
 		if _, exists := m[key]; exists {
@@ -732,7 +732,7 @@ var AssureMapHasKeys = func(keys []string) FigValidatorFunc {
 		var missing []string
 		v := figFlesh{value, nil}
 		if !v.IsMap() {
-			return ErrInvalidType{tMap, value}
+			return fmt.Errorf("invalid type, expected map[string]string, got %T", v)
 		}
 		m := v.ToMap()
 		for _, key := range keys {
@@ -754,7 +754,7 @@ var AssureMapLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsMap() {
-			return ErrInvalidType{tMap, value}
+			return fmt.Errorf("invalid type, expected *MapFlag or map[string]string, got %T", value)
 		}
 		m := v.ToMap()
 		if len(m) != length {
@@ -771,7 +771,7 @@ var AssureMapNotLength = func(length int) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsMap() {
-			return ErrInvalidType{tMap, value}
+			return fmt.Errorf("invalid type, got %T", value)
 		}
 		m := v.ToMap()
 		if len(m) == length {

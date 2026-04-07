@@ -3,6 +3,7 @@ package figtree
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -58,6 +59,7 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 	}
 	tree.figs[name] = fruit
 	if tree.tracking && !tree.angel.Load() {
+		// error is at this line due to the deadlock
 		tree.mutationsCh <- Mutation{
 			Property:    name,
 			Mutagenesis: strings.ToLower(string(mut)),
@@ -146,7 +148,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case string:
 			m := map[string]string{}
 			for _, p := range strings.Split(f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -155,7 +157,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case *string:
 			m := map[string]string{}
 			for _, p := range strings.Split(*f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -179,7 +181,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case string:
 			m := map[string]string{}
 			for _, p := range strings.Split(f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -188,7 +190,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case *string:
 			m := map[string]string{}
 			for _, p := range strings.Split(*f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -216,7 +218,16 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		}
 		tree.values.Store(name, value)
 		tree.figs[name] = fruit
-		return old != current, old, current
+		equal := len(*old) == len(*current)
+		if equal {
+			for k, v := range *old {
+				if cv, exists := (*current)[k]; !exists || cv != v {
+					equal = false
+					break
+				}
+			}
+		}
+		return !equal, old, current
 	case tList:
 		var old *[]string
 		var err error
@@ -278,7 +289,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		}
 		tree.values.Store(name, value)
 		tree.figs[name] = fruit
-		return old != current, old, current
+		return !slices.Equal(*old, *current), old, current
 	case tUnitDuration:
 		var old time.Duration
 		var err error

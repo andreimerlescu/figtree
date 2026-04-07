@@ -1,11 +1,74 @@
 package figtree
 
 import (
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestPersist_MapFromString(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true, Tracking: false})
+	figs.NewMap("attrs", map[string]string{"key1": "value1"}, "usage")
+	assert.NoError(t, figs.Parse())
+
+	// Manually store the map value as a raw string to force the string path in persist
+	tree := figs.(*figTree)
+	tree.mu.Lock()
+	v := &Value{
+		Value:      "key2=value2,key3=value3",
+		Mutagensis: tMap,
+	}
+	tree.values.Store("attrs", v)
+	tree.mu.Unlock()
+
+	// Now Store through the normal path — persist will read the raw string flesh
+	// and attempt to parse it via SplitN. With limit 1 the map will be empty.
+	figs.StoreMap("attrs", map[string]string{"key4": "value4"})
+
+	result := *figs.Map("attrs")
+	assert.Contains(t, result, "key4", "key4 should be present after StoreMap")
+	// This will fail with the SplitN bug because the old value parsed from string
+	// produces an empty map, making the changed check unreliable
+	assert.Equal(t, map[string]string{"key4": "value4"}, result)
+}
+
+func TestPersist_MapFromStringMutation(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true, Tracking: true})
+	figs.NewMap("attrs", map[string]string{"key1": "value1"}, "usage")
+	assert.NoError(t, figs.Parse())
+
+	tree := figs.(*figTree)
+	tree.mu.Lock()
+	tree.values.Store("attrs", &Value{
+		Value:      "key2=value2,key3=value3",
+		Mutagensis: tMap,
+	})
+	tree.mu.Unlock()
+
+	mutationFired := make(chan Mutation, 1)
+	go func() {
+		select {
+		case m, ok := <-figs.Mutations():
+			if ok {
+				mutationFired <- m
+			}
+		case <-time.After(500 * time.Millisecond):
+			close(mutationFired)
+		}
+	}()
+
+	figs.StoreMap("attrs", map[string]string{"key2": "value2", "key3": "value3"})
+
+	mutation, fired := <-mutationFired
+	if fired {
+		t.Logf("mutation fired: old=%v new=%v", mutation.Old, mutation.New)
+		assert.Fail(t, "mutation should not have fired — value did not change")
+	}
+}
 
 func TestTree_StoreString(t *testing.T) {
 	const k, u = "test-store-string", "usage"

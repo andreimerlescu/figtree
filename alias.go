@@ -15,6 +15,12 @@ func (tree *figTree) resolveName(name string) string {
 	return name
 }
 
+func (tree *figTree) Problems() []error {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	return tree.problems
+}
+
 func (tree *figTree) WithAlias(name, alias string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()

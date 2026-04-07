@@ -1,11 +1,57 @@
 package figtree
 
 import (
+	"context"
 	"os"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestConcurrentPollinateReads(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Pollinate: true, Germinate: true, Tracking: false})
+	figs.NewString("concurrent_key", "initial", "usage")
+	assert.NoError(t, figs.Parse())
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Writer goroutine: flip env var constantly
+	go func() {
+		vals := []string{"alpha", "beta", "gamma"}
+		i := 0
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				os.Setenv("CONCURRENT_KEY", vals[i%3])
+				i++
+			}
+		}
+	}()
+
+	// Multiple concurrent readers
+	var wg sync.WaitGroup
+	for n := 0; n < 10; n++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					_ = figs.String("concurrent_key") // triggers pollinate path
+				}
+			}
+		}()
+	}
+	wg.Wait()
+}
 
 func TestWithAlias(t *testing.T) {
 	const cmdLong, cmdAliasLong, valueLong, usage = "long", "l", "default", "usage"
