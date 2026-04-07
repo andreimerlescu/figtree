@@ -43,6 +43,14 @@ func (tree *figTree) WithAlias(name, alias string) Plant {
 		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: failed to cast value for -%s", name))
 		return tree
 	}
+	if _, exists := tree.figs[alias]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: alias -%s conflicts with existing fig name", alias))
+		return tree
+	}
+	if tree.flagSet.Lookup(alias) != nil {
+		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: alias -%s conflicts with existing flag", alias))
+		return tree
+	}
 	tree.aliases[alias] = name // only register after all validations pass
 	tree.flagSet.Var(value, alias, "Alias of -"+name)
 	return tree

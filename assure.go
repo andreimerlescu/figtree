@@ -582,7 +582,7 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 		}
 		l := v.ToList()
 		if len(l) < min {
-			return fmt.Errorf("list is empty")
+			return fmt.Errorf("list must have at least %d elements, got %d", min, len(l))
 		}
 		return nil
 	}

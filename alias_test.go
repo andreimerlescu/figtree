@@ -10,6 +10,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestWithAlias_ConflictsWithExistingFig(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true})
+	figs = figs.NewString("long", "default", "usage")
+	figs = figs.NewString("short", "default", "usage")
+
+	// Attempt to register "short" as an alias for "long" — but "short" is
+	// already a registered fig name, so this should record a problem and
+	// not panic.
+	figs = figs.WithAlias("long", "short")
+
+	assert.NoError(t, figs.Parse())
+	problems := figs.(*figTree).Problems()
+	assert.Len(t, problems, 1, "expected one problem recorded for alias conflict")
+	assert.Contains(t, problems[0].Error(), "conflicts with existing fig name")
+}
+
 func TestConcurrentPollinateReads(t *testing.T) {
 	os.Args = []string{os.Args[0]}
 	figs := With(Options{Pollinate: true, Germinate: true, Tracking: false})
