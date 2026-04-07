@@ -59,7 +59,9 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 	}
 	tree.figs[name] = fruit
 	if tree.tracking && !tree.angel.Load() {
-		// error is at this line due to the deadlock
+		// Store holds tree.mu while sending on mutationsCh. If the channel buffer
+		// is full, this send will block, stalling other tree operations. Ensure the
+		// channel capacity (Harvest) is large enough or consume mutations promptly.
 		tree.mutationsCh <- Mutation{
 			Property:    name,
 			Mutagenesis: strings.ToLower(string(mut)),

@@ -35,6 +35,7 @@ func TestConcurrentPollinateReads(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	defer os.Unsetenv("CONCURRENT_KEY")
 
 	go func() {
 		vals := []string{"alpha", "beta", "gamma"}

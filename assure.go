@@ -252,7 +252,7 @@ var AssureBoolTrue = func(value interface{}) error {
 		}
 		return nil
 	}
-	return ErrInvalidType{tString, value}
+	return ErrInvalidType{tBool, value}
 }
 
 // AssureBoolFalse ensures a boolean value is false.
@@ -265,7 +265,7 @@ var AssureBoolFalse = func(value interface{}) error {
 		}
 		return nil
 	}
-	return ErrInvalidType{tString, value}
+	return ErrInvalidType{tBool, value}
 }
 
 // AssureIntPositive ensures an integer is positive.

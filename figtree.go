@@ -75,7 +75,7 @@ func With(opts Options) Plant {
 		filterTests:    opts.Germinate,
 		pollinate:      opts.Pollinate,
 		tracking:       opts.Tracking,
-		harvest:        opts.Harvest,
+		harvest:        chBuf,
 		angel:          &angel,
 		problems:       make([]error, 0),
 		aliases:        make(map[string]string),
