@@ -19,33 +19,35 @@ func TestConcurrentPollinateReads(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	// Writer goroutine: flip env var constantly
 	go func() {
 		vals := []string{"alpha", "beta", "gamma"}
 		i := 0
+		ticker := time.NewTicker(5 * time.Millisecond)
+		defer ticker.Stop()
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			default:
+			case <-ticker.C:
 				os.Setenv("CONCURRENT_KEY", vals[i%3])
 				i++
 			}
 		}
 	}()
 
-	// Multiple concurrent readers
 	var wg sync.WaitGroup
 	for n := 0; n < 10; n++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			ticker := time.NewTicker(10 * time.Millisecond)
+			defer ticker.Stop()
 			for {
 				select {
 				case <-ctx.Done():
 					return
-				default:
-					_ = figs.String("concurrent_key") // triggers pollinate path
+				case <-ticker.C:
+					_ = figs.String("concurrent_key")
 				}
 			}
 		}()

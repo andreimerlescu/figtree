@@ -532,7 +532,7 @@ var AssureDurationMin = func(min time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsDuration() {
-			return fmt.Errorf("value must be a duration, got %s", v)
+			return fmt.Errorf("value must be a duration, got %T", v)
 		}
 		d := v.ToDuration()
 		if d < min {
@@ -665,11 +665,11 @@ var AssureListLength = func(length int) FigValidatorFunc {
 var AssureMapNotEmpty = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if !v.IsMap() {
-		return fmt.Errorf("invalid type, expected *ListFlag or []string, got %T", v)
+		return fmt.Errorf("invalid type, expected *MapFlag or map[string]string, got %T", v)
 	}
 	m := v.ToMap()
 	if len(m) == 0 {
-		return fmt.Errorf("list is empty")
+		return fmt.Errorf("map is empty")
 	}
 	return nil
 }

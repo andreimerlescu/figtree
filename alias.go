@@ -18,7 +18,7 @@ func (tree *figTree) resolveName(name string) string {
 func (tree *figTree) Problems() []error {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
-	return tree.problems
+	return append([]error(nil), tree.problems...)
 }
 
 func (tree *figTree) WithAlias(name, alias string) Plant {
