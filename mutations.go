@@ -486,11 +486,11 @@ func (tree *figTree) List(name string) *[]string {
 		v = make([]string, len(f))
 		copy(v, f)
 	case string:
-		fv := strings.Split(f, ",")
+		fv := strings.Split(f, ListSeparator)
 		v = make([]string, len(fv))
 		copy(v, fv)
 	case *string:
-		fv := strings.Split(*f, ",")
+		fv := strings.Split(*f, ListSeparator)
 		v = make([]string, len(fv))
 		copy(v, fv)
 	default:
@@ -617,7 +617,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
-			i := strings.Split(e, ",")
+			i := strings.Split(e, MapSeparator)
 			if len(i) == 0 {
 				v = map[string]string{}
 			} else {
