@@ -248,7 +248,7 @@ var AssureBoolTrue = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsBool() {
 		if !v.ToBool() {
-			return ErrValue{ErrWayBeNegative, v.ToBool(), true}
+			return fmt.Errorf("value must be true, got %t", v.ToBool())
 		}
 		return nil
 	}
