@@ -293,7 +293,16 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		}
 		tree.values.Store(name, value)
 		tree.figs[name] = fruit
-		return !slices.Equal(*old, *current), old, current
+		changed := false
+		switch {
+		case old == nil && current == nil:
+			changed = false
+		case old == nil || current == nil:
+			changed = true
+		default:
+			changed = !slices.Equal(*old, *current)
+		}
+		return changed, old, current
 	case tUnitDuration:
 		var old time.Duration
 		var err error
