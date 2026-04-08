@@ -220,10 +220,12 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		}
 		tree.values.Store(name, value)
 		tree.figs[name] = fruit
-		equal := len(*old) == len(*current)
+		oldMap, _ := toStringMap(flesh)
+		currentMap, _ := toStringMap(value)
+		equal := len(oldMap) == len(currentMap)
 		if equal {
-			for k, v := range *old {
-				if cv, exists := (*current)[k]; !exists || cv != v {
+			for k, v := range oldMap {
+				if cv, exists := currentMap[k]; !exists || cv != v {
 					equal = false
 					break
 				}
