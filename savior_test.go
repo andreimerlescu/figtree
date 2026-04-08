@@ -65,6 +65,6 @@ func TestFigTree_SaveTo_ListRoundTrip(t *testing.T) {
 	assert.NoError(t, figs2.ReadFrom(path))
 
 	result := *figs2.List("items")
-	assert.Equal(t, []string{"one", "three", "two"}, result,
+	assert.Equal(t, []string{"one", "two", "three"}, result,
 		"ListFlag should be unwrapped before serialization — got %v", result)
 }
