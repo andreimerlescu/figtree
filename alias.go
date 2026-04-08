@@ -27,6 +27,7 @@ func (tree *figTree) WithAlias(name, alias string) Plant {
 	name = strings.ToLower(name)
 	alias = strings.ToLower(alias)
 	if _, exists := tree.aliases[alias]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: alias exists -%s", name))
 		return tree
 	}
 	if _, exists := tree.figs[name]; !exists {
