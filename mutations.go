@@ -513,10 +513,6 @@ func (tree *figTree) List(name string) *[]string {
 					return &zeroList
 				}
 				switch f := value.Value.(type) {
-				case string:
-					v = []string{f}
-				case *string:
-					v = []string{*f}
 				case ListFlag:
 					v = make([]string, len(f.values))
 					copy(v, f.values)
@@ -529,6 +525,14 @@ func (tree *figTree) List(name string) *[]string {
 				case []string:
 					v = make([]string, len(f))
 					copy(v, f)
+				case string:
+					fv := strings.Split(f, ListSeparator)
+					v = make([]string, len(fv))
+					copy(v, fv)
+				case *string:
+					fv := strings.Split(*f, ListSeparator)
+					v = make([]string, len(fv))
+					copy(v, fv)
 				default:
 					panic("unreachable")
 				}

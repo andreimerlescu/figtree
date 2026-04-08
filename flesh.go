@@ -168,7 +168,7 @@ func (flesh *figFlesh) ToList() []string {
 	}
 }
 
-func (flesh *figFlesh) checkMapString(in string) map[string]string {
+func (flesh *figFlesh) getMapString(in string) map[string]string {
 	// f 								— the result map being built
 	// ff 								— each key=value pair from the split
 	// uck 								— the index of MapKeySeparator within ff
@@ -203,9 +203,9 @@ func (flesh *figFlesh) ToMap() map[string]string {
 	case *map[string]string:
 		return *ft
 	case string:
-		return flesh.checkMapString(ft)
+		return flesh.getMapString(ft)
 	case *string:
-		return flesh.checkMapString(*ft)
+		return flesh.getMapString(*ft)
 	default:
 		return map[string]string{}
 	}
@@ -353,7 +353,7 @@ func (flesh *figFlesh) IsList() bool {
 	}
 }
 
-func (flesh *figFlesh) checkBoolString(in string) bool {
+func (flesh *figFlesh) getStringBool(in string) bool {
 	for _, e := range strings.Split(in, MapSeparator) {
 		if strings.Index(e, MapKeySeparator) == -1 {
 			return false
@@ -391,9 +391,9 @@ func (flesh *figFlesh) IsMap() bool {
 	case *map[string]string:
 		return f != nil
 	case string:
-		return flesh.checkBoolString(f)
+		return flesh.getStringBool(f)
 	case *string:
-		return flesh.checkBoolString(*f)
+		return flesh.getStringBool(*f)
 	default:
 		return false
 	}
