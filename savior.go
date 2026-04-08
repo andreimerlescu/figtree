@@ -32,7 +32,18 @@ func (tree *figTree) SaveTo(path string) error {
 		if !ok {
 			return errors.Join(fig.Error, fmt.Errorf("failed to cast %s as *Value ; got %T", fig.name, valueAny))
 		}
-		properties[name] = _value.Value
+		switch v := _value.Value.(type) {
+		case MapFlag:
+			properties[name] = v.values
+		case *MapFlag:
+			properties[name] = v.values
+		case ListFlag:
+			properties[name] = v.values
+		case *ListFlag:
+			properties[name] = v.values
+		default:
+			properties[name] = _value.Value
+		}
 	}
 	formatValue := func(val interface{}) string {
 		return fmt.Sprintf("%v", val)

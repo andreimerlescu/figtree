@@ -34,3 +34,37 @@ func TestFigTree_SaveTo(t *testing.T) {
 	assert.Equal(t, t.Name(), *name)
 	assert.NoError(t, os.RemoveAll(testFile))
 }
+
+func TestFigTree_SaveTo_MapRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "out.yaml")
+
+	figs := With(Options{Germinate: true})
+	figs.NewMap("cfg", map[string]string{"key": "value", "foo": "bar"}, "usage")
+	// intentionally do NOT call StoreMap — use the raw MapFlag state from NewMap
+	assert.NoError(t, figs.SaveTo(path))
+
+	figs2 := With(Options{Germinate: true})
+	figs2.NewMap("cfg", map[string]string{}, "usage")
+	assert.NoError(t, figs2.ReadFrom(path))
+
+	result := *figs2.Map("cfg")
+	assert.Equal(t, map[string]string{"key": "value", "foo": "bar"}, result,
+		"MapFlag should be unwrapped before serialization — got %v", result)
+}
+
+func TestFigTree_SaveTo_ListRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "out.yaml")
+
+	figs := With(Options{Germinate: true})
+	figs.NewList("items", []string{"one", "two", "three"}, "usage")
+	// intentionally do NOT call StoreList — use the raw ListFlag state from NewList
+	assert.NoError(t, figs.SaveTo(path))
+
+	figs2 := With(Options{Germinate: true})
+	figs2.NewList("items", []string{}, "usage")
+	assert.NoError(t, figs2.ReadFrom(path))
+
+	result := *figs2.List("items")
+	assert.Equal(t, []string{"one", "three", "two"}, result,
+		"ListFlag should be unwrapped before serialization — got %v", result)
+}
