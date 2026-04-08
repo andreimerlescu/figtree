@@ -26,9 +26,12 @@ func (tree *figTree) WithAlias(name, alias string) Plant {
 	defer tree.mu.Unlock()
 	name = strings.ToLower(name)
 	alias = strings.ToLower(alias)
-	if _, exists := tree.aliases[alias]; exists {
-		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: alias exists -%s", name))
-		return tree
+	if existing, exists := tree.aliases[alias]; exists {
+		if existing != name {
+			tree.problems = append(tree.problems,
+				fmt.Errorf("WithAlias: alias -%s already maps to -%s, ignoring -%s", alias, existing, name))
+		}
+		return tree // idempotent re-registration is fine
 	}
 	if _, exists := tree.figs[name]; !exists {
 		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: no fig named -%s", name))
