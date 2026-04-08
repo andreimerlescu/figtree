@@ -2,13 +2,145 @@ package figtree
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestAlias_DuplicateAlias_SecondIsNoop(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true})
+	figs = figs.NewString("alpha", "a-val", "usage")
+	figs = figs.NewString("beta", "b-val", "usage")
+	figs = figs.WithAlias("alpha", "x")
+	figs = figs.WithAlias("beta", "x") // second registration — should be ignored
+	assert.NoError(t, figs.Parse())
+	// "x" should still point to "alpha", not "beta"
+	assert.Equal(t, "a-val", *figs.String("x"))
+}
+
+func TestAlias_ValidatorOnAlias(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true})
+	figs = figs.NewString("domain", "", "usage")
+	figs = figs.WithAlias("domain", "d")
+	figs = figs.WithValidator("d", AssureStringNotEmpty) // register via alias
+	assert.Error(t, figs.Parse(), "validator registered via alias should fire")
+}
+
+func TestRecall_ChannelCapacityMatchesHarvest(t *testing.T) {
+	figs := With(Options{Tracking: true, Harvest: 5, Germinate: true})
+	figs.NewString("k", "v", "u")
+	assert.NoError(t, figs.Parse())
+
+	figs.Curse()
+	figs.Recall()
+
+	// Send 5 mutations without a receiver — should not block with harvest=5
+	done := make(chan struct{})
+	go func() {
+		for i := 0; i < 5; i++ {
+			figs.StoreString("k", fmt.Sprintf("v%d", i))
+		}
+		close(done)
+	}()
+	select {
+	case <-done:
+		// pass
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("StoreString blocked: Recall() channel capacity is too small")
+	}
+}
+
+func TestAssureBoolTrue_WrongType_ReturnsCorrectErrorType(t *testing.T) {
+	err := AssureBoolTrue(42) // not a bool
+	require.Error(t, err)
+	var e ErrInvalidType
+	require.ErrorAs(t, err, &e)
+	assert.Equal(t, tBool, e.Wanted, "ErrInvalidType.Wanted should be tBool, not tString")
+}
+
+func TestAssureBoolFalse_WrongType_ReturnsCorrectErrorType(t *testing.T) {
+	err := AssureBoolFalse("yes") // not a bool
+	require.Error(t, err)
+	var e ErrInvalidType
+	require.ErrorAs(t, err, &e)
+	assert.Equal(t, tBool, e.Wanted)
+}
+
+func TestAssureListMinLength_ErrorMessage_ReflectsActualCount(t *testing.T) {
+	err := AssureListMinLength(5)([]string{"a", "b", "c"})
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "empty",
+		"error should report min/actual length, not 'list is empty'")
+	assert.Contains(t, err.Error(), "3", "error should mention actual length")
+	assert.Contains(t, err.Error(), "5", "error should mention required minimum")
+}
+
+func TestPersist_MapValue_ContainsSeparator(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true})
+	figs.NewMap("cfg", map[string]string{}, "usage")
+	assert.NoError(t, figs.Parse())
+
+	// Value contains "=" — old SplitN(1) would lose the value part
+	figs.StoreMap("cfg", map[string]string{"url": "http://example.com?a=1&b=2"})
+
+	result := *figs.Map("cfg")
+	assert.Equal(t, "http://example.com?a=1&b=2", result["url"],
+		"value containing '=' must be preserved intact")
+}
+
+func TestFigTree_SaveTo_JSON_RoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "out.json")
+	figs := With(Options{Germinate: true})
+	figs.NewString("name", "yahuah", "name")
+	figs.NewInt("age", 33, "age")
+	assert.NoError(t, figs.SaveTo(path))
+
+	figs2 := With(Options{Germinate: true})
+	figs2.NewString("name", "", "name")
+	figs2.NewInt("age", 0, "age")
+	assert.NoError(t, figs2.ReadFrom(path))
+	assert.Equal(t, "yahuah", *figs2.String("name"))
+	assert.Equal(t, 33, *figs2.Int("age"))
+}
+
+func TestWithValidators_MultipleApplied(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true})
+	figs.NewString("host", "localhost", "usage")
+	figs = figs.WithValidators("host",
+		AssureStringNotEmpty,
+		AssureStringHasPrefix("local"),
+		AssureStringLengthLessThan(20),
+	)
+	assert.NoError(t, figs.Parse())
+
+	figs2 := With(Options{Germinate: true})
+	figs2.NewString("host", "", "usage")
+	figs2 = figs2.WithValidators("host", AssureStringNotEmpty)
+	assert.Error(t, figs2.Parse())
+}
+
+func TestAlias_StoreThrough(t *testing.T) {
+	os.Args = []string{os.Args[0]}
+	figs := With(Options{Germinate: true, Tracking: true, Harvest: 10})
+	figs = figs.NewString("verbose", "false", "usage")
+	figs = figs.WithAlias("verbose", "v")
+	assert.NoError(t, figs.Parse())
+
+	figs.StoreString("v", "true") // store via alias
+
+	assert.Equal(t, "true", *figs.String("verbose"), "canonical should reflect alias store")
+	assert.Equal(t, "true", *figs.String("v"), "alias should reflect alias store")
+}
 
 func TestWithAlias_ConflictsWithExistingFig(t *testing.T) {
 	os.Args = []string{os.Args[0]}

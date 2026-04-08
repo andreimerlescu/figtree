@@ -18,6 +18,8 @@ type Withables interface {
 	WithTreeRule(rule RuleKind) Plant
 	// WithValidator binds a figValidatorFunc to a figFruit that returns Plant
 	WithValidator(name string, validator func(interface{}) error) Plant
+	// WithValidators binds a figValidatorFunc to a figFruit that returns Plant
+	WithValidators(name string, validators ...func(interface{}) error) Plant
 }
 
 type Savable interface {
