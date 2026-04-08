@@ -10,6 +10,7 @@ import (
 
 	check "github.com/andreimerlescu/checkfs"
 	"github.com/andreimerlescu/checkfs/file"
+	"gopkg.in/yaml.v3"
 )
 
 // Reload will readEnv on each flag in the configurable package
@@ -233,5 +234,91 @@ func (tree *figTree) loadFlagSet() (e error) {
 		}
 		tree.values.Store(flagName, value)
 	})
+	return nil
+}
+
+// loadYAML parses the DefaultYAMLFile or the value of the EnvironmentKey or ConfigFilePath into yaml.Unmarshal
+func (tree *figTree) loadYAML(data []byte) error {
+	var yamlData map[string]interface{}
+	if err := yaml.Unmarshal(data, &yamlData); err != nil {
+		return err
+	}
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.activateFlagSet()
+	for n, d := range yamlData {
+		var fruit *figFruit
+		var exists bool
+		if fruit, exists = tree.figs[n]; exists && fruit != nil {
+			value := tree.useValue(tree.from(fruit.name))
+			var ds string
+			var err error
+			if fruit.Mutagenesis == tMap {
+				m, merr := toStringMap(d)
+				if merr != nil {
+					return fmt.Errorf("unable toStringMap value for %s: %w", n, merr)
+				}
+				err = value.Assign(m)
+				if err != nil {
+					return fmt.Errorf("unable to Assign map value for %s: %w", n, err)
+				}
+			} else if fruit.Mutagenesis == tList {
+				l, lerr := toStringSlice(d)
+				if lerr != nil {
+					return fmt.Errorf("unable toStringSlice value for %s: %w", n, lerr)
+				}
+				err = value.Assign(l)
+				if err != nil {
+					return fmt.Errorf("unable to Assign list value for %s: %w", n, err)
+				}
+			} else {
+				ds, err = toString(d)
+				if err != nil {
+					return fmt.Errorf("unable toString value for %s: %w", n, err)
+				}
+				err = value.Set(ds)
+				if err != nil {
+					return fmt.Errorf("unable to Set value for %s: %w", n, err)
+				}
+			}
+			tree.values.Store(fruit.name, value)
+			continue
+		}
+		mut := tree.MutagenesisOf(d)
+		vf, er := tree.from(n)
+		if er == nil && vf != nil && strings.EqualFold(string(vf.Mutagensis), string(tree.MutagenesisOf(d))) {
+			err := vf.Assign(d)
+			if err != nil {
+				return fmt.Errorf("unable to assign value for %s: %w", n, err)
+			}
+			tree.values.Store(n, vf)
+			mut = vf.Mutagensis
+		} else {
+			value := &Value{
+				Value:      d,
+				Mutagensis: mut,
+			}
+			tree.values.Store(n, value)
+		}
+		fruit = &figFruit{
+			name:        n,
+			Mutagenesis: mut,
+			usage:       "Unknown, loaded from config file",
+			Mutations:   make([]Mutation, 0),
+			Validators:  make([]FigValidatorFunc, 0),
+			Callbacks:   make([]Callback, 0),
+			Rules:       make([]RuleKind, 0),
+		}
+		withered := witheredFig{
+			name: n,
+			Value: Value{
+				Mutagensis: mut,
+				Value:      d,
+			},
+		}
+		tree.figs[n] = fruit
+		tree.withered[n] = withered
+	}
+
 	return nil
 }
