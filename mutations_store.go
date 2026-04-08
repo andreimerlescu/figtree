@@ -62,6 +62,7 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 		// Store holds tree.mu while sending on mutationsCh. If the channel buffer
 		// is full, this send will block, stalling other tree operations. Ensure the
 		// channel capacity (Harvest) is large enough or consume mutations promptly.
+		tree.mu.Unlock() // fixes classic "lock while sending to a channel whose consumer needs the lock"
 		tree.mutationsCh <- Mutation{
 			Property:    name,
 			Mutagenesis: strings.ToLower(string(mut)),
@@ -71,6 +72,7 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 			When:        time.Now(),
 			Error:       err,
 		}
+		tree.mu.Lock() // allows for the defer method to capture the remainder of the functionality of Store()
 	}
 	return tree
 }
