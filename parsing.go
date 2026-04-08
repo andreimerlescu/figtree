@@ -21,7 +21,10 @@ func (tree *figTree) useValue(value *Value, err error) *Value {
 	return value
 }
 
-// from will break everything if you lock the tree here
+// from must not acquire, and should not be called while holding, the tree lock.
+// It may resolve names and compute derived metadata by re-entering other tree
+// methods and shared state; taking the tree lock here can introduce lock-order
+// inversion or self-deadlock.
 func (tree *figTree) from(name string) (*Value, error) {
 	flagName := tree.resolveName(name)
 	valueAny, ok := tree.values.Load(flagName)
