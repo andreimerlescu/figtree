@@ -58,6 +58,8 @@ type Loadable interface {
 }
 
 type Divine interface {
+	// Problems exposes non-fatal errors in the figtree like duplicate registrations that get ignored
+	Problems() []error
 	// Recall allows you to unlock the figTree from changes and resume tracking
 	Recall()
 	// Curse allows you to lock the figTree from changes and stop tracking

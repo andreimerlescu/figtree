@@ -24,38 +24,58 @@ func (tree *figTree) Problems() []error {
 func (tree *figTree) WithAlias(name, alias string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+
 	name = strings.ToLower(name)
 	alias = strings.ToLower(alias)
+
+	// Guard: alias already registered
 	if existing, exists := tree.aliases[alias]; exists {
 		if existing != name {
 			tree.problems = append(tree.problems,
-				fmt.Errorf("WithAlias: alias -%s already maps to -%s, ignoring -%s", alias, existing, name))
+				fmt.Errorf("WithAlias: alias -%s already maps to -%s, cannot remap to -%s", alias, existing, name))
 		}
-		return tree // idempotent re-registration is fine
-	}
-	if _, exists := tree.figs[name]; !exists {
-		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: no fig named -%s", name))
+		// idempotent: same alias→name pair is a no-op, not an error
 		return tree
 	}
+
+	// Guard: canonical fig must exist
+	if _, exists := tree.figs[name]; !exists {
+		tree.problems = append(tree.problems,
+			fmt.Errorf("WithAlias: no fig named -%s", name))
+		return tree
+	}
+
+	// Guard: alias must not shadow an existing fig name
+	if _, exists := tree.figs[alias]; exists {
+		tree.problems = append(tree.problems,
+			fmt.Errorf("WithAlias: alias -%s conflicts with existing fig name", alias))
+		return tree
+	}
+
+	// Guard: alias must not shadow an existing flag (covers both figs and
+	// any flags registered outside of figtree, e.g. via flagSet.Var directly)
+	if tree.flagSet.Lookup(alias) != nil {
+		tree.problems = append(tree.problems,
+			fmt.Errorf("WithAlias: alias -%s conflicts with existing flag", alias))
+		return tree
+	}
+
+	// Guard: underlying value must be retrievable and correctly typed
 	ptr, ok := tree.values.Load(name)
 	if !ok {
-		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: no value found for -%s", name))
+		tree.problems = append(tree.problems,
+			fmt.Errorf("WithAlias: no value found for -%s", name))
 		return tree
 	}
 	value, ok := ptr.(*Value)
 	if !ok {
-		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: failed to cast value for -%s", name))
+		tree.problems = append(tree.problems,
+			fmt.Errorf("WithAlias: value for -%s is %T, expected *Value", name, ptr))
 		return tree
 	}
-	if _, exists := tree.figs[alias]; exists {
-		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: alias -%s conflicts with existing fig name", alias))
-		return tree
-	}
-	if tree.flagSet.Lookup(alias) != nil {
-		tree.problems = append(tree.problems, fmt.Errorf("WithAlias: alias -%s conflicts with existing flag", alias))
-		return tree
-	}
-	tree.aliases[alias] = name // only register after all validations pass
+
+	// All validations passed — register the alias
+	tree.aliases[alias] = name
 	tree.flagSet.Var(value, alias, "Alias of -"+name)
 	return tree
 }
