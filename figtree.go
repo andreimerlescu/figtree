@@ -63,10 +63,8 @@ func Grow() Plant {
 func With(opts Options) Plant {
 	angel := atomic.Bool{}
 	angel.Store(true)
-	chBuf := 0
-	if opts.Harvest <= 0 && opts.Tracking {
-		chBuf = 1
-	} else if opts.Tracking {
+	chBuf := 1
+	if opts.Tracking && opts.Harvest > 0 {
 		chBuf = opts.Harvest
 	}
 	fig := &figTree{
