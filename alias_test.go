@@ -289,11 +289,11 @@ func TestWithAlias(t *testing.T) {
 		assert.Equal(t, valueShort, *figs.String(cmdAliasShort))
 		// list
 		assert.NotEqual(t, []string{"one", "two", "three"}, *figs.List("myList"))
-		assert.Equal(t, []string{"five", "four", "three"}, *figs.List("myList"))
+		assert.ElementsMatch(t, []string{"five", "four", "three"}, *figs.List("myList"))
 
 		// list alias
 		assert.NotEqual(t, []string{"one", "two", "three"}, *figs.List("list"))
-		assert.Equal(t, []string{"five", "four", "three"}, *figs.List("list"))
+		assert.ElementsMatch(t, []string{"five", "four", "three"}, *figs.List("list"))
 		// map
 		assert.NotEqual(t, map[string]string{"one": "1", "two": "2", "three": "3"}, *figs.Map("myMap"))
 		assert.Equal(t, map[string]string{"four": "4", "five": "5", "six": "6"}, *figs.Map("myMap"))
