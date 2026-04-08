@@ -34,7 +34,7 @@ func TestTree_checkAndSetFromEnv(t *testing.T) {
 		values:         &sync.Map{},
 		withered:       make(map[string]witheredFig),
 		mu:             sync.RWMutex{},
-		mutationsCh:    make(chan Mutation),
+		mutationsCh:    make(chan Mutation, 10),
 		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
 	figs.flagSet.Usage = figs.Usage
