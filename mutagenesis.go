@@ -30,6 +30,9 @@ func (m Mutagenesis) Kind() string {
 
 // MutagenesisOfFig returns the Mutagensis of the name
 func (tree *figTree) MutagenesisOfFig(name string) Mutagenesis {
+	tree.mu.RLock()
+	defer tree.mu.RUnlock()
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok {
 		return ""

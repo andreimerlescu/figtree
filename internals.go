@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/go-ini/ini"
-	"gopkg.in/yaml.v3"
 )
 
 // CONFIGURABLE INTERNAL FUNCTIONS
@@ -43,70 +42,6 @@ func (tree *figTree) loadJSON(data []byte) error {
 		return err
 	}
 	return tree.setValuesFromMap(jsonData)
-}
-
-// loadYAML parses the DefaultYAMLFile or the value of the EnvironmentKey or ConfigFilePath into yaml.Unmarshal
-func (tree *figTree) loadYAML(data []byte) error {
-	var yamlData map[string]interface{}
-	if err := yaml.Unmarshal(data, &yamlData); err != nil {
-		return err
-	}
-	tree.mu.Lock()
-	defer tree.mu.Unlock()
-	tree.activateFlagSet()
-	for n, d := range yamlData {
-		var fruit *figFruit
-		var exists bool
-		if fruit, exists = tree.figs[n]; exists && fruit != nil {
-			value := tree.useValue(tree.from(fruit.name))
-			ds, err := toString(d)
-			if err != nil {
-				return fmt.Errorf("unable toString value for %s: %w", n, err)
-			}
-			err = value.Set(ds)
-			if err != nil {
-				return fmt.Errorf("unable to Set value for %s: %w", n, err)
-			}
-			tree.values.Store(fruit.name, value)
-			continue
-		}
-		mut := tree.MutagenesisOf(d)
-		vf, er := tree.from(n)
-		if er == nil && vf != nil && strings.EqualFold(string(vf.Mutagensis), string(tree.MutagenesisOf(d))) {
-			err := vf.Assign(d)
-			if err != nil {
-				return fmt.Errorf("unable to assign value for %s: %w", n, err)
-			}
-			tree.values.Store(n, vf)
-			mut = vf.Mutagensis
-		} else {
-			value := &Value{
-				Value:      d,
-				Mutagensis: mut,
-			}
-			tree.values.Store(n, value)
-		}
-		fruit = &figFruit{
-			name:        n,
-			Mutagenesis: mut,
-			usage:       "Unknown, loaded from config file",
-			Mutations:   make([]Mutation, 0),
-			Validators:  make([]FigValidatorFunc, 0),
-			Callbacks:   make([]Callback, 0),
-			Rules:       make([]RuleKind, 0),
-		}
-		withered := witheredFig{
-			name: n,
-			Value: Value{
-				Mutagensis: mut,
-				Value:      d,
-			},
-		}
-		tree.figs[n] = fruit
-		tree.withered[n] = withered
-	}
-
-	return nil
 }
 
 // loadINI parses the DefaultINIFile or the value of the EnvironmentKey or ConfigFilePath into ini.Load()
@@ -146,9 +81,13 @@ func (tree *figTree) loadINI(data []byte) error {
 
 // setValuesFromMap uses the data map to store the configurable figs
 func (tree *figTree) setValuesFromMap(data map[string]interface{}) error {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
 	for key, value := range data {
-		if _, exists := tree.figs[key]; exists {
-			if err := tree.mutateFig(key, value); err != nil {
+		name := tree.resolveName(key)
+		_, exists := tree.figs[name]
+		if exists {
+			if err := tree.mutateFig(name, value); err != nil {
 				return fmt.Errorf("error setting key %s: %w", key, err)
 			}
 		}
@@ -269,7 +208,7 @@ func (tree *figTree) checkAndSetFromEnv(name string) {
 
 // mutateFig replaces the value interface{} and sends a Mutation into Mutations
 func (tree *figTree) mutateFig(name string, value interface{}) error {
-	name = strings.ToLower(name)
+	name = tree.resolveName(name)
 	def, ok := tree.figs[name]
 	if !ok || def == nil {
 		return fmt.Errorf("no such fig: %s", name)

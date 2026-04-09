@@ -3,6 +3,7 @@ package figtree
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 )
@@ -10,6 +11,7 @@ import (
 func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok {
 		return tree
@@ -57,6 +59,10 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 	}
 	tree.figs[name] = fruit
 	if tree.tracking && !tree.angel.Load() {
+		// Store holds tree.mu while sending on mutationsCh. If the channel buffer
+		// is full, this send will block, stalling other tree operations. Ensure the
+		// channel capacity (Harvest) is large enough or consume mutations promptly.
+		tree.mu.Unlock() // fixes classic "lock while sending to a channel whose consumer needs the lock"
 		tree.mutationsCh <- Mutation{
 			Property:    name,
 			Mutagenesis: strings.ToLower(string(mut)),
@@ -66,6 +72,7 @@ func (tree *figTree) Store(mut Mutagenesis, name string, value interface{}) Plan
 			When:        time.Now(),
 			Error:       err,
 		}
+		tree.mu.Lock() // allows for the defer method to capture the remainder of the functionality of Store()
 	}
 	return tree
 }
@@ -145,7 +152,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case string:
 			m := map[string]string{}
 			for _, p := range strings.Split(f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -154,7 +161,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case *string:
 			m := map[string]string{}
 			for _, p := range strings.Split(*f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -178,7 +185,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case string:
 			m := map[string]string{}
 			for _, p := range strings.Split(f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -187,7 +194,7 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		case *string:
 			m := map[string]string{}
 			for _, p := range strings.Split(*f, MapSeparator) {
-				z := strings.SplitN(p, MapKeySeparator, 1)
+				z := strings.SplitN(p, MapKeySeparator, 2)
 				if len(z) == 2 {
 					m[z[0]] = z[1]
 				}
@@ -215,7 +222,18 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		}
 		tree.values.Store(name, value)
 		tree.figs[name] = fruit
-		return old != current, old, current
+		oldMap, _ := toStringMap(flesh)
+		currentMap, _ := toStringMap(value)
+		equal := len(oldMap) == len(currentMap)
+		if equal {
+			for k, v := range oldMap {
+				if cv, exists := currentMap[k]; !exists || cv != v {
+					equal = false
+					break
+				}
+			}
+		}
+		return !equal, old, current
 	case tList:
 		var old *[]string
 		var err error
@@ -277,7 +295,16 @@ func (tree *figTree) persist(fruit *figFruit, mut Mutagenesis, name string, valu
 		}
 		tree.values.Store(name, value)
 		tree.figs[name] = fruit
-		return old != current, old, current
+		changed := false
+		switch {
+		case old == nil && current == nil:
+			changed = false
+		case old == nil || current == nil:
+			changed = true
+		default:
+			changed = !slices.Equal(*old, *current)
+		}
+		return changed, old, current
 	case tUnitDuration:
 		var old time.Duration
 		var err error

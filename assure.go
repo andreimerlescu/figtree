@@ -11,7 +11,7 @@ import (
 var AssureStringHasSuffix = func(suffix string) FigValidatorFunc {
 	return makeStringValidator(
 		func(s string) bool { return strings.HasSuffix(s, suffix) },
-		"string must have suffix %q, got %q",
+		fmt.Sprintf("string must have suffix %q, got %%q", suffix),
 	)
 }
 
@@ -19,7 +19,7 @@ var AssureStringHasSuffix = func(suffix string) FigValidatorFunc {
 var AssureStringHasPrefix = func(prefix string) FigValidatorFunc {
 	return makeStringValidator(
 		func(s string) bool { return strings.HasPrefix(s, prefix) },
-		"string must have prefix %q, got %q",
+		fmt.Sprintf("string must have prefix %q, got %%q", prefix),
 	)
 }
 
@@ -57,7 +57,7 @@ var AssureStringNoPrefixes = func(prefixes []string) FigValidatorFunc {
 	}
 }
 
-// AssureStringHasSuffixes ensures a string ends with a suffix
+// AssureStringHasSuffixes ensures a string ends with all suffixes in the list provided
 // Returns a figValidatorFunc that checks for the substring (case-sensitive).
 var AssureStringHasSuffixes = func(suffixes []string) FigValidatorFunc {
 	return func(value interface{}) error {
@@ -222,7 +222,7 @@ var AssureStringNotEmpty = func(value interface{}) error {
 var AssureStringContains = func(substring string) FigValidatorFunc {
 	return makeStringValidator(
 		func(s string) bool { return strings.Contains(s, substring) },
-		"string must contain %q, got %q",
+		fmt.Sprintf("string must contain %q, got %%q", substring),
 	)
 }
 
@@ -248,7 +248,7 @@ var AssureBoolTrue = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsBool() {
 		if !v.ToBool() {
-			return fmt.Errorf("value must be true, got false")
+			return fmt.Errorf("value must be true, got %t", v.ToBool())
 		}
 		return nil
 	}
@@ -261,7 +261,7 @@ var AssureBoolFalse = func(value interface{}) error {
 	v := figFlesh{value, nil}
 	if v.IsBool() {
 		if v.ToBool() {
-			return fmt.Errorf("value must be false, got true")
+			return fmt.Errorf("bool must be false, got %t", v.ToBool())
 		}
 		return nil
 	}
@@ -364,7 +364,7 @@ var AssureInt64LessThan = func(below int64) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsInt64() {
-			return fmt.Errorf("value must be int64, got %d", value)
+			return ErrInvalidType{tInt64, value}
 		}
 		i := v.ToInt64()
 		if i > below {
@@ -486,7 +486,7 @@ var AssureDurationGreaterThan = func(above time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsDuration() {
-			return fmt.Errorf("value must be a duration, got %v", value)
+			return ErrInvalidType{tDuration, value}
 		}
 		t := v.ToDuration()
 		if t < above {
@@ -502,7 +502,7 @@ var AssureDurationLessThan = func(below time.Duration) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsDuration() {
-			return fmt.Errorf("value must be a duration, got %v", value)
+			return ErrInvalidType{tDuration, value}
 		}
 		t := v.ToDuration()
 		if t > below {
@@ -582,7 +582,7 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 		}
 		l := v.ToList()
 		if len(l) < min {
-			return fmt.Errorf("list is empty")
+			return fmt.Errorf("list must have at least %d elements, got %d", min, len(l))
 		}
 		return nil
 	}
@@ -592,7 +592,7 @@ var AssureListMinLength = func(min int) FigValidatorFunc {
 // Returns a figValidatorFunc that checks for the presence of the value.
 var AssureListContains = func(inside string) FigValidatorFunc {
 	return func(value interface{}) error {
-		v := NewFlesh(value)
+		v := figFlesh{value, nil}
 		if !v.IsList() {
 			return ErrInvalidType{tList, value}
 		}
@@ -712,7 +712,7 @@ var AssureMapValueMatches = func(key, match string) FigValidatorFunc {
 	return func(value interface{}) error {
 		v := figFlesh{value, nil}
 		if !v.IsMap() {
-			return fmt.Errorf("%s is not a map", key)
+			return ErrInvalidType{tMap, value}
 		}
 		m := v.ToMap()
 		if val, exists := m[key]; exists {

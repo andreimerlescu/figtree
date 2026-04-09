@@ -63,13 +63,17 @@ func Grow() Plant {
 func With(opts Options) Plant {
 	angel := atomic.Bool{}
 	angel.Store(true)
+	chBuf := 1
+	if opts.Tracking && opts.Harvest > 0 {
+		chBuf = opts.Harvest
+	}
 	fig := &figTree{
 		ConfigFilePath: opts.ConfigFile,
 		ignoreEnv:      opts.IgnoreEnvironment,
 		filterTests:    opts.Germinate,
 		pollinate:      opts.Pollinate,
 		tracking:       opts.Tracking,
-		harvest:        opts.Harvest,
+		harvest:        chBuf,
 		angel:          &angel,
 		problems:       make([]error, 0),
 		aliases:        make(map[string]string),
@@ -77,7 +81,7 @@ func With(opts Options) Plant {
 		values:         &sync.Map{},
 		withered:       make(map[string]witheredFig),
 		mu:             sync.RWMutex{},
-		mutationsCh:    make(chan Mutation),
+		mutationsCh:    make(chan Mutation, chBuf),
 		flagSet:        flag.NewFlagSet(os.Args[0], flag.ContinueOnError),
 	}
 	fig.flagSet.Usage = fig.Usage

@@ -21,13 +21,9 @@ func (tree *figTree) useValue(value *Value, err error) *Value {
 	return value
 }
 
+// from callers must not call this while holding a read lock and trying to acquire a write lock
 func (tree *figTree) from(name string) (*Value, error) {
-	flagName := strings.ToLower(name)
-	for alias, realname := range tree.aliases {
-		if strings.EqualFold(alias, name) {
-			flagName = realname
-		}
-	}
+	flagName := tree.resolveName(name)
 	valueAny, ok := tree.values.Load(flagName)
 	if !ok {
 		return nil, errors.New("no value for " + flagName)

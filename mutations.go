@@ -34,10 +34,7 @@ func (tree *figTree) String(name string) *string {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -95,10 +92,7 @@ func (tree *figTree) Bool(name string) *bool {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -142,6 +136,7 @@ func (tree *figTree) Bool(name string) *bool {
 		tree.figs[name] = fruit
 		return &zeroBool
 	}
+	// return the result
 	return &s
 }
 
@@ -153,10 +148,7 @@ func (tree *figTree) Int(name string) *int {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -216,10 +208,7 @@ func (tree *figTree) Int64(name string) *int64 {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -275,10 +264,7 @@ func (tree *figTree) Float64(name string) *float64 {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -334,10 +320,7 @@ func (tree *figTree) Duration(name string) *time.Duration {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -404,10 +387,7 @@ func (tree *figTree) UnitDuration(name string) *time.Duration {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -474,10 +454,7 @@ func (tree *figTree) List(name string) *[]string {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -496,10 +473,6 @@ func (tree *figTree) List(name string) *[]string {
 	}
 	var v []string
 	switch f := value.Value.(type) {
-	case string:
-		v = []string{f}
-	case *string:
-		v = []string{*f}
 	case ListFlag:
 		v = make([]string, len(f.values))
 		copy(v, f.values)
@@ -512,6 +485,14 @@ func (tree *figTree) List(name string) *[]string {
 	case []string:
 		v = make([]string, len(f))
 		copy(v, f)
+	case string:
+		fv := strings.Split(f, ListSeparator)
+		v = make([]string, len(fv))
+		copy(v, fv)
+	case *string:
+		fv := strings.Split(*f, ListSeparator)
+		v = make([]string, len(fv))
+		copy(v, fv)
 	default:
 		return nil
 	}
@@ -532,10 +513,6 @@ func (tree *figTree) List(name string) *[]string {
 					return &zeroList
 				}
 				switch f := value.Value.(type) {
-				case string:
-					v = []string{f}
-				case *string:
-					v = []string{*f}
 				case ListFlag:
 					v = make([]string, len(f.values))
 					copy(v, f.values)
@@ -548,6 +525,14 @@ func (tree *figTree) List(name string) *[]string {
 				case []string:
 					v = make([]string, len(f))
 					copy(v, f)
+				case string:
+					fv := strings.Split(f, ListSeparator)
+					v = make([]string, len(fv))
+					copy(v, fv)
+				case *string:
+					fv := strings.Split(*f, ListSeparator)
+					v = make([]string, len(fv))
+					copy(v, fv)
 				default:
 					panic("unreachable")
 				}
@@ -572,10 +557,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 	defer func() {
 		name = originalName // restore after we're done
 	}()
-	name = strings.ToLower(name)
-	if _, exists := tree.aliases[name]; exists {
-		name = tree.aliases[name]
-	}
+	name = tree.resolveName(name)
 	fruit, ok := tree.figs[name]
 	if !ok || fruit == nil {
 		return nil
@@ -639,7 +621,7 @@ func (tree *figTree) Map(name string) *map[string]string {
 	if !tree.HasRule(RuleNoEnv) && !fruit.HasRule(RuleNoEnv) && !tree.ignoreEnv && tree.pollinate {
 		e := os.Getenv(name)
 		if len(e) > 0 {
-			i := strings.Split(e, ",")
+			i := strings.Split(e, MapSeparator)
 			if len(i) == 0 {
 				v = map[string]string{}
 			} else {

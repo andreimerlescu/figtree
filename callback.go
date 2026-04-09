@@ -2,7 +2,6 @@ package figtree
 
 import (
 	"errors"
-	"strings"
 )
 
 // WithCallback allows you to assign a slice of CallbackFunc to a figFruit attached to a figTree.
@@ -27,7 +26,7 @@ import (
 func (tree *figTree) WithCallback(name string, whenCallback CallbackWhen, runThis CallbackFunc) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	name = strings.ToLower(name)
+	name = tree.resolveName(name)
 	fruit, exists := tree.figs[name]
 	if !exists || fruit == nil {
 		return tree

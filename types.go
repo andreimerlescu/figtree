@@ -18,6 +18,8 @@ type Withables interface {
 	WithTreeRule(rule RuleKind) Plant
 	// WithValidator binds a figValidatorFunc to a figFruit that returns Plant
 	WithValidator(name string, validator func(interface{}) error) Plant
+	// WithValidators binds a figValidatorFunc to a figFruit that returns Plant
+	WithValidators(name string, validators ...func(interface{}) error) Plant
 }
 
 type Savable interface {
@@ -56,6 +58,8 @@ type Loadable interface {
 }
 
 type Divine interface {
+	// Problems exposes non-fatal errors in the figtree like duplicate registrations that get ignored
+	Problems() []error
 	// Recall allows you to unlock the figTree from changes and resume tracking
 	Recall()
 	// Curse allows you to lock the figTree from changes and stop tracking
