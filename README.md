@@ -1,11 +1,11 @@
 # Fig Tree
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<img src="/logo.jpeg" alt="Figtree logo created by xAI Grok" height="369px" >
 
 Fig Tree is a command line utility configuration manager that you can refer to as `figs`, as you con<b>FIG</b>ure your
-application's runtime.
+application's runtime. Check out [ABOUT.md](/ABOUT.md) if you want to learn about the origins of the package itself and why I built it. 
 
-![Figtree](/figtree.jpg "Figtree by xAI Grok 3")
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Installation
 
@@ -14,6 +14,34 @@ To use `figtree` in your project, `go get` it...
 ```shell
 go get -u github.com/andreimerlescu/figtree/v2
 ```
+
+## Feature Comparison of Figtree vs Viper
+
+Figtree was designed to be a replacement for <a href="https://github.com/spf13/viper" alt="Viper" target="_blank">Viper</a> since I prefer fruit over fangs of a snake and I am a programmer capable of investing the energy into giving you an alternative that packs a strong punch.
+
+Think of it this way: _Viper_ is for Eve and _Figtree_ is for Adam. 
+
+| Capability | Viper | Figtree |
+|---|---|---|
+| CLI flags | ✅ (via pflag) | ✅ (via stdlib flag) |
+| Environment variables | ✅ | ✅ |
+| Config files (YAML/JSON/INI) | ✅ | ✅ |
+| File watching | ✅ | 🔜 planned v2.1.1+ |
+| Struct unmarshaling | ✅ | 🔜 planned v2.2.0+ |
+| Per-property validators | ❌ | ✅ 36 built-in |
+| Per-property callbacks | ❌ | ✅ |
+| Mutation tracking channel | ❌ | ✅ |
+| Property aliases | ⚠️ shallow | ✅ full propagation |
+| Property rules | ❌ | ✅ |
+| Struct tag validation (assure:) | ❌ | 🔜 planned v2.2.0+ |
+| Organizational branches | ❌ | 🔜 planned v2.3.0+ |
+| Known race conditions | ⚠️ yes | ✅ fixed |
+| Remote config sources | ✅ | 🔜 planned |
+| stdlib flag compatibility | ❌ | ✅ |
+| Zero dependencies (core) | ❌ | ✅ |
+
+[Read full case study comparison...](/COMPARISON.md)
+
 
 ## Usage
 
@@ -265,6 +293,7 @@ When using callbacks, you will want to make sure that you're keeping on top of w
 With callbacks, you can really slow the performance down of `figtree`, but when used sparingly, its extremely powerful.
 
 At the end of the day, you'll know what's best to use. I build what I build because its the best that I use.
+
 
 ### Complex Example Usage
 
