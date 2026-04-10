@@ -3,7 +3,7 @@
 <img src="/logo.jpeg" alt="Figtree logo created by xAI Grok" height="369px" >
 
 Fig Tree is a command line utility configuration manager that you can refer to as `figs`, as you con<b>FIG</b>ure your
-application's runtime.
+application's runtime. Check out [ABOUT.md](/ABOUT.md) if you want to learn about the origins of the package itself and why I built it. 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -40,7 +40,7 @@ Think of it this way: _Viper_ is for Eve and _Figtree_ is for Adam.
 | stdlib flag compatibility | ❌ | ✅ |
 | Zero dependencies (core) | ❌ | ✅ |
 
-[Read full case study comparison...](/DIFF-viper-versus-figtree.md)
+[Read full case study comparison...](/COMPARISON.md)
 
 
 ## Usage
