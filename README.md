@@ -1,11 +1,11 @@
 # Fig Tree
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<img src="/logo.jpeg" alt="Figtree logo created by xAI Grok" height="369px" >
 
 Fig Tree is a command line utility configuration manager that you can refer to as `figs`, as you con<b>FIG</b>ure your
 application's runtime.
 
-![Figtree](/figtree.jpg "Figtree by xAI Grok 3")
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Installation
 
@@ -15,9 +15,11 @@ To use `figtree` in your project, `go get` it...
 go get -u github.com/andreimerlescu/figtree/v2
 ```
 
-## Figtree vs Viper: A Practical Comparison
+## Feature Comparison of Figtree vs Viper
 
-Figtree was designed to be a replacement for [Viper](https://github.com/spf13/viper) since I prefer fruit over snakes. 
+Figtree was designed to be a replacement for <a href="https://github.com/spf13/viper" alt="Viper" target="_blank">Viper</a> since I prefer fruit over fangs of a snake and I am a programmaer capable of investing the energy into giving you an alternative that packs a strong punch.
+
+Think of it this way: _Viper_ is for Eve and _Figtree_ is for Adam. 
 
 | Capability | Viper | Figtree |
 |---|---|---|
