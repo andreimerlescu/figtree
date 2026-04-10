@@ -20,8 +20,8 @@ sources — which represents the majority of real-world Go projects.
 | Mutation tracking channel | ❌ | ✅ |
 | Property aliases | ⚠️ shallow | ✅ full propagation |
 | Property rules | ❌ | ✅ |
-| Organizational branches | ❌ | 🔜 planned v2.3.0+ |
 | Struct tag validation (assure:) | ❌ | 🔜 planned v2.2.0+ |
+| Organizational branches | ❌ | 🔜 planned v2.3.0+ |
 | Known race conditions | ⚠️ yes | ✅ fixed |
 | Remote config sources | ✅ | 🔜 planned |
 | stdlib flag compatibility | ❌ | ✅ |
