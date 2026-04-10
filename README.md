@@ -17,7 +17,7 @@ go get -u github.com/andreimerlescu/figtree/v2
 
 ## Feature Comparison of Figtree vs Viper
 
-Figtree was designed to be a replacement for <a href="https://github.com/spf13/viper" alt="Viper" target="_blank">Viper</a> since I prefer fruit over fangs of a snake and I am a programmaer capable of investing the energy into giving you an alternative that packs a strong punch.
+Figtree was designed to be a replacement for <a href="https://github.com/spf13/viper" alt="Viper" target="_blank">Viper</a> since I prefer fruit over fangs of a snake and I am a programmer capable of investing the energy into giving you an alternative that packs a strong punch.
 
 Think of it this way: _Viper_ is for Eve and _Figtree_ is for Adam. 
 
