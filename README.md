@@ -33,8 +33,8 @@ Think of it this way: _Viper_ is for Eve and _Figtree_ is for Adam.
 | Mutation tracking channel | ❌ | ✅ |
 | Property aliases | ⚠️ shallow | ✅ full propagation |
 | Property rules | ❌ | ✅ |
-| Organizational branches | ❌ | 🔜 planned v2.3.0+ |
 | Struct tag validation (assure:) | ❌ | 🔜 planned v2.2.0+ |
+| Organizational branches | ❌ | 🔜 planned v2.3.0+ |
 | Known race conditions | ⚠️ yes | ✅ fixed |
 | Remote config sources | ✅ | 🔜 planned |
 | stdlib flag compatibility | ❌ | ✅ |
