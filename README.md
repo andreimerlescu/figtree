@@ -15,6 +15,32 @@ To use `figtree` in your project, `go get` it...
 go get -u github.com/andreimerlescu/figtree/v2
 ```
 
+## Figtree vs Viper: A Practical Comparison
+
+Figtree was designed to be a replacement for [Viper](https://github.com/spf13/viper) since I prefer fruit over snakes. 
+
+| Capability | Viper | Figtree |
+|---|---|---|
+| CLI flags | ✅ (via pflag) | ✅ (via stdlib flag) |
+| Environment variables | ✅ | ✅ |
+| Config files (YAML/JSON/INI) | ✅ | ✅ |
+| File watching | ✅ | ✅ v2.1.1+ |
+| Struct unmarshaling | ✅ | ✅ v2.2.0+ |
+| Per-property validators | ❌ | ✅ 36 built-in |
+| Per-property callbacks | ❌ | ✅ |
+| Mutation tracking channel | ❌ | ✅ |
+| Property aliases | ⚠️ shallow | ✅ full propagation |
+| Property rules | ❌ | ✅ |
+| Organizational branches | ❌ | ✅ v2.3.0+ |
+| Struct tag validation (assure:) | ❌ | ✅ v2.2.0+ |
+| Known race conditions | ⚠️ yes | ✅ fixed |
+| Remote config sources | ✅ | 🔜 planned |
+| stdlib flag compatibility | ❌ | ✅ |
+| Zero dependencies (core) | ❌ | ✅ |
+
+[Read full case study comparison...](/DIFF-viper-versus-figtree.md)
+
+
 ## Usage
 
 To use **figs** package in your Go code, you need to import it:
@@ -265,6 +291,7 @@ When using callbacks, you will want to make sure that you're keeping on top of w
 With callbacks, you can really slow the performance down of `figtree`, but when used sparingly, its extremely powerful.
 
 At the end of the day, you'll know what's best to use. I build what I build because its the best that I use.
+
 
 ### Complex Example Usage
 
