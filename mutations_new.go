@@ -1,6 +1,7 @@
 package figtree
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -9,8 +10,12 @@ import (
 func (tree *figTree) NewString(name string, value string, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	vPtr := &Value{
 		Value:      value,
 		Mutagensis: tString,
@@ -27,15 +32,13 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	theWitheredFig, exists := tree.withered[name]
-	if !exists {
+	if _, exists := tree.withered[name]; !exists {
 		tree.withered[name] = witheredFig{
 			name:        name,
 			Value:       *vPtr,
 			Mutagenesis: tString,
 		}
 	}
-	tree.withered[name] = theWitheredFig
 	return tree
 }
 
@@ -43,14 +46,18 @@ func (tree *figTree) NewString(name string, value string, usage string) Plant {
 func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
-		Value:      &value, // Store a persistent pointer to the bool value
+		Value:      value,
 		Mutagensis: tBool,
 	}
-	tree.flagSet.BoolVar(v.Value.(*bool), name, value, usage) // Use the persistent pointer directly
 	tree.values.Store(name, v)
+	tree.flagSet.Var(v, name, usage)
 	def := &figFruit{
 		name:        name,
 		usage:       usage,
@@ -61,10 +68,12 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       *v,
-		Mutagenesis: tBool,
+	if _, exists := tree.withered[name]; !exists {
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       *v,
+			Mutagenesis: tBool,
+		}
 	}
 	return tree
 }
@@ -73,8 +82,12 @@ func (tree *figTree) NewBool(name string, value bool, usage string) Plant {
 func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      value,
 		Mutagensis: tInt,
@@ -91,11 +104,13 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       *v,
-		Mutagenesis: tInt,
-	} // Initialize withered with a copy
+	if _, exists := tree.withered[name]; !exists {
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       *v,
+			Mutagenesis: tInt,
+		} // Initialize withered with a copy
+	}
 	return tree
 }
 
@@ -103,8 +118,12 @@ func (tree *figTree) NewInt(name string, value int, usage string) Plant {
 func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      value,
 		Mutagensis: tInt64,
@@ -121,10 +140,12 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       *v,
-		Mutagenesis: tInt64,
+	if _, exists := tree.withered[name]; !exists {
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       *v,
+			Mutagenesis: tInt64,
+		}
 	}
 	return tree
 }
@@ -133,8 +154,12 @@ func (tree *figTree) NewInt64(name string, value int64, usage string) Plant {
 func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      value,
 		Mutagensis: tFloat64,
@@ -151,10 +176,12 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       *v,
-		Mutagenesis: tFloat64,
+	if _, exists := tree.withered[name]; !exists {
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       *v,
+			Mutagenesis: tFloat64,
+		}
 	}
 	return tree
 }
@@ -163,8 +190,12 @@ func (tree *figTree) NewFloat64(name string, value float64, usage string) Plant 
 func (tree *figTree) NewDuration(name string, value time.Duration, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      value,
 		Mutagensis: tDuration,
@@ -181,10 +212,12 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       *v,
-		Mutagenesis: tDuration,
+	if _, exists := tree.withered[name]; !exists {
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       *v,
+			Mutagenesis: tDuration,
+		}
 	}
 	return tree
 }
@@ -193,8 +226,12 @@ func (tree *figTree) NewDuration(name string, value time.Duration, usage string)
 func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, usage string) Plant {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      value * units,
 		Mutagensis: tUnitDuration,
@@ -211,10 +248,12 @@ func (tree *figTree) NewUnitDuration(name string, value, units time.Duration, us
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	tree.withered[name] = witheredFig{
-		name:        name,
-		Value:       *v,
-		Mutagenesis: tUnitDuration,
+	if _, exists := tree.withered[name]; !exists {
+		tree.withered[name] = witheredFig{
+			name:        name,
+			Value:       *v,
+			Mutagenesis: tUnitDuration,
+		}
 	}
 	return tree
 }
@@ -226,8 +265,12 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 	if tree.HasRule(RuleNoLists) {
 		return tree
 	}
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      ListFlag{values: value},
 		Mutagensis: tList,
@@ -244,15 +287,17 @@ func (tree *figTree) NewList(name string, value []string, usage string) Plant {
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	witheredVal := make([]string, len(value))
-	copy(witheredVal, value)
-	tree.withered[name] = witheredFig{
-		name: name,
-		Value: Value{
-			Value:      witheredVal,
-			Mutagensis: tList,
-		},
-		Mutagenesis: tList,
+	if _, exists := tree.withered[name]; !exists {
+		witheredVal := make([]string, len(value))
+		copy(witheredVal, value)
+		tree.withered[name] = witheredFig{
+			name: name,
+			Value: Value{
+				Value:      witheredVal,
+				Mutagensis: tList,
+			},
+			Mutagenesis: tList,
+		}
 	}
 	return tree
 }
@@ -264,8 +309,12 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 	if tree.HasRule(RuleNoMaps) {
 		return tree
 	}
-	tree.activateFlagSet()
 	name = strings.ToLower(name)
+	if _, exists := tree.figs[name]; exists {
+		tree.problems = append(tree.problems, fmt.Errorf("name '%s' already exists", name))
+		return tree
+	}
+	tree.activateFlagSet()
 	v := &Value{
 		Value:      MapFlag{values: value},
 		Mutagensis: tMap,
@@ -282,17 +331,19 @@ func (tree *figTree) NewMap(name string, value map[string]string, usage string) 
 		Rules:       make([]RuleKind, 0),
 	}
 	tree.figs[name] = def
-	witheredVal := make(map[string]string)
-	for k, v := range value {
-		witheredVal[k] = v
-	}
-	tree.withered[name] = witheredFig{
-		name: name,
-		Value: Value{
-			Value:      witheredVal,
-			Mutagensis: tree.MutagenesisOf(witheredVal),
-		},
-		Mutagenesis: tMap,
+	if _, exists := tree.withered[name]; !exists {
+		witheredVal := make(map[string]string)
+		for k, v := range value {
+			witheredVal[k] = v
+		}
+		tree.withered[name] = witheredFig{
+			name: name,
+			Value: Value{
+				Value:      witheredVal,
+				Mutagensis: tree.MutagenesisOf(witheredVal),
+			},
+			Mutagenesis: tMap,
+		}
 	}
 	return tree
 }
