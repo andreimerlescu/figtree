@@ -13,15 +13,15 @@ sources — which represents the majority of real-world Go projects.
 | CLI flags | ✅ (via pflag) | ✅ (via stdlib flag) |
 | Environment variables | ✅ | ✅ |
 | Config files (YAML/JSON/INI) | ✅ | ✅ |
-| File watching | ✅ | ✅ v2.1.1+ |
-| Struct unmarshaling | ✅ | ✅ v2.2.0+ |
+| File watching | ✅ | 🔜 planned v2.1.1+ |
+| Struct unmarshaling | ✅ | 🔜 planned v2.2.0+ |
 | Per-property validators | ❌ | ✅ 36 built-in |
 | Per-property callbacks | ❌ | ✅ |
 | Mutation tracking channel | ❌ | ✅ |
 | Property aliases | ⚠️ shallow | ✅ full propagation |
 | Property rules | ❌ | ✅ |
-| Organizational branches | ❌ | ✅ v2.3.0+ |
-| Struct tag validation (assure:) | ❌ | ✅ v2.2.0+ |
+| Organizational branches | ❌ | 🔜 planned v2.3.0+ |
+| Struct tag validation (assure:) | ❌ | 🔜 planned v2.2.0+ |
 | Known race conditions | ⚠️ yes | ✅ fixed |
 | Remote config sources | ✅ | 🔜 planned |
 | stdlib flag compatibility | ❌ | ✅ |
