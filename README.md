@@ -6,6 +6,7 @@ Fig Tree is a command line utility configuration manager that you can refer to a
 application's runtime. Check out [ABOUT.md](/ABOUT.md) if you want to learn about the origins of the package itself and why I built it. 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Unique](https://counthis.app/github?repository=andreimerlescu/figtree&label=Unique) ![Visitors](https://counthis.app/g/qyjy5vwjtjgbjfzy)
 
 ## Installation
 
